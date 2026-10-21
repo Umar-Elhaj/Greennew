@@ -18,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from config import APP_NAME, APP_VERSION, DEBUG
+from config import APP_NAME, APP_VERSION, DEBUG, MEDIA_DIR, MEDIA_URL_PREFIX
 from database import engine, Base
 
 # ---- Import routers -----------------------------------------
@@ -216,6 +216,11 @@ async def health_check():
         }
     }
 
+
+# ---- Mount analysed images (Green Data) ---------------------
+# Must be mounted before "/" which would otherwise catch the path.
+os.makedirs(MEDIA_DIR, exist_ok=True)
+app.mount(MEDIA_URL_PREFIX, StaticFiles(directory=MEDIA_DIR), name="media")
 
 # ---- Mount static assets ------------------------------------
 app.mount(

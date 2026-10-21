@@ -1,6 +1,7 @@
 # ============================================================
 # GREEN App — Database Models (SQLAlchemy ORM)
-# Each class maps to a table in the SQLite database.
+# Each class maps to a table (SQLite in dev, PostgreSQL/Supabase in prod).
+# Prod schema: backend/sql/supabase_schema.sql — keep both in sync.
 # Tables are auto-created on startup via Base.metadata.create_all()
 # ============================================================
 
@@ -35,12 +36,14 @@ class User(Base):
     region        = Column(String(100), nullable=True)   # Cameroon region
     avatar_url    = Column(String(500), nullable=True)
     is_active     = Column(Boolean, default=True)
+    dataset_consent = Column(Boolean, default=False, nullable=False)  # Green Data opt-in
     created_at    = Column(DateTime, default=utcnow)
     updated_at    = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     # Relationships
     parcels          = relationship("Parcel",          back_populates="owner", cascade="all, delete-orphan")
-    analyses         = relationship("DiseaseAnalysis", back_populates="user",  cascade="all, delete-orphan")
+    analyses         = relationship("DiseaseAnalysis", back_populates="user",  cascade="all, delete-orphan",
+                                    foreign_keys="DiseaseAnalysis.user_id")
     chat_sessions    = relationship("ChatSession",     back_populates="user",  cascade="all, delete-orphan")
 
     def __repr__(self):
@@ -89,7 +92,8 @@ class DiseaseAnalysis(Base):
 
     # Detection input
     source          = Column(String(50), default="camera")  # "camera" | "upload" | "drone"
-    image_path      = Column(String(500), nullable=True)   # Saved frame path
+    image_path      = Column(String(500), nullable=True)   # Relative path inside MEDIA_DIR
+    image_sha256    = Column(String(64),  nullable=True, index=True)  # Duplicate detection
 
     # Detection output — Disease model (EfficientNet)
     detected_disease= Column(String(255), nullable=True)   # Disease class ID or "healthy"
@@ -97,6 +101,8 @@ class DiseaseAnalysis(Base):
     confidence      = Column(Float, nullable=True)         # 0.0 – 1.0
     severity        = Column(String(50),  nullable=True)   # "low" | "medium" | "high"
     plant_type      = Column(String(100), nullable=True)   # "tomate" | "maïs" | "manioc" etc.
+    predictions     = Column(JSON, nullable=True)          # Top-3 [{class, confidence}]
+    model_version   = Column(String(100), nullable=True)
 
     # GPS coordinates (optional — rover GPS not yet implemented)
     latitude        = Column(Float, nullable=True)
@@ -107,10 +113,17 @@ class DiseaseAnalysis(Base):
 
     # Analysis metadata
     notes           = Column(Text, nullable=True)
+
+    # Green Data — human validation + consent
+    consent_dataset = Column(Boolean, default=False, nullable=False)
+    verified_label  = Column(String(255), nullable=True)   # Class corrected by an agronomist
+    verified_by     = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    verified_at     = Column(DateTime, nullable=True)
+
     created_at      = Column(DateTime, default=utcnow, index=True)
 
     # Relationships
-    user   = relationship("User",   back_populates="analyses")
+    user   = relationship("User",   back_populates="analyses", foreign_keys=[user_id])
     parcel = relationship("Parcel", back_populates="analyses")
 
     def __repr__(self):
@@ -149,7 +162,7 @@ class ChatMessage(Base):
     role       = Column(String(20), nullable=False)   # "user" | "assistant"
     content    = Column(Text, nullable=False)
     # Optional: link message to a disease analysis for context
-    analysis_id= Column(Integer, ForeignKey("disease_analyses.id"), nullable=True)
+    analysis_id= Column(Integer, ForeignKey("disease_analyses.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=utcnow)
 
     # Relationships

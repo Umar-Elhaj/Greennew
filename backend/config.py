@@ -16,11 +16,25 @@ ALGORITHM: str = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
 # ---- Database -----------------------------------------------
-# SQLite for local development — file stored at project root
+# Production: Supabase PostgreSQL (session pooler URI, see .env).
+# Fallback: SQLite for local development — file stored at project root
 DATABASE_URL: str = os.getenv(
     "DATABASE_URL",
     "sqlite:///" + os.path.join(os.path.dirname(__file__), '..', 'green.db')
 )
+# SQLAlchemy needs the "postgresql://" scheme (Supabase sometimes shows "postgres://")
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# ---- Media (Green Data images) ------------------------------
+# Analysed images are stored on the server disk, NOT in the database.
+# The DB keeps only the path relative to MEDIA_DIR (e.g. "2026/10/<uuid>.jpg").
+MEDIA_DIR: str = os.path.abspath(os.getenv(
+    "MEDIA_DIR",
+    os.path.join(os.path.dirname(__file__), '..', 'data', 'captures')
+))
+# Public URL prefix — under /api so the Vercel rewrite proxies it too
+MEDIA_URL_PREFIX: str = "/api/media"
 
 # ---- Gemini AI (GreenBot chatbot + camera disease research) --
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
@@ -43,6 +57,8 @@ MODEL_PATH: str = os.getenv(
     "MODEL_PATH",
     os.path.join(os.path.dirname(__file__), '..', 'Models', 'best_efficientnet.pth')
 )
+# Stored with every analysis so the dataset knows which model predicted what
+MODEL_VERSION: str = os.getenv("MODEL_VERSION", "efficientnet-v1")
 
 # ---- RAG ----------------------------------------------------
 RAG_CHUNKS_PATH: str = os.path.join(os.path.dirname(__file__), '..', 'rag', 'chunks.json')

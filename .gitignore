@@ -55,3 +55,7 @@ npm-debug.log
 # Uploads / captures
 frontend/assets/captures/
 uploads/
+
+# Green Data images (stored on the server, not in git)
+data/
+frontend/assets/captures/

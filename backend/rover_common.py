@@ -4,6 +4,7 @@
 # ============================================================
 
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -16,7 +17,10 @@ import httpx
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
-from config import DEFAULT_DRONE_IP, DEFAULT_DRONE_STREAM_PORT, DISEASES_DB_PATH
+from config import (
+    DEFAULT_DRONE_IP, DEFAULT_DRONE_STREAM_PORT, DISEASES_DB_PATH,
+    MEDIA_DIR, MEDIA_URL_PREFIX, MODEL_VERSION,
+)
 from inference import CLASS_FR_NAMES, predict
 from models import DiseaseAnalysis, User
 
@@ -24,10 +28,7 @@ logger = logging.getLogger(__name__)
 
 _executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="rover_inf")
 
-CAPTURES_DIR = os.path.join(
-    os.path.dirname(__file__), "..", "frontend", "assets", "captures"
-)
-os.makedirs(CAPTURES_DIR, exist_ok=True)
+os.makedirs(MEDIA_DIR, exist_ok=True)
 
 # Map EfficientNet class labels → diseases.json entry ids
 CLASS_TO_DISEASE_ID = {
@@ -104,12 +105,37 @@ async def grab_frame(ip: str, port: int = None) -> bytes:
     raise HTTPException(status_code=502, detail="No JPEG frame found in stream.")
 
 
-def save_capture(image_bytes: bytes, user_id: int) -> str:
-    filename = f"capture_{user_id}_{uuid.uuid4().hex[:8]}.jpg"
-    filepath = os.path.join(CAPTURES_DIR, filename)
+def save_capture(image_bytes: bytes) -> Tuple[str, str]:
+    """
+    Write the image under MEDIA_DIR/YYYY/MM/ and return
+    (relative path stored in DB, sha256 of the bytes).
+    """
+    now = datetime.utcnow()
+    rel_path = f"{now:%Y}/{now:%m}/{uuid.uuid4().hex}.jpg"
+    filepath = os.path.join(MEDIA_DIR, rel_path)
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
     with open(filepath, "wb") as f:
         f.write(image_bytes)
-    return f"/assets/captures/{filename}"
+    return rel_path, hashlib.sha256(image_bytes).hexdigest()
+
+
+def media_url(rel_path: Optional[str]) -> Optional[str]:
+    """Public URL of a stored image (what the frontend puts in <img src>)."""
+    if not rel_path:
+        return None
+    if rel_path.startswith("/"):   # legacy rows: "/assets/captures/..."
+        return rel_path
+    return f"{MEDIA_URL_PREFIX}/{rel_path}"
+
+
+def media_file(rel_path: Optional[str]) -> Optional[str]:
+    """Absolute path on disk of a stored image, or None if outside MEDIA_DIR."""
+    if not rel_path or rel_path.startswith("/"):
+        return None
+    filepath = os.path.abspath(os.path.join(MEDIA_DIR, rel_path))
+    if not filepath.startswith(MEDIA_DIR + os.sep):
+        return None
+    return filepath
 
 
 async def run_disease_model(image_bytes: bytes) -> dict:
@@ -206,6 +232,7 @@ def save_analysis(
     current_user: User,
     disease: dict,
     image_path: Optional[str],
+    image_sha256: Optional[str],
     source: str,
     parcel_id: Optional[int],
     latitude: Optional[float],
@@ -218,11 +245,15 @@ def save_analysis(
         parcel_id        = parcel_id,
         source           = source,
         image_path       = image_path,
+        image_sha256     = image_sha256,
         detected_disease = disease["detected_disease"],
         disease_name     = disease["disease_name"],
         confidence       = disease["confidence"],
         severity         = disease["severity"],
         plant_type       = disease["plant_type"],
+        predictions      = disease.get("top3"),
+        model_version    = MODEL_VERSION,
+        consent_dataset  = bool(current_user.dataset_consent),
         latitude         = latitude,
         longitude        = longitude,
         fiche_terrain    = fiche,
@@ -243,16 +274,17 @@ async def analyze_image_bytes(
     longitude: Optional[float] = None,
     save_image: bool = True,
 ) -> dict:
+    # Inference first: the image is only kept if the analysis succeeded
     disease = await run_disease_model(image_bytes)
-    image_path = save_capture(image_bytes, current_user.id) if save_image else None
+    image_path, image_sha256 = save_capture(image_bytes) if save_image else (None, None)
     analysis = save_analysis(
-        db, current_user, disease, image_path, source,
+        db, current_user, disease, image_path, image_sha256, source,
         parcel_id, latitude, longitude,
     )
     return {
         "success":       True,
         "analysis_id":   analysis.id,
-        "image_path":    image_path,
+        "image_path":    media_url(image_path),
         "disease":       disease,
         "fiche_terrain": analysis.fiche_terrain,
     }

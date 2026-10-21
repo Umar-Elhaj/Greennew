@@ -20,6 +20,7 @@ from database import get_db
 from models import User, DiseaseAnalysis, Parcel
 from auth import get_current_user
 from config import DISEASES_DB_PATH
+from rover_common import media_file, media_url
 
 router = APIRouter(prefix="/api/analysis", tags=["Disease Analysis"])
 
@@ -131,6 +132,7 @@ def get_history(
                 "parcel_id":        a.parcel_id,
                 "latitude":         a.latitude,
                 "longitude":        a.longitude,
+                "image_path":       media_url(a.image_path),
                 "created_at":       a.created_at.isoformat(),
                 "has_fiche":        a.fiche_terrain is not None,
             }
@@ -181,6 +183,7 @@ def get_analysis(
         "latitude":         analysis.latitude,
         "longitude":        analysis.longitude,
         "notes":            analysis.notes,
+        "image_path":       media_url(analysis.image_path),
         "created_at":       analysis.created_at.isoformat(),
         "fiche_terrain":    fiche,
     }
@@ -209,9 +212,10 @@ def delete_analysis(
         raise HTTPException(status_code=404, detail="Analysis not found.")
 
     # Remove saved image file if it exists
-    if analysis.image_path and os.path.exists(analysis.image_path):
+    image_file = media_file(analysis.image_path)
+    if image_file and os.path.exists(image_file):
         try:
-            os.remove(analysis.image_path)
+            os.remove(image_file)
         except OSError:
             pass  # Non-critical — proceed with DB deletion
 
