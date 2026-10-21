@@ -17,6 +17,7 @@ build/
 venv/
 env/
 .venv/
+greenvnv/
 *.pyc
 
 # ML Models (large binary files — store separately)

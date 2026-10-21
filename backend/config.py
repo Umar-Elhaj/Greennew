@@ -37,17 +37,6 @@ DEFAULT_DRONE_STREAM_PORT: int = int(os.getenv("DEFAULT_DRONE_STREAM_PORT", os.g
 DEFAULT_CAMERA_IP          = DEFAULT_DRONE_IP
 DEFAULT_CAMERA_PORT        = DEFAULT_DRONE_STREAM_PORT
 
-# ---- ESP32-CAM (GREEN-CAM firmware) -------------------------
-# IP de l'ESP32-CAM (fallback si mDNS échoue).
-# En production laisser vide et compter sur la découverte mDNS.
-ESP32_DEFAULT_IP: str = os.getenv("ESP32_DEFAULT_IP", DEFAULT_DRONE_IP)
-
-# Hostname mDNS déclaré dans le firmware GREEN_CAM
-ESP32_MDNS_HOST: str = os.getenv("ESP32_MDNS_HOST", "green-cam.local")
-
-# Désactive la découverte au démarrage (utile pour les tests sans ESP32)
-ESP32_DISCOVERY_ENABLED: bool = os.getenv("ESP32_DISCOVERY_ENABLED", "true").lower() == "true"
-
 # ---- Models -------------------------------------------------
 # Disease detection model (EfficientNet — cassava / maize / tomato)
 MODEL_PATH: str = os.getenv(
