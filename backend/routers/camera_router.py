@@ -1,10 +1,13 @@
 # ============================================================
 # GREEN App — Camera / Rover Router (MVP)
 #
-#   POST /api/camera/connect        → verify MJPEG stream reachable
-#   POST /api/camera/capture        → grab frame + disease inference
-#   POST /api/camera/analyze-frame  → analyse browser-captured frame
-#   POST /api/camera/upload         → analyse uploaded image file
+#   POST /api/camera/analyze-frame  → analyse a frame captured in the browser
+#   POST /api/camera/upload         → analyse an imported image file
+#   POST /api/camera/connect        → (local development only) check that the
+#   POST /api/camera/capture           server can reach the rover's MJPEG stream
+#                                       and grab a frame. A hosted server cannot
+#                                       reach the rover's private IP: production
+#                                       uses analyze-frame (store-and-forward).
 # ============================================================
 
 from typing import Optional
@@ -74,19 +77,20 @@ async def capture_from_stream(
     )
 
 
-@router.post("/analyze-frame", summary="Analyse a browser-captured JPEG frame")
+@router.post("/analyze-frame", summary="Analyse a frame captured in the browser (device camera or rover stream)")
 async def analyze_frame(
     request: Request,
     file: UploadFile = File(...),
+    source:    str             = Form("camera", pattern="^(camera|rover)$"),
     parcel_id: Optional[int]   = Form(None),
-    latitude:  Optional[float] = Form(None),
-    longitude: Optional[float] = Form(None),
+    latitude:  Optional[float] = Form(None, ge=-90, le=90),
+    longitude: Optional[float] = Form(None, ge=-180, le=180),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     image_bytes = await read_upload(file)
     return await analyze_image_bytes(
-        image_bytes, db, current_user, source="camera",
+        image_bytes, db, current_user, source=source,
         parcel_id=parcel_id, latitude=latitude, longitude=longitude,
         lang=request_lang(request),
     )
@@ -97,8 +101,8 @@ async def upload_and_analyze(
     request: Request,
     file: UploadFile = File(...),
     parcel_id: Optional[int]   = Form(None),
-    latitude:  Optional[float] = Form(None),
-    longitude: Optional[float] = Form(None),
+    latitude:  Optional[float] = Form(None, ge=-90, le=90),
+    longitude: Optional[float] = Form(None, ge=-180, le=180),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

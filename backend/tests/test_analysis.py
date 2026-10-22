@@ -70,3 +70,11 @@ def test_same_image_same_user_is_not_reanalysed(client, user, fake_model):
     assert a["analysis_id"] == b["analysis_id"]
     assert b["duplicate"] is True and a["duplicate"] is False
     assert len(fake_model) == 1
+
+
+def test_rover_source_and_coordinates_validated(client, user, fake_model):
+    r = _upload(client, user["headers"], data={"source": "rover"}, endpoint="/api/camera/analyze-frame")
+    assert r.status_code == 200
+    assert client.get("/api/analysis/history?source=rover", headers=user["headers"]).json()["total"] == 1
+    assert _upload(client, user["headers"], data={"source": "drone"}, endpoint="/api/camera/analyze-frame").status_code == 422
+    assert _upload(client, user["headers"], data={"latitude": "123"}).status_code == 422

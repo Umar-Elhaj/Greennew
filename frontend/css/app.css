@@ -785,3 +785,27 @@ body.sidebar-collapsed .app-main {
 .fiche-disclaimer { font-size: var(--text-xs); color: var(--text-muted); font-style: italic; margin: var(--sp-3) 0; }
 .fiche-meta { font-size: var(--text-xs); color: var(--text-muted); display: flex; gap: var(--sp-3); flex-wrap: wrap; padding-top: var(--sp-3); border-top: 1px solid var(--border-subtle); }
 .fiche-bot { margin-top: var(--sp-4); width: 100%; justify-content: center; }
+
+/* Banner buttons (dashboard, camera) */
+.btn-banner {
+      height: 40px;
+      padding: 0 var(--sp-5);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      cursor: pointer;
+      border: none;
+      transition: all var(--dur-base) var(--ease-out);
+    }
+.btn-banner-primary {
+      background: #ffffff;
+      color: var(--brand-darker);
+    }
+.btn-banner-primary:hover { background: rgba(255,255,255,0.90); transform: translateY(-1px); }
+.btn-banner-secondary {
+      background: rgba(255,255,255,0.12);
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.20);
+    }
+.btn-banner-secondary:hover { background: rgba(255,255,255,0.20); transform: translateY(-1px); }
+.btn-banner { text-decoration: none; display: inline-flex; align-items: center; gap: var(--sp-2); }

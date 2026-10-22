@@ -430,10 +430,10 @@
   font-size: 10px; font-weight: var(--weight-bold);
   text-transform: uppercase; letter-spacing: .06em;
 }
-.sev-tag.low    { background: rgba(46,204,113,.12);  color: var(--brand-primary); }
+.sev-tag.low    { background: rgba(59,130,246,.12);  color: var(--color-info); }
 .sev-tag.medium { background: rgba(245,158,11,.12);  color: #d97706; }
 .sev-tag.high   { background: rgba(239,68,68,.12);   color: var(--color-error); }
-.sev-tag.none   { background: var(--bg-subtle); color: var(--text-muted); }
+.sev-tag.none   { background: rgba(46,204,113,.12); color: var(--brand-primary); }
 
 /* Top-3 predictions */
 .top3 { margin-top: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); }

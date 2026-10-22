@@ -151,3 +151,38 @@ test('history: deep link, sheet in both languages, delete', async ({ page, reque
   await page.locator(`[data-del="${up.analysis_id}"]`).click();
   await expect(page.locator('#histEmptyText')).toContainText('No analysis yet');
 });
+
+test('camera: photos imported offline are queued, then sent when back online', async ({ page, context, request }) => {
+  const s = await newUser(request);
+  await signIn(page, s);
+  await page.goto('/camera');
+  await page.click('#tabPhotos');
+  await context.setOffline(true);
+  await page.setInputFiles('#uploadInput', [
+    { name: 'a.png', mimeType: 'image/png', buffer: solidPng('#30a040') },
+    { name: 'b.png', mimeType: 'image/png', buffer: solidPng('#a03040') },
+  ]);
+  await expect(page.locator('#queueStat')).toHaveText('2 images');
+  await expect(page.locator('#netLabel')).toHaveText('Hors ligne');
+  await expect(page.locator('.queue-item')).toHaveCount(2);
+  // the queue survives a reload (IndexedDB) — reload needs the network, so check the DB instead
+  const stored = await page.evaluate(() => UploadQueue.all().then((x: any[]) => x.length));
+  expect(stored).toBe(2);
+  await context.setOffline(false);
+  await expect(page.locator('#queueStat')).toHaveText('0 image', { timeout: 20000 });
+  await expect(page.locator('#resultBody')).toContainText('pas un diagnostic');
+  const hist = await request.get('/api/analysis/history', { headers: { Authorization: `Bearer ${s.token}` } });
+  expect((await hist.json()).total).toBe(2);
+});
+
+test('camera: an invalid file is rejected and listed, then deletable', async ({ page, request }) => {
+  const s = await newUser(request);
+  await signIn(page, s);
+  await page.goto('/camera');
+  await page.click('#tabPhotos');
+  await page.setInputFiles('#uploadInput', [{ name: 'fake.png', mimeType: 'image/png', buffer: Buffer.from('not an image') }]);
+  await expect(page.locator('.qi-status.failed')).toHaveText('Refusée', { timeout: 15000 });
+  await expect(page.locator('.qi-err')).toContainText("n'est pas une image valide");
+  await page.locator('.queue-item button').click();
+  await expect(page.locator('.queue-item')).toHaveCount(0);
+});

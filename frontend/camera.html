@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,1023 +18,622 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="stylesheet" href="/css/camera.css" />
   <link rel="stylesheet" href="/css/mobile.css" />
+  <style>
+    .ctx-box { display: flex; flex-direction: column; gap: var(--sp-3); padding-bottom: var(--sp-4); border-bottom: 1px solid var(--border-subtle); }
+    .check-row { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--text-sm); color: var(--text-secondary); cursor: pointer; }
+    .check-row input { width: 16px; height: 16px; accent-color: var(--brand-primary); }
+    .gps-info { font-size: var(--text-xs); color: var(--text-muted); }
+    .auto-row { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; font-size: var(--text-sm); color: var(--text-secondary); }
+    .auto-row select { width: auto; height: 32px; padding: 0 var(--sp-2); }
+    .warn-box { font-size: var(--text-xs); line-height: 1.5; padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-md);
+                background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.3); color: #92400E; }
+    [data-theme="dark"] .warn-box { color: #FCD34D; }
+    .err-box { font-size: var(--text-xs); line-height: 1.5; padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-md);
+               background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.2); color: var(--color-error); }
+    .queue-card { background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); }
+    .queue-card-hdr { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--border-subtle); }
+    .queue-card-hdr h3 { margin: 0; font-size: var(--text-base); }
+    .queue-list { list-style: none; margin: 0; padding: var(--sp-2) var(--sp-5); }
+    .queue-item { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-2) 0; border-bottom: 1px solid var(--border-subtle); font-size: var(--text-sm); }
+    .queue-item:last-child { border-bottom: none; }
+    .queue-item img { width: 44px; height: 44px; object-fit: cover; border-radius: var(--radius-sm, 6px); flex: none; background: var(--bg-muted); }
+    .queue-item .qi-main { flex: 1; min-width: 0; }
+    .queue-item .qi-status { font-size: var(--text-xs); font-weight: 600; }
+    .queue-item .qi-status.failed { color: var(--color-error); }
+    .queue-item .qi-status.pending { color: var(--color-warning); }
+    .queue-item .qi-err { font-size: var(--text-xs); color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .queue-empty { padding: var(--sp-4) var(--sp-5); font-size: var(--text-sm); color: var(--text-muted); }
+    .capture-btn { width: 100%; }
+    #resultBody .empty-state { padding: var(--sp-8) var(--sp-5); }
+  </style>
 </head>
 <body>
 <div class="app-layout" id="appLayout">
 <div class="app-main" id="appMain">
 <main class="app-content" id="appContent">
 
-  <!-- ══════════════════════════════════════════════════════════
-       BANNER
-       ══════════════════════════════════════════════════════════ -->
-  <div style="
+  <!-- ══ BANNER ══════════════════════════════════════════════ -->
+  <div class="page-banner" style="
     background: linear-gradient(135deg, var(--brand-darker) 0%, var(--brand-dark) 60%, var(--brand-mid) 100%);
-    border-radius: var(--radius-lg);
-    padding: var(--sp-8) var(--sp-8);
-    margin-bottom: var(--sp-6);
-    display: flex; align-items: center; justify-content: space-between;
+    border-radius: var(--radius-lg); padding: var(--sp-8); margin-bottom: var(--sp-6);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
     gap: var(--sp-6); overflow: hidden; position: relative;">
-    <!-- decorative circles -->
     <div style="position:absolute;width:260px;height:260px;background:rgba(255,255,255,.05);border-radius:50%;right:-40px;top:-80px;pointer-events:none;"></div>
-    <div style="position:absolute;width:140px;height:140px;background:rgba(255,255,255,.04);border-radius:50%;right:140px;bottom:-50px;pointer-events:none;"></div>
-
-    <div style="position:relative;z-index:1;">
-      <div style="display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-2);">
-        <div style="width:40px;height:40px;background:rgba(255,255,255,.15);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;">
-          <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-          </svg>
-        </div>
-        <span style="font-size:var(--text-xs);font-weight:var(--weight-semibold);text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.7);">AI Inspection</span>
-      </div>
-      <h2 style="font-size:var(--text-2xl);font-weight:var(--weight-extrabold);color:#fff;margin:0 0 var(--sp-2);letter-spacing:-.02em;">Rover Analysis</h2>
-      <p style="font-size:var(--text-sm);color:rgba(255,255,255,.8);margin:0;max-width:480px;line-height:var(--leading-relaxed);">
-        Connect to the rover camera, capture frames and detect plant diseases with the AI model in real time.
-      </p>
+    <div style="position:relative;z-index:1;min-width:0;">
+      <span style="font-size:var(--text-xs);font-weight:var(--weight-semibold);text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.7);" data-i18n="camera.banner_kicker"></span>
+      <h2 style="font-size:var(--text-2xl);font-weight:var(--weight-extrabold);color:#fff;margin:var(--sp-2) 0;letter-spacing:-.02em;" data-i18n="camera.banner_title"></h2>
+      <p style="font-size:var(--text-sm);color:rgba(255,255,255,.85);margin:0;max-width:560px;line-height:var(--leading-relaxed);" data-i18n="camera.banner_text"></p>
     </div>
-
-    <div class="banner-cta" style="display:flex;gap:var(--sp-3);flex-shrink:0;position:relative;z-index:1;">
-      <a href="/history" style="
-        display:flex;align-items:center;gap:var(--sp-2);
-        padding:var(--sp-3) var(--sp-5);
-        background:rgba(255,255,255,.12);
-        border:1px solid rgba(255,255,255,.22);
-        border-radius:var(--radius-md);
-        color:#fff;text-decoration:none;
-        font-size:var(--text-sm);font-weight:var(--weight-semibold);
-        transition:background var(--dur-base);"
-        onmouseover="this.style.background='rgba(255,255,255,.2)'"
-        onmouseout="this.style.background='rgba(255,255,255,.12)'">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        View History
-      </a>
-    </div>
+    <a href="/history" class="btn-banner btn-banner-secondary" style="position:relative;z-index:1;" data-i18n="camera.view_history"></a>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════
-       STATUS ROW (3 mini-KPIs)
-       ══════════════════════════════════════════════════════════ -->
+  <!-- ══ STATUS ROW ══════════════════════════════════════════ -->
   <div class="rover-status-row">
-
     <div class="rover-stat">
       <div class="rover-stat-icon kpi-icon-green">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-        </svg>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
       </div>
       <div>
-        <div class="rover-stat-label">Connection</div>
-        <div class="rover-stat-value" id="statConnection">
-          <span class="conn-dot off" id="connDot"></span>
-          <span id="connLabel">Offline</span>
-        </div>
+        <div class="rover-stat-label" data-i18n="camera.status.network"></div>
+        <div class="rover-stat-value"><span class="conn-dot off" id="netDot"></span> <span id="netLabel">—</span></div>
       </div>
     </div>
-
-    <div class="rover-stat">
-      <div class="rover-stat-icon kpi-icon-blue">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-        </svg>
-      </div>
-      <div>
-        <div class="rover-stat-label">Active mode</div>
-        <div class="rover-stat-value" id="statMode">IP Stream</div>
-      </div>
-    </div>
-
     <div class="rover-stat">
       <div class="rover-stat-icon kpi-icon-orange">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
       </div>
       <div>
-        <div class="rover-stat-label">Last analysis</div>
+        <div class="rover-stat-label" data-i18n="camera.status.queue"></div>
+        <div class="rover-stat-value" id="queueStat" aria-live="polite">—</div>
+      </div>
+    </div>
+    <div class="rover-stat">
+      <div class="rover-stat-icon kpi-icon-blue">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div>
+        <div class="rover-stat-label" data-i18n="camera.status.last"></div>
         <div class="rover-stat-value" id="statLast">—</div>
       </div>
     </div>
-
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════
-       MAIN GRID
-       ══════════════════════════════════════════════════════════ -->
+  <!-- ══ MAIN GRID ═══════════════════════════════════════════ -->
   <div class="rover-grid">
 
-    <!-- ════════════════════════════════
-         LEFT — Control Panel
-         ════════════════════════════════ -->
+    <!-- LEFT — capture controls -->
     <aside class="control-panel">
-
-      <div class="control-panel-header">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <rect x="2" y="7" width="20" height="15" rx="2"/>
-          <polyline points="17 2 12 7 7 2"/>
-        </svg>
-        <h3>Camera Control</h3>
-      </div>
-
+      <div class="control-panel-header"><h3 data-i18n="camera.panel_title"></h3></div>
       <div class="control-panel-body">
+
+        <!-- Context attached to every capture -->
+        <div class="ctx-box">
+          <div>
+            <label class="f-lbl" for="parcelSelect" data-i18n="camera.parcel"></label>
+            <select id="parcelSelect" class="device-select">
+              <option value="" data-i18n="camera.no_parcel"></option>
+            </select>
+          </div>
+          <label class="check-row"><input type="checkbox" id="gpsToggle" /> <span data-i18n="camera.attach_gps"></span></label>
+          <div class="gps-info" id="gpsInfo"></div>
+        </div>
 
         <!-- Mode selector -->
         <div>
-          <label class="f-lbl">Acquisition mode</label>
-          <div class="mode-tabs">
-            <button class="mode-tab active" id="tabStream"  onclick="switchMode('stream')">IP Stream</button>
-            <button class="mode-tab"        id="tabCamera"  onclick="switchMode('camera')">Camera</button>
-            <button class="mode-tab"        id="tabUpload"  onclick="switchMode('upload')">Upload</button>
+          <span class="f-lbl" data-i18n="camera.mode_label"></span>
+          <div class="mode-tabs" role="tablist">
+            <button type="button" class="mode-tab active" id="tabDevice" data-mode="device" role="tab" data-i18n="camera.modes.device"></button>
+            <button type="button" class="mode-tab" id="tabPhotos" data-mode="photos" role="tab" data-i18n="camera.modes.photos"></button>
+            <button type="button" class="mode-tab" id="tabRover" data-mode="rover" role="tab" data-i18n="camera.modes.rover"></button>
           </div>
         </div>
 
-        <!-- ── IP STREAM ─────────────────────────── -->
-        <div id="sectionStream">
-          <div style="margin-bottom:var(--sp-3);">
-            <label class="f-lbl">Rover IP address</label>
-            <div class="ip-row">
-              <input type="text" id="camIp" class="form-input" placeholder="192.168.10.1" value="192.168.10.1"
-                     style="font-family:var(--font-mono);" />
-              <input type="number" id="camPort" class="form-input port-input" placeholder="8080" value="8080" />
-            </div>
-            <div class="field-error" id="connectErr"></div>
-          </div>
-
-          <div class="camera-note" style="margin-bottom:var(--sp-3);">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Connect this machine to the rover's Wi-Fi hotspot. The rover streams MJPEG over that hotspot; the browser renders the live feed directly and AI inference runs in the web app.
-          </div>
-
-          <div style="display:flex;flex-direction:column;gap:var(--sp-2);">
-            <button class="connect-btn primary" id="connectBtn" onclick="connectStream()">
-              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
-              Connect
-            </button>
-            <button class="connect-btn" id="disconnectBtn" onclick="disconnectStream()" style="display:none;">
-              Disconnect
-            </button>
-          </div>
-        </div>
-
-        <!-- ── EXTERNAL CAMERA ───────────────────── -->
-        <div id="sectionCamera" style="display:none;">
-
-          <!-- Permission denied warning (hidden by default) -->
-          <div id="camPermDenied" style="display:none;
-               background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);
-               border-radius:var(--radius-md);padding:var(--sp-3) var(--sp-4);
-               margin-bottom:var(--sp-3);font-size:var(--text-xs);color:var(--color-error);
-               line-height:1.5;">
-            <strong>Camera access blocked.</strong><br>
-            Click the lock or camera icon in your browser's address bar → allow camera access for this site, then click <em>Request Permission</em> again.
-          </div>
-
-          <div class="camera-note" style="margin-bottom:var(--sp-3);">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Select the external camera connected to this device (USB, Bluetooth, or network adapter appearing as a video input).
-          </div>
-
-          <div style="margin-bottom:var(--sp-3);">
-            <label class="f-lbl">Video device</label>
+        <!-- DEVICE CAMERA -->
+        <div id="sectionDevice" class="mode-section" style="display:flex;flex-direction:column;gap:var(--sp-3);">
+          <div class="camera-note" data-i18n="camera.device.note"></div>
+          <div id="camError" class="err-box" style="display:none;" role="alert"></div>
+          <div>
+            <label class="f-lbl" for="deviceSelect" data-i18n="camera.device.select"></label>
             <div class="device-row">
-              <select class="device-select" id="deviceSelect">
-                <option value="">— Click "Request Permission" first —</option>
-              </select>
-              <button class="cam-btn" id="refreshDevBtn" onclick="requestCameraPermission()"
-                      title="Request camera permission and refresh list">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-              </button>
+              <select class="device-select" id="deviceSelect"></select>
             </div>
           </div>
-
-          <div style="display:flex;flex-direction:column;gap:var(--sp-2);">
-            <button class="cam-btn primary" id="startCamBtn" onclick="startCamera()">
-              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-              Start Camera
-            </button>
-            <button class="cam-btn" id="stopCamBtn" onclick="stopCamera()" style="display:none;">
-              Stop Camera
-            </button>
-          </div>
+          <button type="button" class="cam-btn connect-btn" id="permBtn" data-i18n="camera.device.permission"></button>
+          <button type="button" class="connect-btn primary" id="startCamBtn" data-i18n="camera.device.start"></button>
+          <button type="button" class="connect-btn" id="stopCamBtn" style="display:none;" data-i18n="camera.device.stop"></button>
         </div>
 
-        <!-- ── UPLOAD ────────────────────────────── -->
-        <div id="sectionUpload" style="display:none;">
-          <div class="upload-zone" id="uploadZone"
-               ondragover="event.preventDefault();this.classList.add('drag-over')"
-               ondragleave="this.classList.remove('drag-over')"
-               ondrop="handleDrop(event)">
-            <input type="file" id="uploadInput" accept="image/*" onchange="handleFile(event)" />
-            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-              <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
-              <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-            </svg>
-            <p>Click or drag an image here</p>
-            <p class="up-hint">JPG · PNG · max 10 MB</p>
-          </div>
-          <img id="uploadThumb" class="upload-thumb" alt="preview" />
+        <!-- PHOTOS -->
+        <div id="sectionPhotos" class="mode-section" style="display:none;">
+          <label class="upload-zone" id="uploadZone">
+            <input type="file" id="uploadInput" accept="image/jpeg,image/png,image/webp" multiple />
+            <p data-i18n="camera.photos.drop"></p>
+            <p class="up-hint" data-i18n="camera.photos.hint"></p>
+          </label>
         </div>
 
-        <!-- Auto-analysis status indicator -->
-        <div id="autoStatus" style="display:none;border-top:1px solid var(--border-subtle);
-             padding-top:var(--sp-4);margin-top:var(--sp-1);">
-          <div style="display:flex;align-items:center;gap:var(--sp-2);
-               font-size:var(--text-xs);color:var(--brand-primary);font-weight:var(--weight-semibold);">
-            <span class="conn-dot on" style="flex-shrink:0;"></span>
-            Analyse en temps réel active
+        <!-- ROVER STREAM -->
+        <div id="sectionRover" class="mode-section" style="display:none;flex-direction:column;gap:var(--sp-3);">
+          <div class="warn-box" id="httpsWarning" style="display:none;" data-i18n="camera.rover.https_warning"></div>
+          <div class="camera-note" data-i18n="camera.rover.note"></div>
+          <div>
+            <label class="f-lbl" for="camIp" data-i18n="camera.rover.ip"></label>
+            <div class="ip-row">
+              <input type="text" id="camIp" class="form-input" inputmode="decimal" placeholder="192.168.10.1" style="font-family:var(--font-mono);" />
+              <input type="number" id="camPort" class="form-input port-input" placeholder="8080" min="1" max="65535" />
+            </div>
           </div>
+          <div id="roverError" class="err-box" style="display:none;" role="alert"></div>
+          <button type="button" class="connect-btn primary" id="startRoverBtn" data-i18n="camera.rover.start"></button>
+          <button type="button" class="connect-btn" id="stopRoverBtn" style="display:none;" data-i18n="camera.rover.stop"></button>
+        </div>
+
+        <!-- Capture (device camera and rover) -->
+        <div id="captureBox" style="display:none;flex-direction:column;gap:var(--sp-3);border-top:1px solid var(--border-subtle);padding-top:var(--sp-4);">
+          <button type="button" class="connect-btn primary capture-btn" id="captureBtn" data-i18n="camera.capture"></button>
+          <label class="auto-row">
+            <input type="checkbox" id="autoToggle" />
+            <span data-i18n="camera.auto"></span>
+            <select id="autoInterval" class="form-input">
+              <option value="10"></option><option value="20"></option><option value="30" selected></option><option value="60"></option>
+            </select>
+          </label>
         </div>
 
       </div>
-    </aside><!-- /control-panel -->
+    </aside>
 
-    <!-- ════════════════════════════════
-         RIGHT — Viewer + Results
-         ════════════════════════════════ -->
+    <!-- RIGHT — preview, result, local queue -->
     <section class="viewer-panel">
 
-      <!-- Live feed card -->
       <div class="feed-card">
         <div class="feed-card-header">
-          <h3>
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>
-            </svg>
-            Live Feed
-          </h3>
-          <span class="live-badge hidden" id="liveBadge">
-            <span class="rec-dot"></span> LIVE
-          </span>
+          <h3 data-i18n="camera.viewer"></h3>
+          <span class="live-badge hidden" id="liveBadge"><span class="rec-dot"></span> <span data-i18n="camera.live"></span></span>
         </div>
-
         <div class="viewport" id="viewport">
-          <!-- Placeholder -->
-          <div class="vp-placeholder" id="vpPlaceholder">
-            <svg width="72" height="72" fill="none" stroke="currentColor" stroke-width=".8" viewBox="0 0 24 24">
-              <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>
-            </svg>
-            <p id="vpHint">Select a mode and connect to see the feed</p>
-            <div class="vp-stream-url" id="vpStreamUrl"></div>
-          </div>
-          <!-- Streams -->
-          <img  class="stream-img"  id="streamImg" alt="rover stream" onerror="onStreamError()" />
-          <video class="cam-video"  id="camVideo"  autoplay playsinline muted></video>
+          <div class="vp-placeholder" id="vpPlaceholder"><p id="vpHint"></p></div>
+          <img class="stream-img" id="streamImg" alt="" crossorigin="anonymous" />
+          <video class="cam-video" id="camVideo" autoplay playsinline muted></video>
           <canvas class="capture-canvas" id="captureCanvas"></canvas>
-          <!-- Analysing overlay -->
-          <div class="analysing-overlay" id="analysingOverlay">
-            <div class="spin-ring"></div>
-            <span>Analysing frame…</span>
-          </div>
+          <div class="analysing-overlay" id="analysingOverlay"><div class="spin-ring"></div><span data-i18n="camera.sending"></span></div>
         </div>
       </div>
 
-      <!-- Results card (hidden until first analysis) -->
-      <div class="results-card" id="resultsCard">
+      <div class="results-card" id="resultsCard" style="display:block;">
         <div class="results-card-header">
-          <h3>
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-            </svg>
-            Fiche Terrain
-          </h3>
-          <a href="/history" style="font-size:var(--text-xs);color:var(--brand-primary);font-weight:var(--weight-semibold);text-decoration:none;">
-            Voir dans l'historique →
-          </a>
+          <h3 data-i18n="camera.result_title"></h3>
+          <a href="/history" id="resultHistoryLink" style="font-size:var(--text-xs);color:var(--brand-primary);font-weight:var(--weight-semibold);text-decoration:none;" data-i18n="camera.view_history"></a>
         </div>
-
-        <!-- ══ LOW-CONFIDENCE WARNING ════════════════════════════ -->
-        <div id="lowConfWarning" style="display:none;
-             background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.3);
-             border-radius:var(--radius-md);padding:var(--sp-3) var(--sp-4);
-             margin-bottom:var(--sp-3);
-             display:flex;align-items:center;gap:var(--sp-2);
-             font-size:var(--text-xs);color:rgb(180,110,0);line-height:1.5;">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-               viewBox="0 0 24 24" style="flex-shrink:0;">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          <span id="lowConfText">Confiance faible — résultat indicatif, prenez une photo sous meilleur éclairage.</span>
+        <div id="resultBody" aria-live="polite">
+          <div class="empty-state"><p data-i18n="camera.result_empty"></p></div>
         </div>
+      </div>
 
-        <!-- ══ WINNER BANNER ══════════════════════════════════════ -->
-        <div id="winnerBanner" style="display:none;
-             border-radius:var(--radius-md);padding:var(--sp-4) var(--sp-5);
-             margin-bottom:var(--sp-4);border:1px solid;">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-3);">
-            <div style="display:flex;align-items:center;gap:var(--sp-3);">
-              <div id="winnerIco" style="width:48px;height:48px;border-radius:var(--radius-md);
-                   display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
-              <div>
-                <div style="font-size:var(--text-xs);font-weight:var(--weight-semibold);text-transform:uppercase;letter-spacing:.07em;opacity:.7;" id="winnerLabel">Résultat</div>
-                <div style="font-size:var(--text-lg);font-weight:var(--weight-bold);line-height:1.2;" id="winnerName">—</div>
-                <div style="font-size:var(--text-sm);opacity:.8;margin-top:2px;" id="winnerSub">—</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:var(--sp-3);">
-              <div style="text-align:right;">
-                <div style="font-size:var(--text-2xl);font-weight:var(--weight-extrabold);line-height:1;" id="winnerConf">—</div>
-                <div style="font-size:var(--text-xs);opacity:.7;">confiance</div>
-              </div>
-              <span class="sev-tag none" id="winnerSev" style="flex-shrink:0;">—</span>
-            </div>
-          </div>
+      <div class="queue-card">
+        <div class="queue-card-hdr">
+          <h3 data-i18n="camera.queue.title"></h3>
+          <button type="button" class="btn" id="retryAllBtn" style="display:none;font-size:var(--text-sm);" data-i18n="camera.queue.retry_all"></button>
         </div>
+        <ul class="queue-list" id="queueList"></ul>
+        <div class="queue-empty" id="queueEmpty" data-i18n="camera.queue.empty"></div>
+      </div>
 
-        <!-- ══ CHARACTERISTICS ═══════════════════════════════════ -->
-        <div id="charSection" style="display:none;margin-bottom:var(--sp-4);">
-          <div style="font-size:var(--text-xs);font-weight:var(--weight-semibold);text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:var(--sp-2);">Caractéristiques</div>
-          <p id="charText" style="font-size:var(--text-sm);color:var(--text-secondary);line-height:var(--leading-relaxed);margin:0;background:var(--surface-2);border-radius:var(--radius-md);padding:var(--sp-3) var(--sp-4);"></p>
-        </div>
+    </section>
 
-        <!-- ══ RECOMMENDATIONS ═══════════════════════════════════ -->
-        <div id="recoSection" style="display:none;margin-bottom:var(--sp-4);">
-          <div style="font-size:var(--text-xs);font-weight:var(--weight-semibold);text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:var(--sp-2);">Premières recommandations</div>
-          <ul id="recoList" style="margin:0;padding-left:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-2);"></ul>
-        </div>
-
-        <!-- ══ UNRECOGNIZED STATE ════════════════════════════════ -->
-        <div id="unrecognizedSection" style="display:none;
-             text-align:center;padding:var(--sp-8) var(--sp-6);">
-          <div style="width:56px;height:56px;border-radius:50%;
-               background:rgba(107,114,128,.1);display:inline-flex;
-               align-items:center;justify-content:center;color:var(--text-muted);
-               margin-bottom:var(--sp-4);">
-            <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-              <path d="M3 3l18 18"/><path d="M21 15V5a2 2 0 0 0-2-2H9"/>
-              <path d="M3 9v10a2 2 0 0 0 2 2h10"/>
-            </svg>
-          </div>
-          <div style="font-size:var(--text-base);font-weight:var(--weight-semibold);
-               color:var(--text-primary);margin-bottom:var(--sp-2);">Image non reconnue</div>
-          <div style="font-size:var(--text-sm);color:var(--text-muted);
-               line-height:var(--leading-relaxed);max-width:280px;margin:0 auto;">
-            Niveau de confiance insuffisant (&lt;70 %).
-            Veuillez prendre une nouvelle image sous un meilleur angle ou éclairage.
-          </div>
-        </div>
-
-        <!-- ══ GREENBOT BUTTON ═══════════════════════════════════ -->
-        <div id="greenbotSection" style="display:none;
-             border-top:1px solid var(--border-subtle);padding-top:var(--sp-4);">
-          <a id="greenbotBtn" href="/chatbot"
-             style="display:flex;align-items:center;justify-content:center;gap:var(--sp-3);
-                    width:100%;padding:var(--sp-3) var(--sp-5);
-                    background:linear-gradient(135deg,var(--brand-dark),var(--brand-mid));
-                    border:none;border-radius:var(--radius-md);
-                    color:#fff;font-size:var(--text-sm);font-weight:var(--weight-semibold);
-                    text-decoration:none;cursor:pointer;
-                    transition:opacity var(--dur-base);"
-             onmouseover="this.style.opacity='.88'"
-             onmouseout="this.style.opacity='1'">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              <circle cx="9"  cy="10" r="1" fill="currentColor" stroke="none"/>
-              <circle cx="12" cy="10" r="1" fill="currentColor" stroke="none"/>
-              <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/>
-            </svg>
-            Consulter GreenBot pour un diagnostic approfondi
-          </a>
-        </div>
-
-        <!-- Captured frame -->
-        <div class="thumb-section" id="thumbSection" style="display:none;margin-top:var(--sp-4);">
-          <div style="font-size:var(--text-xs);font-weight:var(--weight-semibold);color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:var(--sp-2);">Image capturée</div>
-          <canvas id="thumbCanvas" style="max-width:100%;border-radius:var(--radius-md);display:block;"></canvas>
-        </div>
-
-      </div><!-- /results-card -->
-
-    </section><!-- /viewer-panel -->
-
-
-    <!-- ════════════════════════════════
-         FULL WIDTH — Recent analyses
-         ════════════════════════════════ -->
+    <!-- FULL WIDTH — recent analyses -->
     <div class="recent-section">
       <div class="recent-section-hdr">
-        <h3>Recent Analyses</h3>
-        <a href="/history" style="font-size:var(--text-xs);color:var(--brand-primary);font-weight:var(--weight-semibold);text-decoration:none;">View all →</a>
+        <h3 data-i18n="camera.recent"></h3>
+        <a href="/history" style="font-size:var(--text-xs);color:var(--brand-primary);font-weight:var(--weight-semibold);text-decoration:none;"><span data-i18n="common.actions.view_all"></span> →</a>
       </div>
-
-      <div class="rv-tbl-scroll">
+      <div class="rv-tbl-scroll table-scroll">
         <table class="rv-tbl" id="recentTbl" style="display:none;">
           <thead>
             <tr>
-              <th>Disease detected</th>
-              <th>Plant</th>
-              <th>Confidence</th>
-              <th>Severity</th>
-              <th>Source</th>
-              <th>Date</th>
+              <th data-i18n="history.col_result"></th>
+              <th data-i18n="history.col_plant"></th>
+              <th data-i18n="history.col_confidence"></th>
+              <th data-i18n="history.col_alert"></th>
+              <th data-i18n="history.col_source"></th>
+              <th data-i18n="history.col_date"></th>
             </tr>
           </thead>
           <tbody id="recentBody"></tbody>
         </table>
       </div>
-
-      <div id="recentEmpty" class="empty-state" style="padding:var(--sp-12) var(--sp-8);">
-        <div class="empty-state-icon">
-          <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </div>
-        <p class="empty-state-title" style="font-size:var(--text-base);">No analyses yet</p>
-        <p class="empty-state-description">Connect a camera or upload an image — analysis starts automatically.</p>
-      </div>
+      <div id="recentEmpty" class="empty-state" style="padding:var(--sp-8);"><p data-i18n="camera.recent_empty"></p></div>
     </div>
 
   </div><!-- /rover-grid -->
 
 </main>
-</div><!-- /app-main -->
-</div><!-- /app-layout -->
+</div>
+</div>
 
-<!-- ════════════════════════════════════════════════════════════
-     SCRIPTS
-     ════════════════════════════════════════════════════════════ -->
 <script src="/js/utils.js"></script>
-<script src="/js/api.js?v=2"></script>
+<script src="/js/api.js"></script>
 <script src="/js/app.js"></script>
 <script src="/js/layout.js"></script>
-
+<script src="/js/fiche.js"></script>
+<script src="/js/upload-queue.js"></script>
 <script>
 /* ============================================================
-   Rover Analysis — Page Controller
+   Camera analysis — page controller
+   Every capture goes through UploadQueue (IndexedDB): it is kept on the
+   device and sent when the network allows (prémisse P1-a).
    ============================================================ */
+Layout.init({ page: 'camera', titleKey: 'nav.camera', subtitleKey: 'camera.subtitle' });
 
-// ---- State -------------------------------------------------
+const $ = id => document.getElementById(id);
 const S = {
-  mode:        'stream',
-  connected:   false,
-  streamUrl:   null,
-  mediaStream: null,
-  uploadFile:  null,
-  deviceId:    null,
+  mode: 'device',
+  stream: null,          // MediaStream of the device camera
+  roverOn: false,
+  autoTimer: null,
+  position: null,        // last GeolocationPosition
+  watchId: null,
+  lastResult: null,      // last analysis (for re-render)
+  recent: null,
 };
+const objectUrls = new Map();   // queue item id → preview URL
 
-// Auto-analysis loop state
-let _autoInterval  = null;
-let _analysisLock  = false;
-const AUTO_MS      = 8000;   // analyse every 8 s when live (avoids API rate limits)
+document.addEventListener('DOMContentLoaded', () => {
+  let ip = null, port = null;
+  try { ip = localStorage.getItem('green_pref_default_ip'); port = localStorage.getItem('green_pref_default_port'); } catch (_) {}
+  $('camIp').value = ip || '192.168.10.1';
+  $('camPort').value = port || '8080';
+  $('httpsWarning').style.display = location.protocol === 'https:' ? '' : 'none';
 
-// ---- Shortcuts -----
-const $  = id => document.getElementById(id);
-const _  = (id, txt) => { if ($(id)) $(id).textContent = txt; };
+  document.querySelectorAll('.mode-tab').forEach(b => b.addEventListener('click', () => switchMode(b.dataset.mode)));
+  $('permBtn').addEventListener('click', requestCameraPermission);
+  $('startCamBtn').addEventListener('click', startCamera);
+  $('stopCamBtn').addEventListener('click', stopCamera);
+  $('startRoverBtn').addEventListener('click', startRover);
+  $('stopRoverBtn').addEventListener('click', stopRover);
+  $('captureBtn').addEventListener('click', captureFrame);
+  $('autoToggle').addEventListener('change', updateAuto);
+  $('autoInterval').addEventListener('change', updateAuto);
+  $('gpsToggle').addEventListener('change', toggleGps);
+  $('uploadInput').addEventListener('change', e => queueFiles(e.target.files));
+  $('retryAllBtn').addEventListener('click', () => UploadQueue.retryFailed());
+  const zone = $('uploadZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); queueFiles(e.dataTransfer.files); });
 
-// ============================================================
-// INIT
-// ============================================================
-document.addEventListener('DOMContentLoaded', async () => {
-  App.boot();
-  Layout.init({ page: 'camera', title: 'Rover Analysis', subtitle: 'Disease detection' });
-  $('camIp').value   = localStorage.getItem('green_pref_default_ip')   || '192.168.10.1';
-  $('camPort').value = localStorage.getItem('green_pref_default_port') || '8080';
+  UploadQueue.on('changed', renderQueue);
+  UploadQueue.on('sending', () => $('analysingOverlay').classList.add('active'));
+  UploadQueue.on('uploaded', ({ response }) => {
+    $('analysingOverlay').classList.remove('active');
+    S.lastResult = Fiche.fromUpload(response);
+    renderResult();
+    $('statLast').textContent = I18n.dateTime(new Date());
+    loadRecent();
+  });
+  UploadQueue.on('retry', () => $('analysingOverlay').classList.remove('active'));
+  UploadQueue.on('failed', item => {
+    $('analysingOverlay').classList.remove('active');
+    App.toast(item.last_error || I18n.t('common.errors.generic'), 'error');
+  });
+  window.addEventListener('online', renderNetwork);
+  window.addEventListener('offline', renderNetwork);
+
+  renderStatic();
+  renderNetwork();
+  renderQueue();
+  switchMode('device');
+  loadParcels();
+  listDevices();
   loadRecent();
-  enumerateDevices();
+  UploadQueue.process();
 });
 
-// ============================================================
-// AUTO-ANALYSIS LOOP
-// ============================================================
-function startAutoAnalysis() {
-  if (_autoInterval) return;
-  _analysisLock = false;
-  $('autoStatus').style.display = '';
-  analyse();                                      // immediate first capture
-  _autoInterval = setInterval(() => {
-    if (!_analysisLock) analyse();
-  }, AUTO_MS);
+window.addEventListener('languageChanged', () => {
+  renderStatic();
+  renderNetwork();
+  renderQueue();
+  renderResult();
+  renderRecent();
+  renderGps();
+  $('vpHint').textContent = I18n.t(`camera.vp_hint.${S.mode}`);
+});
+
+/* ---- Static labels built in JS ------------------------------ */
+function renderStatic() {
+  [...$('autoInterval').options].forEach(o => { o.textContent = I18n.t('camera.seconds', { n: o.value }); });
+  const sel = $('deviceSelect');
+  if (!sel.options.length || !sel.value) {
+    [...sel.options].forEach((o, i) => { if (!o.dataset.label) o.textContent = I18n.t('camera.device.default_label', { n: i + 1 }); });
+  }
 }
 
-function stopAutoAnalysis() {
-  if (_autoInterval) { clearInterval(_autoInterval); _autoInterval = null; }
-  _analysisLock = false;
-  $('autoStatus').style.display = 'none';
+/* ---- Network & queue status --------------------------------- */
+function renderNetwork() {
+  $('netDot').className = `conn-dot ${navigator.onLine ? 'on' : 'off'}`;
+  $('netLabel').textContent = I18n.t(navigator.onLine ? 'camera.status.online' : 'camera.status.offline');
 }
 
-// ============================================================
-// MODE SWITCH
-// ============================================================
-function switchMode(m) {
-  S.mode = m;
-  const modeLabels = { stream: 'IP Stream', camera: 'Connected Camera', upload: 'Upload' };
-  _('statMode', modeLabels[m]);
+async function renderQueue() {
+  let items = [];
+  try { items = await UploadQueue.all(); } catch (_) { /* IndexedDB unavailable */ }
+  const pending = items.filter(i => i.status === 'pending').length;
+  const failed = items.filter(i => i.status === 'failed').length;
+  $('queueStat').textContent = I18n.t('camera.status.queue_value', { count: pending })
+    + (failed ? ` · ${I18n.t('camera.status.queue_failed', { count: failed })}` : '');
+  $('retryAllBtn').style.display = items.length ? '' : 'none';
+  $('queueEmpty').style.display = items.length ? 'none' : '';
 
-  ['stream','camera','upload'].forEach(t => {
-    const cap = t.charAt(0).toUpperCase() + t.slice(1);
-    $('tab'    + cap).classList.toggle('active', t === m);
-    $('section'+ cap).style.display = t === m ? '' : 'none';
+  // free previews of items that are gone
+  for (const [id, url] of objectUrls) {
+    if (!items.some(i => i.id === id)) { URL.revokeObjectURL(url); objectUrls.delete(id); }
+  }
+  const list = $('queueList');
+  list.innerHTML = '';
+  items.sort((a, b) => a.created - b.created).forEach(item => {
+    if (!objectUrls.has(item.id)) objectUrls.set(item.id, URL.createObjectURL(item.blob));
+    const li = document.createElement('li');
+    li.className = 'queue-item';
+    li.innerHTML = `
+      <img src="${objectUrls.get(item.id)}" alt="" />
+      <div class="qi-main">
+        <div class="qi-status ${item.status}">${escapeHtml(I18n.t(`camera.queue.${item.status}`))}</div>
+        <div class="qi-err">${escapeHtml(item.status === 'failed' && item.last_error ? item.last_error
+          : I18n.t('camera.queue.captured_at', { date: I18n.dateTime(item.meta.captured_at) }))}</div>
+      </div>
+      <button type="button" class="btn" style="font-size:var(--text-xs);">${escapeHtml(I18n.t('camera.queue.delete'))}</button>`;
+    li.querySelector('button').addEventListener('click', () => UploadQueue.remove(item.id));
+    list.appendChild(li);
   });
-
-  const hints = {
-    stream: 'Enter the rover IP and click Connect',
-    camera: 'Start the external camera to preview',
-    upload: 'Upload an image to preview',
-  };
-  _('vpHint', hints[m]);
 }
 
-// ============================================================
-// MODE A — IP STREAM
-// ============================================================
-async function connectStream() {
-  const ip   = $('camIp').value.trim();
-  const port = $('camPort').value.trim() || '8080';
-  if (!ip) return;
+/* ---- Context: parcel + GPS ----------------------------------- */
+async function loadParcels() {
+  const { data } = await API.parcels.list();
+  const sel = $('parcelSelect');
+  (Array.isArray(data) ? data : []).forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id;
+    o.textContent = p.name;
+    sel.appendChild(o);
+  });
+  const wanted = new URLSearchParams(location.search).get('parcel_id');
+  if (wanted) sel.value = wanted;
+}
 
-  _setConn('checking', 'Connecting…');
-  $('connectBtn').disabled = true;
-  $('connectErr').style.display = 'none';
-
-  const { data, error } = await API.camera.connect(ip, port);
-  $('connectBtn').disabled = false;
-
-  if (error) {
-    _setConn('off', 'Offline');
-    $('connectErr').textContent = error;
-    $('connectErr').style.display = 'block';
-    return;
+function toggleGps() {
+  if ($('gpsToggle').checked && navigator.geolocation) {
+    S.watchId = navigator.geolocation.watchPosition(
+      pos => { S.position = pos; renderGps(); },
+      () => { S.position = null; renderGps(true); },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
+  } else {
+    if (S.watchId !== null) navigator.geolocation.clearWatch(S.watchId);
+    S.watchId = null;
+    S.position = null;
+    renderGps();
   }
-
-  S.connected = true;
-  S.streamUrl = data.stream_url;
-  _setConn('on', `${ip}:${port}`);
-
-  $('connectBtn').style.display    = 'none';
-  $('disconnectBtn').style.display = '';
-  $('liveBadge').classList.remove('hidden');
-
-  $('vpPlaceholder').style.display = 'none';
-  $('streamImg').style.display     = 'block';
-  $('streamImg').src               = S.streamUrl + '?t=' + Date.now();
-  _('vpStreamUrl', S.streamUrl);
-
-  startAutoAnalysis();
 }
 
-function disconnectStream() {
-  stopAutoAnalysis();
-  S.connected = false;
-  S.streamUrl = null;
-  $('streamImg').src               = '';
-  $('streamImg').style.display     = 'none';
-  $('vpPlaceholder').style.display = 'flex';
-  _('vpHint', 'Enter the rover IP and click Connect');
-  _setConn('off', 'Offline');
-  $('connectBtn').style.display    = '';
-  $('disconnectBtn').style.display = 'none';
-  $('liveBadge').classList.add('hidden');
+function renderGps(failed) {
+  const el = $('gpsInfo');
+  if (!$('gpsToggle').checked) { el.textContent = ''; return; }
+  if (S.position) el.textContent = I18n.t('camera.gps_accuracy', { m: Math.round(S.position.coords.accuracy) });
+  else el.textContent = failed ? I18n.t('camera.gps_unavailable') : I18n.t('common.loading');
 }
 
-function onStreamError() {
-  if (!S.connected) return;
-  stopAutoAnalysis();
-  S.connected = false;
-  $('streamImg').style.display     = 'none';
-  $('vpPlaceholder').style.display = 'flex';
-  $('liveBadge').classList.add('hidden');
-  _('vpHint', 'Stream lost. Check rover connection and try reconnecting.');
-  _setConn('off', 'Stream lost');
-}
-
-// ============================================================
-// MODE B — EXTERNAL CAMERA (getUserMedia with device selection)
-// ============================================================
-
-/**
- * Explicitly request camera permission, then populate the device list.
- * Must be triggered by a user gesture (button click) so browsers allow it.
- */
-async function requestCameraPermission() {
-  const permEl  = $('camPermDenied');
-  const sel     = $('deviceSelect');
-  const btn     = $('refreshDevBtn');
-
-  permEl.style.display = 'none';
-  btn.disabled = true;
-  sel.innerHTML = '<option>Requesting permission…</option>';
-
-  let tempStream = null;
-  try {
-    // Ask for any video device — triggers the browser permission popup
-    tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-  } catch (err) {
-    btn.disabled = false;
-    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-      permEl.style.display = 'block';
-      sel.innerHTML = '<option value="">— Permission denied —</option>';
-    } else if (err.name === 'NotFoundError') {
-      sel.innerHTML = '<option value="">— No camera hardware found —</option>';
-    } else {
-      sel.innerHTML = `<option value="">— Error: ${err.message} —</option>`;
-    }
-    return;
-  } finally {
-    // Always stop the temporary stream (we just needed the permission grant)
-    if (tempStream) tempStream.getTracks().forEach(t => t.stop());
+function captureMeta(source) {
+  const meta = { source };
+  const parcel = $('parcelSelect').value;
+  if (parcel) meta.parcel_id = parcel;
+  if ($('gpsToggle').checked && S.position) {
+    meta.latitude = S.position.coords.latitude.toFixed(7);
+    meta.longitude = S.position.coords.longitude.toFixed(7);
   }
-
-  btn.disabled = false;
-  await _populateDeviceList();
+  return meta;
 }
 
-async function _populateDeviceList() {
+async function enqueue(blob, source) {
   try {
-    const devices   = await navigator.mediaDevices.enumerateDevices();
-    const videoCams = devices.filter(d => d.kind === 'videoinput');
-    const sel       = $('deviceSelect');
-    if (!videoCams.length) {
-      sel.innerHTML = '<option value="">— No video device detected —</option>';
-      return;
-    }
-    sel.innerHTML = videoCams.map((d, i) =>
-      `<option value="${d.deviceId}">${d.label || 'Camera ' + (i + 1)}</option>`
-    ).join('');
+    await UploadQueue.add(blob, captureMeta(source));
+    App.toast(I18n.t(navigator.onLine ? 'camera.captured' : 'camera.queued_offline'), 'info', 2500);
   } catch (e) {
-    $('deviceSelect').innerHTML = '<option value="">— Cannot list devices —</option>';
+    App.toast(I18n.t('common.errors.generic'), 'error');
   }
 }
 
-// Called on page load — silently checks if permission was already granted
-async function enumerateDevices() {
+/* ---- Modes ----------------------------------------------------- */
+function switchMode(m) {
+  if (S.mode !== m) { stopCamera(); stopRover(); }
+  S.mode = m;
+  for (const [mode, id] of [['device', 'Device'], ['photos', 'Photos'], ['rover', 'Rover']]) {
+    $(`tab${id}`).classList.toggle('active', mode === m);
+    $(`tab${id}`).setAttribute('aria-selected', mode === m ? 'true' : 'false');
+    $(`section${id}`).style.display = mode === m ? 'flex' : 'none';
+  }
+  $('sectionPhotos').style.display = m === 'photos' ? 'block' : 'none';
+  $('vpHint').textContent = I18n.t(`camera.vp_hint.${m}`);
+  updateCaptureBox();
+}
+
+function updateCaptureBox() {
+  const live = (S.mode === 'device' && S.stream) || (S.mode === 'rover' && S.roverOn);
+  $('captureBox').style.display = live ? 'flex' : 'none';
+  $('liveBadge').classList.toggle('hidden', !live);
+  if (!live) { $('autoToggle').checked = false; updateAuto(); }
+}
+
+function updateAuto() {
+  clearInterval(S.autoTimer);
+  S.autoTimer = null;
+  if ($('autoToggle').checked) {
+    S.autoTimer = setInterval(captureFrame, parseInt($('autoInterval').value, 10) * 1000);
+  }
+}
+
+/* ---- Device camera ------------------------------------------- */
+function showCamError(key) {
+  $('camError').textContent = key ? I18n.t(key) : '';
+  $('camError').style.display = key ? '' : 'none';
+}
+
+async function listDevices() {
+  const sel = $('deviceSelect');
   try {
-    const devices   = await navigator.mediaDevices.enumerateDevices();
-    const videoCams = devices.filter(d => d.kind === 'videoinput');
-    // If labels are populated, permission was already granted — fill the list
-    if (videoCams.length && videoCams[0].label) {
-      await _populateDeviceList();
-    }
-    // else: leave placeholder — user must click "Request Permission"
-  } catch (_) {}
+    const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+    sel.innerHTML = '';
+    cams.forEach((d, i) => {
+      const o = document.createElement('option');
+      o.value = d.deviceId;
+      if (d.label) { o.textContent = d.label; o.dataset.label = '1'; }
+      else o.textContent = I18n.t('camera.device.default_label', { n: i + 1 });
+      sel.appendChild(o);
+    });
+    // labels are only exposed once the permission is granted
+    $('permBtn').style.display = cams.length && cams[0].label ? 'none' : '';
+  } catch (_) {
+    $('permBtn').style.display = '';
+  }
+}
+
+async function requestCameraPermission() {
+  showCamError(null);
+  try {
+    const tmp = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    tmp.getTracks().forEach(t => t.stop());
+    await listDevices();
+  } catch (e) {
+    showCamError(e.name === 'NotAllowedError' ? 'camera.device.denied'
+      : e.name === 'NotFoundError' ? 'camera.device.not_found' : 'camera.device.error');
+  }
 }
 
 async function startCamera() {
-  const deviceId = $('deviceSelect').value;
-  const videoConstraint = deviceId ? { deviceId: { exact: deviceId } } : true;
-
+  showCamError(null);
+  const id = $('deviceSelect').value;
   try {
-    S.mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: videoConstraint,
-      audio: false,
-    });
-    const video = $('camVideo');
-    video.srcObject = S.mediaStream;
-    video.style.display              = 'block';
-    $('vpPlaceholder').style.display = 'none';
-    $('startCamBtn').style.display   = 'none';
-    $('stopCamBtn').style.display    = '';
-    $('liveBadge').classList.remove('hidden');
-    $('camPermDenied').style.display = 'none';
-    _setConn('on', 'Camera active');
-    startAutoAnalysis();
+    S.stream = await navigator.mediaDevices.getUserMedia({
+      video: id ? { deviceId: { exact: id } } : { facingMode: 'environment' }, audio: false });
   } catch (e) {
-    if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-      $('camPermDenied').style.display = 'block';
-    } else if (e.name === 'NotFoundError') {
-      App.toast('No camera found. Check the device is connected.', 'error');
-    } else {
-      App.toast('Camera error: ' + e.message, 'error');
-    }
+    showCamError(e.name === 'NotAllowedError' ? 'camera.device.denied'
+      : e.name === 'NotFoundError' ? 'camera.device.not_found' : 'camera.device.error');
+    return;
   }
+  const video = $('camVideo');
+  video.srcObject = S.stream;
+  video.style.display = 'block';
+  $('vpPlaceholder').style.display = 'none';
+  $('startCamBtn').style.display = 'none';
+  $('stopCamBtn').style.display = '';
+  listDevices();
+  updateCaptureBox();
 }
 
 function stopCamera() {
-  stopAutoAnalysis();
-  if (S.mediaStream) {
-    S.mediaStream.getTracks().forEach(t => t.stop());
-    S.mediaStream = null;
-  }
-  $('camVideo').style.display      = 'none';
-  $('vpPlaceholder').style.display = 'flex';
-  $('startCamBtn').style.display   = '';
-  $('stopCamBtn').style.display    = 'none';
-  $('liveBadge').classList.add('hidden');
-  _setConn('off', 'Offline');
+  if (S.stream) S.stream.getTracks().forEach(t => t.stop());
+  S.stream = null;
+  $('camVideo').srcObject = null;
+  $('camVideo').style.display = 'none';
+  $('startCamBtn').style.display = '';
+  $('stopCamBtn').style.display = 'none';
+  if (S.mode === 'device') $('vpPlaceholder').style.display = 'flex';
+  updateCaptureBox();
 }
 
-// Capture a frame from the browser video element
-function _captureBrowserFrame() {
-  return new Promise((resolve, reject) => {
-    const video  = $('camVideo');
-    const canvas = $('captureCanvas');
-    canvas.width  = video.videoWidth  || 640;
-    canvas.height = video.videoHeight || 480;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    canvas.toBlob(b => b ? resolve(b) : reject('Canvas empty'), 'image/jpeg', 0.92);
-  });
+/* ---- Rover stream (local network only) ----------------------- */
+function showRoverError(key) {
+  $('roverError').textContent = key ? I18n.t(key) : '';
+  $('roverError').style.display = key ? '' : 'none';
 }
 
-// ============================================================
-// MODE C — UPLOAD
-// ============================================================
-function handleFile(e) { if (e.target.files[0]) _previewFile(e.target.files[0]); }
-function handleDrop(e) {
-  e.preventDefault();
-  $('uploadZone').classList.remove('drag-over');
-  const f = e.dataTransfer.files[0];
-  if (f && f.type.startsWith('image/')) _previewFile(f);
-}
-function _previewFile(file) {
-  S.uploadFile = file;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const t = $('uploadThumb'); t.src = ev.target.result; t.style.display = 'block';
-    $('vpPlaceholder').style.display = 'none';
-    $('streamImg').src               = ev.target.result;
-    $('streamImg').style.display     = 'block';
-  };
-  reader.readAsDataURL(file);
-  // Upload mode: single shot — run once immediately, no loop
-  stopAutoAnalysis();
-  analyse();
+function startRover() {
+  showRoverError(null);
+  const ip = $('camIp').value.trim();
+  const port = $('camPort').value.trim() || '8080';
+  if (!ip) return;
+  const img = $('streamImg');
+  img.onerror = () => { if (S.roverOn) { stopRover(); showRoverError('camera.rover.lost'); } };
+  img.onload = () => { $('vpPlaceholder').style.display = 'none'; };
+  img.src = `http://${ip}:${port}/?t=${Date.now()}`;
+  img.style.display = 'block';
+  S.roverOn = true;
+  $('startRoverBtn').style.display = 'none';
+  $('stopRoverBtn').style.display = '';
+  updateCaptureBox();
 }
 
-// ============================================================
-// UNIFIED ANALYSE  (called by loop or directly for uploads)
-// ============================================================
-async function analyse() {
-  if (_analysisLock) return;
-  _analysisLock = true;
-  $('analysingOverlay').classList.add('active');
+function stopRover() {
+  S.roverOn = false;
+  const img = $('streamImg');
+  img.onerror = null;
+  img.removeAttribute('src');
+  img.style.display = 'none';
+  $('startRoverBtn').style.display = '';
+  $('stopRoverBtn').style.display = 'none';
+  if (S.mode === 'rover') $('vpPlaceholder').style.display = 'flex';
+  updateCaptureBox();
+}
 
-  let data, error;
-
+/* ---- Capture ------------------------------------------------- */
+async function captureFrame() {
+  const source = S.mode === 'rover' ? 'rover' : 'camera';
+  const el = source === 'rover' ? $('streamImg') : $('camVideo');
+  const w = el.videoWidth || el.naturalWidth;
+  const h = el.videoHeight || el.naturalHeight;
+  if (!w || !h) return;   // nothing displayed yet: never send an empty frame
+  const canvas = $('captureCanvas');
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext('2d').drawImage(el, 0, 0, w, h);
+  let blob;
   try {
-    if (S.mode === 'stream') {
-      const ip = $('camIp').value.trim();
-      const port = $('camPort').value.trim() || '8080';
-      ({ data, error } = await API.camera.captureFromStream(ip, port));
-
-    } else if (S.mode === 'camera') {
-      const blob = await _captureBrowserFrame();
-      const form = new FormData();
-      form.append('file', blob, 'frame.jpg');
-      ({ data, error } = await API.camera.analyzeFrame(form));
-
-    } else {
-      const form = new FormData();
-      form.append('file', S.uploadFile);
-      ({ data, error } = await API.camera.upload(form));
-    }
-  } catch(e) { error = e.message; }
-
-  $('analysingOverlay').classList.remove('active');
-  _analysisLock = false;
-
-  if (error) {
-    // Don't toast on every loop tick; just log
-    console.warn('[Rover] analysis error:', error);
+    blob = await new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error('empty')), 'image/jpeg', 0.9));
+  } catch (e) {
+    // tainted canvas: the rover does not send CORS headers
+    if (source === 'rover') showRoverError('camera.rover.cors');
+    $('autoToggle').checked = false;
+    updateAuto();
     return;
   }
-
-  _renderResults(data);
-  _('statLast', new Date().toLocaleTimeString());
-  loadRecent();
+  enqueue(blob, source);
 }
 
-// ============================================================
-// SVG ICON LIBRARY  (no emojis — pure SVG)
-// ============================================================
-const SVG = {
-  leaf: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-           <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
-           <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
-         </svg>`,
-
-  virus: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"
-                stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="5"/>
-            <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12
-                     M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
-            <circle cx="10" cy="10" r="1" fill="currentColor" stroke="none"/>
-            <circle cx="14" cy="13" r="1" fill="currentColor" stroke="none"/>
-          </svg>`,
-
-  check: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>`,
-
-  scanOff: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-              <path d="M3 3l18 18"/>
-              <path d="M21 15V5a2 2 0 0 0-2-2H9"/>
-              <path d="M3 9v10a2 2 0 0 0 2 2h10"/>
-              <path d="M21 21H3M21 3H3"/>
-            </svg>`,
-};
-
-// Per-type config for the winner banner + verdict icons
-const TYPE_CFG = {
-  disease: {
-    bannerBg:    'rgba(239,68,68,.06)',
-    bannerBorder:'rgba(239,68,68,.2)',
-    icoBg:       'rgba(239,68,68,.12)',
-    icoColor:    'rgb(239,68,68)',
-    labelColor:  'rgb(239,68,68)',
-    label:       'Maladie détectée',
-    svg:         SVG.virus,
-  },
-  healthy: {
-    bannerBg:    'rgba(16,185,129,.06)',
-    bannerBorder:'rgba(16,185,129,.2)',
-    icoBg:       'rgba(16,185,129,.12)',
-    icoColor:    'rgb(16,185,129)',
-    labelColor:  'rgb(16,185,129)',
-    label:       'Plante saine',
-    svg:         SVG.leaf,
-  },
-  uncertain: {
-    bannerBg:    'rgba(107,114,128,.06)',
-    bannerBorder:'rgba(107,114,128,.2)',
-    icoBg:       'rgba(107,114,128,.1)',
-    icoColor:    'var(--text-muted)',
-    labelColor:  'var(--text-muted)',
-    label:       'Image non reconnue',
-    svg:         SVG.scanOff,
-  },
-};
-
-// ============================================================
-// RENDER RESULTS
-// ============================================================
-function _renderResults(data) {
-  const fiche = data.fiche_terrain || {};
-  const w     = fiche.winner       || {};
-  const wType = w.type || 'uncertain';
-
-  $('resultsCard').classList.add('show');
-
-  // ── uncertain = ancien fallback de sécurité (ne devrait plus arriver) ──
-  if (wType === 'uncertain') {
-    $('lowConfWarning').style.display    = 'none';
-    $('winnerBanner').style.display      = 'none';
-    $('charSection').style.display       = 'none';
-    $('recoSection').style.display       = 'none';
-    $('greenbotSection').style.display   = 'none';
-    $('thumbSection').style.display      = 'none';
-    $('unrecognizedSection').style.display = '';
-    return;
-  }
-
-  $('unrecognizedSection').style.display = 'none';
-
-  // ── Bandeau confiance faible ───────────────────────────────
-  if (w.low_confidence) {
-    const el = $('lowConfWarning');
-    el.style.display = 'flex';
-    _('lowConfText',
-      `Confiance faible (${w.confidence}%) — résultat indicatif. `
-      + 'Recommencez avec un meilleur éclairage ou un cadrage plus proche.');
-  } else {
-    $('lowConfWarning').style.display = 'none';
-  }
-
-  // ── Winner banner ──────────────────────────────────────────
-  const cfg   = TYPE_CFG[wType] || TYPE_CFG.uncertain;
-  const wConf = w.confidence || 0;
-
-  const banner = $('winnerBanner');
-  banner.style.display     = '';
-  banner.style.background  = cfg.bannerBg;
-  banner.style.borderColor = cfg.bannerBorder;
-
-  const icoEl = $('winnerIco');
-  icoEl.style.background = cfg.icoBg;
-  icoEl.style.color      = cfg.icoColor;
-  icoEl.innerHTML        = cfg.svg;
-
-  const labelEl = $('winnerLabel');
-  labelEl.textContent = w.low_confidence ? cfg.label + ' (faible confiance)' : cfg.label;
-  labelEl.style.color = w.low_confidence ? 'rgb(180,110,0)' : cfg.labelColor;
-
-  _('winnerName', w.fr_name || w.name || '—');
-  _('winnerSub',  w.scientific_name
-      ? w.scientific_name
-      : w.plant_type ? w.plant_type.toUpperCase() : (w.message || ''));
-  _('winnerConf', wConf + '%');
-  _setSev('winnerSev', w.severity || (wType === 'healthy' ? 'none' : 'low'));
-
-  // ── Characteristics ───────────────────────────────────────
-  // For diseases: show symptoms list + characteristics text
-  if (wType === 'disease') {
-    const symptoms = w.symptoms || [];
-    const charLines = [];
-    if (w.characteristics) charLines.push(w.characteristics);
-    if (symptoms.length)   charLines.push('Symptômes : ' + symptoms.join(' · '));
-    if (w.affected_plants && w.affected_plants.length)
-      charLines.push('Plantes concernées : ' + w.affected_plants.join(', '));
-    if (charLines.length) {
-      $('charSection').style.display = '';
-      $('charText').textContent = charLines.join('\n\n');
-    } else {
-      $('charSection').style.display = 'none';
-    }
-  } else if (wType === 'healthy') {
-    $('charSection').style.display = 'none';
-  } else {
-    $('charSection').style.display = 'none';
-  }
-
-  // ── Recommendations ───────────────────────────────────────
-  const recos = w.recommendations || [];
-  if (recos.length) {
-    $('recoSection').style.display = '';
-    $('recoList').innerHTML = recos.map(r =>
-      `<li style="font-size:var(--text-sm);color:var(--text-secondary);line-height:var(--leading-relaxed);">${r}</li>`
-    ).join('');
-  } else {
-    $('recoSection').style.display = 'none';
-  }
-
-  // ── GreenBot link ──────────────────────────────────────────
-  if (data.analysis_id && wType !== 'healthy') {
-    $('greenbotSection').style.display = '';
-    $('greenbotBtn').href = `/chatbot?analysis_id=${data.analysis_id}`;
-  } else {
-    $('greenbotSection').style.display = 'none';
-  }
-
-  // ── Captured frame thumbnail ──────────────────────────────
-  if (data.image_path) {
-    $('thumbSection').style.display = '';
-    _drawFrameThumb(data.image_path);
-  } else {
-    $('thumbSection').style.display = 'none';
-  }
-
-  $('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+function queueFiles(files) {
+  const images = [...(files || [])].filter(f => f.type.startsWith('image/'));
+  images.forEach(f => enqueue(f, 'upload'));
+  if (images.length) App.toast(I18n.t('camera.photos.added', { count: images.length }), 'info', 2500);
+  $('uploadInput').value = '';
 }
 
-// ============================================================
-// CAPTURED FRAME THUMBNAIL
-// ============================================================
-function _drawFrameThumb(imagePath) {
-  const canvas = $('thumbCanvas');
-  const ctx    = canvas.getContext('2d');
-  const img    = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => {
-    const maxW = 640;
-    const scale = Math.min(1, maxW / img.naturalWidth);
-    canvas.width  = img.naturalWidth  * scale;
-    canvas.height = img.naturalHeight * scale;
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  };
-  img.onerror = () => { canvas.style.display = 'none'; };
-  img.src = imagePath + '?t=' + Date.now();
+/* ---- Results --------------------------------------------------- */
+function renderResult() {
+  if (!S.lastResult) return;
+  $('resultBody').innerHTML = Fiche.html(S.lastResult);
+  $('resultHistoryLink').href = `/history?id=${encodeURIComponent(S.lastResult.id)}`;
 }
 
-function _setSev(id, sev) {
-  const el = $(id);
-  const labels = { low:'Low', medium:'Medium', high:'High', none:'None' };
-  el.className   = `sev-tag ${sev || 'none'}`;
-  el.textContent = labels[sev] || '—';
-}
-
-// ============================================================
-// RECENT TABLE
-// ============================================================
 async function loadRecent() {
-  const { data } = await API.analysis.history(6, 0);
-  const items = data?.items || [];
+  const { data, error } = await API.analysis.history(5, 0);
+  S.recent = error ? null : (data && data.items) || [];
+  renderRecent();
+}
 
-  if (!items.length) {
-    $('recentTbl').style.display   = 'none';
-    $('recentEmpty').style.display = 'flex';
-    return;
-  }
-  $('recentTbl').style.display   = '';
-  $('recentEmpty').style.display = 'none';
-
+function renderRecent() {
+  const items = S.recent || [];
+  $('recentTbl').style.display = items.length ? '' : 'none';
+  $('recentEmpty').style.display = items.length ? 'none' : '';
   $('recentBody').innerHTML = items.map(a => {
-    const healthy = !a.detected_disease || a.detected_disease === 'healthy';
-    const pct     = a.confidence ? (a.confidence * 100).toFixed(0) + '%' : '—';
-    const sev     = a.severity || 'low';
-    const dt      = a.created_at ? new Date(a.created_at).toLocaleDateString() : '—';
+    const level = alertLevel(a);
     return `<tr>
-      <td class="${healthy ? 'td-healthy' : 'td-primary'}">${healthy ? 'Healthy' : (a.disease_name || '—')}</td>
-      <td>${a.plant_type || '—'}</td>
-      <td>${pct}</td>
-      <td><span class="sev-tag ${sev}">${sev}</span></td>
-      <td class="td-muted">${a.source || '—'}</td>
-      <td class="td-muted">${dt}</td>
+      <td class="${isHealthy(a) ? 'td-healthy' : 'td-primary'}"><a href="/history?id=${encodeURIComponent(a.id)}" style="color:inherit;">${escapeHtml(analysisLabel(a))}</a></td>
+      <td class="td-muted">${escapeHtml(plantLabel(a.plant_type))}</td>
+      <td class="td-muted">${a.confidence != null ? escapeHtml(I18n.percent(a.confidence)) : '—'}</td>
+      <td><span class="sev-tag ${level}">${escapeHtml(alertLabel(level, true))}</span></td>
+      <td class="td-muted">${escapeHtml(I18n.t(`fiche.sources.${a.source || 'upload'}`))}</td>
+      <td class="td-muted" style="white-space:nowrap;">${escapeHtml(I18n.dateTime(a.created_at))}</td>
     </tr>`;
   }).join('');
 }
-
-// ============================================================
-// CONNECTION STATUS HELPER
-// ============================================================
-function _setConn(state, label) {
-  const dot = $('connDot');
-  dot.className   = `conn-dot ${state === 'on' ? 'on' : state === 'checking' ? '' : 'off'}`;
-  _('connLabel', label);
-}
 </script>
-
 </body>
 </html>
