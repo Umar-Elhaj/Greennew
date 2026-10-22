@@ -25,13 +25,13 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 
 ## LOT 1 — Supabase via `DATABASE_URL` uniquement
 
-- [ ] 1.1 Normalisation de l'URL (`postgres://`, `sslmode=require`), masquage du mot de passe dans les logs
-- [ ] 1.2 Pool selon le port du pooler (6543 → `NullPool` ; 5432 → `pool_size=2, max_overflow=2`) + documentation du pooler IPv4
-- [ ] 1.3 Alembic : baseline (stamp sur base existante) + révisions additives ; `create_all` limité à SQLite dev
-- [ ] 1.4 `backend/sql/supabase_schema.sql` aligné sur l'état final
-- [ ] 1.5 `scripts/db_check.py` (version PG, révision Alembic, comptage par table, URL jamais affichée)
-- [ ] 1.6 Tests verts sur SQLite puis Postgres jetable (Docker)
-- [ ] CP2 — `alembic upgrade head --sql` présenté avant toute migration de production
+- [x] 1.1 Normalisation de l'URL (`postgres://`, `sslmode=require`), masquage du mot de passe dans les logs
+- [x] 1.2 Pool selon le port du pooler (6543 → `NullPool` ; 5432 → `pool_size=2, max_overflow=2`) + documentation du pooler IPv4
+- [x] 1.3 Alembic : baseline (stamp sur base existante) + révisions additives ; `create_all` limité à SQLite dev
+- [~] 1.4 `backend/sql/supabase_schema.sql` aligné sur l'état final — garde-fou `test_reference_sql_matches_models` (Postgres) ; mis à jour à chaque nouvelle révision
+- [x] 1.5 `scripts/db_check.py` (version PG, révision Alembic, comptage par table, URL jamais affichée)
+- [x] 1.6 Tests verts sur SQLite puis Postgres jetable (Docker) — SQLite : 31 passed ; Postgres 16 (suite complète + `-m postgres`) : 33 passed + 3 passed
+- [ ] CP2 — `alembic upgrade head --sql` présenté avant toute migration de production (reporté après les lots 2, 5 et 6, cf. D9)
 
 ## LOT 2 — Stockage des images d'inférence
 
@@ -106,6 +106,8 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 | D6 | P4 : ONNX Runtime en production, PyTorch en dev seulement, après test de parité | Défaut accepté (limites LVE du mutualisé). |
 | D7 | P5 : **frontend conservé sur Vercel** ; `vercel.json` réécrit `/api/*` vers le domaine o2switch (même origine vue du navigateur, donc pas de CORS nécessaire) ; `CORS_ORIGINS` limité au domaine Vercel en secours ; images compressées côté client avant envoi (limite de corps des proxys) ; images affichées via `fetch` + jeton → `blob:` (une balise `<img>` ne porte pas l'en-tête `Authorization`) | Choix humain au CP1. |
 | D8 | Contenu inventé retiré (notes, badges « vérifié », marques réelles, moyennes régionales, chiffres marketing) ; catalogue marqué « aperçu, prix indicatifs » ; benchmark comparé à l'historique propre de l'utilisateur. YOLO retiré du README (travail futur, `best.pt` conservé) | Choix humain au CP1. |
+| D9 | CP2 présenté une seule fois, quand les révisions additives des lots 2, 5 et 6 existent ; en production, la seule opération sera `alembic stamp 0001_baseline` puis `alembic upgrade head` | La production est déjà au niveau de la baseline (vérifié : `models.py` ⇄ SQL de `36d4768` sans écart sur Postgres 16) ; une seule fenêtre de migration validée. |
+| D10 | `models.py` aligné sur le schéma Supabase réel (identity, jsonb, `ON DELETE CASCADE`, `NOT NULL`, noms d'index) | Sans ça, Alembic aurait généré des différences parasites ; `compare_metadata` = [] est maintenant testé. |
 | D2 | Dépendances de dev dans `backend/requirements-dev.txt` (pytest, ruff, onnx) | Ne pas alourdir le serveur de production. |
 | D1 | Clone de `Umar-Elhaj/Greennew` dans `Greennew/` (et non `TCHOUANANG-dimitri/GREEN`) | Le prompt maître cible ce dépôt ; HEAD distant = `36d4768`, identique au contexte vérifié. |
 
@@ -132,7 +134,13 @@ _Aucun pour l'instant._
 ```bash
 # depuis la racine du dépôt
 .venv/bin/pytest backend/tests -q
-.venv/bin/ruff check backend
+.venv/bin/ruff check --config backend/pyproject.toml backend scripts
+# Postgres jetable (Docker) :
+#   docker run -d --rm --name green-pg-test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=green_test -p 55432:5432 postgres:16-alpine
+#   TEST_POSTGRES_URL=postgresql://postgres:test@localhost:55432/green_test?sslmode=disable \
+#   TEST_DATABASE_URL=postgresql://postgres:test@localhost:55432/green_suite?sslmode=disable \
+#     .venv/bin/pytest backend/tests -m "not slow"
+.venv/bin/python scripts/db_check.py
 .venv/bin/python scripts/check_i18n.py
 npx playwright test -c qa
 ```
