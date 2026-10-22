@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import User
-from schemas import UserRegister, UserLogin, UserUpdate, PasswordChange, TokenResponse, UserResponse, MessageResponse
+from schemas import phone_variants, UserRegister, UserLogin, UserUpdate, PasswordChange, TokenResponse, UserResponse, MessageResponse
 from auth import hash_password, verify_password, create_access_token, get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
@@ -29,7 +29,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     Returns a JWT token and the created user profile.
     """
     # Check phone uniqueness
-    if db.query(User).filter(User.phone == user_data.phone).first():
+    if db.query(User).filter(User.phone.in_(phone_variants(user_data.phone))).first():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="This phone number is already registered."
@@ -75,14 +75,13 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     Sign in using phone number OR email address + password.
     Returns a JWT token and the user profile.
     """
-    # Same normalisation as at registration: lower-case email, phone without separators
-    identifier = credentials.identifier.strip()
-    identifier = identifier.lower() if "@" in identifier else identifier.replace(" ", "").replace("-", "")
-
-    # Search by phone or email
-    user = db.query(User).filter(
-        (User.phone == identifier) | (User.email == identifier)
-    ).first()
+    # Same normalisation as at registration: lower-case email, +237 phone.
+    # Accounts created before the +237 normalisation are matched too.
+    raw = credentials.identifier.strip()
+    if "@" in raw:
+        user = db.query(User).filter(User.email == raw.lower()).first()
+    else:
+        user = db.query(User).filter(User.phone.in_(phone_variants(raw))).first()
 
     # Validate credentials (same error for unknown user AND wrong password
     # to prevent user enumeration attacks)

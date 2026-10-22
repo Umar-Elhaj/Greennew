@@ -29,6 +29,32 @@ def _clean_email(v: Optional[str]) -> Optional[str]:
     return v
 
 
+def normalize_phone(raw: str) -> str:
+    """
+    One stored form per phone number. Separators are removed; Cameroonian
+    numbers get the +237 prefix whatever way they were typed:
+    6XXXXXXXX / 2XXXXXXXX (9 digits), 237XXXXXXXXX, 00237XXXXXXXXX -> +237XXXXXXXXX.
+    Other international numbers keep their + form.
+    """
+    v = re.sub(r"[\s.\-()]", "", raw or "")
+    if v.startswith("00"):
+        v = "+" + v[2:]
+    if re.fullmatch(r"[26]\d{8}", v):
+        v = "+237" + v
+    elif re.fullmatch(r"237[26]\d{8}", v):
+        v = "+" + v
+    return v
+
+
+def phone_variants(raw: str) -> set:
+    """Forms under which this number may be stored (accounts created before +237 normalisation)."""
+    phone = normalize_phone(raw)
+    out = {phone, re.sub(r"[\s.\-()]", "", raw or "")}
+    if phone.startswith("+237"):
+        out.update({phone[4:], phone[1:]})
+    return out
+
+
 def _required_text(v: str) -> str:
     v = (v or "").strip()
     if not v:
@@ -50,8 +76,8 @@ class UserRegister(BaseModel):
     @field_validator("phone")
     @classmethod
     def validate_phone(cls, v: str) -> str:
-        """Strips spaces and validates basic phone format."""
-        cleaned = v.strip().replace(" ", "").replace("-", "")
+        """Normalises (+237 for Cameroonian numbers) and validates the format."""
+        cleaned = normalize_phone(v)
         if not re.match(r"^\+?[0-9]{8,15}$", cleaned):
             raise ValueError("Invalid phone number format.")
         return cleaned

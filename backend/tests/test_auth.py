@@ -101,3 +101,32 @@ def test_login_normalises_identifier_and_consent_at_register(client):
     assert r.status_code == 201 and r.json()["user"]["dataset_consent"] is True
     for ident in ("+237 690 111 222", "MIXED@case.CM"):
         assert client.post("/api/auth/login", json={"identifier": ident, "password": "secret123"}).status_code == 200
+
+
+def test_cameroonian_phone_normalised_at_register_and_login(client):
+    from database import SessionLocal
+    from models import User
+    from schemas import normalize_phone
+
+    assert normalize_phone("6 90 12 34 56") == "+237690123456"
+    assert normalize_phone("00237690123456") == "+237690123456"
+    assert normalize_phone("237 690-12-34-56") == "+237690123456"
+    assert normalize_phone("+33612345678") == "+33612345678"
+
+    r = client.post("/api/auth/register", json={"first_name": "A", "last_name": "B", "phone": "690 12 34 56",
+                                                "password": "secret123"})
+    assert r.status_code == 201 and r.json()["user"]["phone"] == "+237690123456"
+    for typed in ("+237 690 12 34 56", "690123456", "00237690123456"):
+        assert client.post("/api/auth/login", json={"identifier": typed, "password": "secret123"}).status_code == 200
+    dup = client.post("/api/auth/register", json={"first_name": "C", "last_name": "D", "phone": "+237690123456",
+                                                  "password": "secret123"})
+    assert dup.status_code == 409
+
+    # an account stored before the normalisation still signs in, and blocks duplicates
+    db = SessionLocal()
+    db.add(User(first_name="Old", last_name="Format", phone="677000111", password_hash=__import__("auth").hash_password("secret123")))
+    db.commit()
+    db.close()
+    assert client.post("/api/auth/login", json={"identifier": "+237677000111", "password": "secret123"}).status_code == 200
+    assert client.post("/api/auth/register", json={"first_name": "E", "last_name": "F", "phone": "677 000 111",
+                                                   "password": "secret123"}).status_code == 409
