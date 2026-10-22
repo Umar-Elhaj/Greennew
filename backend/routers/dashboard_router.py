@@ -196,3 +196,67 @@ def get_recent_activity(
         }
         for a in analyses
     ]
+
+
+# ---- GET /api/dashboard/progress ------------------------------
+@router.get("/progress", summary="The user's own monthly history (My progress page)")
+def get_progress(
+    months: int = Query(default=6, ge=2, le=24),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Per calendar month (oldest first): number of analyses, probable diseases,
+    healthy results; per plant over the period; most frequent probable
+    disease. Compared only with the user's own past: no invented averages.
+    """
+    now = datetime.utcnow()
+    # first day of the oldest month in the window
+    y, m = now.year, now.month - (months - 1)
+    while m <= 0:
+        m += 12
+        y -= 1
+    start = datetime(y, m, 1)
+
+    rows = (
+        db.query(DiseaseAnalysis.created_at, DiseaseAnalysis.detected_disease, DiseaseAnalysis.plant_type,
+                 DiseaseAnalysis.parcel_id)
+          .filter(DiseaseAnalysis.user_id == current_user.id, DiseaseAnalysis.created_at >= start)
+          .all()
+    )
+
+    keys = []
+    yy, mm = y, m
+    for _ in range(months):
+        keys.append(f"{yy:04d}-{mm:02d}")
+        mm += 1
+        if mm > 12:
+            mm, yy = 1, yy + 1
+    monthly = {k: {"month": k, "analyses": 0, "diseases": 0, "healthy": 0} for k in keys}
+    plants: dict = {}
+    disease_counts: dict = {}
+    parcels = set()
+
+    for created_at, detected, plant, parcel_id in rows:
+        k = f"{created_at.year:04d}-{created_at.month:02d}"
+        if k not in monthly:
+            continue
+        diseased = bool(detected) and detected != "healthy"
+        monthly[k]["analyses"] += 1
+        monthly[k]["diseases" if diseased else "healthy"] += 1
+        p = plants.setdefault(plant or "unknown", {"plant": plant, "analyses": 0, "diseases": 0})
+        p["analyses"] += 1
+        p["diseases"] += int(diseased)
+        if diseased:
+            disease_counts[detected] = disease_counts.get(detected, 0) + 1
+        if parcel_id:
+            parcels.add(parcel_id)
+
+    top = max(disease_counts.items(), key=lambda kv: kv[1]) if disease_counts else None
+    return {
+        "months": [monthly[k] for k in keys],
+        "plants": sorted(plants.values(), key=lambda p: -p["analyses"]),
+        "top_disease": {"code": top[0], "count": top[1]} if top else None,
+        "parcels_analysed": len(parcels),
+        "total": len(rows),
+    }

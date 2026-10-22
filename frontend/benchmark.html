@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,221 +18,21 @@
   <link rel="stylesheet" href="/css/mobile.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <style>
-    /* ---- Score card ---------------------------------------- */
-    .score-banner {
-      background: var(--surface-1);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-xl);
-      padding: var(--sp-8) var(--sp-10);
-      display: flex;
-      align-items: center;
-      gap: var(--sp-10);
-      margin-bottom: var(--sp-8);
-    }
-    @media (max-width: 800px) { .score-banner { flex-direction: column; gap: var(--sp-6); } }
-
-    .score-ring-wrap {
-      flex-shrink: 0;
-      position: relative;
-      width: 120px; height: 120px;
-    }
-    .score-ring-svg { width: 120px; height: 120px; transform: rotate(-90deg); }
-    .score-ring-track { fill: none; stroke: var(--bg-muted); stroke-width: 10; }
-    .score-ring-fill  {
-      fill: none; stroke: var(--brand-primary); stroke-width: 10;
-      stroke-linecap: round;
-      stroke-dasharray: 314;
-      transition: stroke-dashoffset 1s ease;
-    }
-    .score-ring-text {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .score-ring-num {
-      font-size: 1.9rem;
-      font-weight: 800;
-      color: var(--text-primary);
-      letter-spacing: -.04em;
-      line-height: 1;
-    }
-    .score-ring-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
-
-    .score-info { flex: 1; }
-    .score-info h3 {
-      font-size: var(--text-2xl);
-      font-weight: var(--weight-extrabold);
-      color: var(--text-primary);
-      letter-spacing: -.02em;
-      margin: 0 0 var(--sp-2);
-    }
-    .score-info p { font-size: var(--text-sm); color: var(--text-secondary); margin: 0 0 var(--sp-5); max-width: 420px; }
-
-    .score-breakdown {
-      display: flex;
-      gap: var(--sp-6);
-      flex-wrap: wrap;
-    }
-    .score-item { display: flex; flex-direction: column; gap: 2px; }
-    .score-item-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
-    .score-item-val   { font-size: var(--text-lg); font-weight: var(--weight-extrabold); color: var(--text-primary); }
-
-    /* ---- Section title ------------------------------------- */
-    .section-title {
-      font-size: var(--text-lg);
-      font-weight: var(--weight-bold);
-      color: var(--text-primary);
-      letter-spacing: -.01em;
-      margin-bottom: var(--sp-4);
-      display: flex;
-      align-items: center;
-      gap: var(--sp-3);
-    }
-    .section-title-line { flex:1; height:1px; background: var(--border-subtle); }
-
-    /* ---- Benchmark comparison rows ------------------------- */
-    .bench-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--sp-4);
-      margin-bottom: var(--sp-8);
-    }
-    @media (max-width: 900px) { .bench-grid { grid-template-columns: 1fr; } }
-
-    .bench-card {
-      background: var(--surface-1);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: var(--sp-5) var(--sp-6);
-    }
-    .bench-card-title {
-      font-size: var(--text-xs);
-      font-weight: var(--weight-semibold);
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      color: var(--text-muted);
-      margin-bottom: var(--sp-5);
-      display: flex;
-      align-items: center;
-      gap: var(--sp-2);
-    }
-    .bench-row {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-3);
-      margin-bottom: var(--sp-4);
-    }
-    .bench-row:last-child { margin-bottom: 0; }
-    .bench-row-label {
-      font-size: var(--text-sm);
-      color: var(--text-secondary);
-      width: 100px;
-      flex-shrink: 0;
-    }
-    .bench-bar-wrap {
-      flex: 1;
-      height: 8px;
-      background: var(--bg-muted);
-      border-radius: var(--radius-full);
-      overflow: hidden;
-      position: relative;
-    }
-    .bench-bar {
-      height: 100%;
-      border-radius: var(--radius-full);
-      transition: width 0.8s ease;
-    }
-    .bench-row-val {
-      font-size: var(--text-sm);
-      font-weight: var(--weight-bold);
-      width: 55px;
-      text-align: right;
-      flex-shrink: 0;
-    }
-
-    /* ---- Comparison meter ---------------------------------- */
-    .metric-compare {
-      background: var(--surface-1);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: var(--sp-5) var(--sp-6);
-      margin-bottom: var(--sp-4);
-    }
-    .mc-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: var(--sp-4);
-    }
-    .mc-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
-    .mc-badge {
-      font-size: 11px;
-      font-weight: var(--weight-bold);
-      padding: 3px 10px;
-      border-radius: var(--radius-full);
-    }
-    .mc-badge.good    { background: rgba(46,204,113,.12); color: var(--brand-primary); }
-    .mc-badge.warning { background: rgba(245,158,11,.12); color: #d97706; }
-    .mc-badge.bad     { background: rgba(239,68,68,.12);  color: var(--color-error); }
-
-    .mc-bars {
-      display: flex;
-      flex-direction: column;
-      gap: var(--sp-2);
-    }
-    .mc-bar-row {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-3);
-    }
-    .mc-bar-label { font-size: 11px; color: var(--text-muted); width: 100px; flex-shrink: 0; text-align: right; }
-    .mc-bar-track {
-      flex: 1;
-      height: 10px;
-      background: var(--bg-muted);
-      border-radius: var(--radius-full);
-      overflow: hidden;
-    }
-    .mc-bar-fill { height: 100%; border-radius: var(--radius-full); transition: width 1s ease; }
-    .mc-bar-val { font-size: 11px; font-weight: var(--weight-bold); width: 45px; flex-shrink: 0; }
-
-    /* ---- Chart card ---------------------------------------- */
-    .chart-card {
-      background: var(--surface-1);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: var(--sp-6);
-      margin-bottom: var(--sp-6);
-    }
-    .chart-card-hdr {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: var(--sp-4);
-    }
-    .chart-card-title { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--text-primary); }
-    .chart-container  { position: relative; height: 220px; }
-
-    /* ---- Tips list ----------------------------------------- */
-    .tips-list { display: flex; flex-direction: column; gap: var(--sp-3); }
-    .tip-item {
-      display: flex;
-      gap: var(--sp-4);
-      background: var(--surface-1);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: var(--sp-4) var(--sp-5);
-      align-items: flex-start;
-    }
-    .tip-item.positive { border-color: rgba(46,204,113,.2); background: rgba(46,204,113,.03); }
-    .tip-item.caution  { border-color: rgba(245,158,11,.2); background: rgba(245,158,11,.03); }
-    .tip-item.alert    { border-color: rgba(239,68,68,.2);  background: rgba(239,68,68,.03); }
-    .tip-icon { width: 36px; height: 36px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .tip-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: 2px; }
-    .tip-body  { font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.5; }
+    .prog-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-6); }
+    .prog-kpi { background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: var(--sp-5); }
+    .prog-kpi-label { font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+    .prog-kpi-value { font-size: var(--text-2xl); font-weight: 800; color: var(--text-primary); margin: var(--sp-2) 0; }
+    .prog-kpi-value.small { font-size: var(--text-base); font-weight: 700; }
+    .prog-kpi-sub { font-size: var(--text-xs); color: var(--text-muted); }
+    .prog-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-6); }
+    .prog-card { background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: var(--sp-5); min-width: 0; }
+    .prog-card h3 { font-size: var(--text-sm); margin: 0 0 var(--sp-4); color: var(--text-primary); }
+    .prog-chart { position: relative; height: 240px; }
+    .prog-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+    .prog-table th { text-align: left; font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border-subtle); }
+    .prog-table td { padding: var(--sp-3); border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); }
+    .prog-empty { background: var(--surface-1); border: 1px dashed var(--border-default); border-radius: var(--radius-lg); padding: var(--sp-8); text-align: center; color: var(--text-muted); margin-bottom: var(--sp-6); }
+    .prog-method { font-size: var(--text-xs); color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -240,65 +40,64 @@
   <div class="app-main" id="appMain">
     <main class="app-content" id="appContent">
 
-      <!-- Banner -->
-      <div style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 60%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-6);position:relative;overflow:hidden;">
+      <div class="page-banner" style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 60%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-6);position:relative;overflow:hidden;">
         <div style="position:absolute;width:280px;height:280px;background:rgba(255,255,255,.05);border-radius:50%;right:-50px;top:-80px;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;">
-          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);">Analytics</div>
-          <div style="font-size:var(--text-2xl);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp-2);">Local Benchmark</div>
-          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.65);">
-            Compare your monitoring performance to regional averages and best practices.
+          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);" data-i18n="benchmark.banner_kicker"></div>
+          <div style="font-size:var(--text-2xl);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp-2);" data-i18n="benchmark.banner_title"></div>
+          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.75);" data-i18n="benchmark.banner_text"></div>
+        </div>
+      </div>
+
+      <div class="prog-empty" id="progEmpty" style="display:none;"></div>
+
+      <div id="progContent" style="display:none;">
+        <div class="prog-kpis">
+          <div class="prog-kpi">
+            <div class="prog-kpi-label" data-i18n="benchmark.this_month"></div>
+            <div class="prog-kpi-value" id="kThisMonth">—</div>
+            <div class="prog-kpi-sub" id="kThisMonthSub"></div>
+          </div>
+          <div class="prog-kpi">
+            <div class="prog-kpi-label" data-i18n="benchmark.disease_rate"></div>
+            <div class="prog-kpi-value" id="kRate">—</div>
+            <div class="prog-kpi-sub" id="kRateSub"></div>
+          </div>
+          <div class="prog-kpi">
+            <div class="prog-kpi-label" data-i18n="benchmark.top_disease"></div>
+            <div class="prog-kpi-value small" id="kTop">—</div>
+            <div class="prog-kpi-sub" id="kTopSub"></div>
+          </div>
+          <div class="prog-kpi">
+            <div class="prog-kpi-label" data-i18n="benchmark.parcels"></div>
+            <div class="prog-kpi-value" id="kParcels">—</div>
+            <div class="prog-kpi-sub" data-i18n="benchmark.parcels_hint"></div>
+          </div>
+        </div>
+
+        <div class="prog-charts">
+          <div class="prog-card">
+            <h3 data-i18n="benchmark.monthly_title"></h3>
+            <div class="prog-chart"><canvas id="monthlyChart" role="img" data-i18n-aria-label="benchmark.monthly_title"></canvas></div>
+          </div>
+          <div class="prog-card">
+            <h3 data-i18n="benchmark.rate_title"></h3>
+            <div class="prog-chart"><canvas id="rateChart" role="img" data-i18n-aria-label="benchmark.rate_title"></canvas></div>
+          </div>
+        </div>
+
+        <div class="prog-card" style="margin-bottom:var(--sp-4);">
+          <h3 data-i18n="benchmark.plants_title"></h3>
+          <div class="table-scroll">
+            <table class="prog-table">
+              <thead><tr><th data-i18n="benchmark.col_plant"></th><th data-i18n="benchmark.col_analyses"></th><th data-i18n="benchmark.col_rate"></th></tr></thead>
+              <tbody id="plantRows"></tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      <!-- Score banner -->
-      <div class="score-banner">
-        <div class="score-ring-wrap">
-          <svg class="score-ring-svg" viewBox="0 0 100 100">
-            <circle class="score-ring-track" cx="50" cy="50" r="45"/>
-            <circle class="score-ring-fill" id="scoreRing" cx="50" cy="50" r="45"/>
-          </svg>
-          <div class="score-ring-text">
-            <div class="score-ring-num" id="scoreNum">—</div>
-            <div class="score-ring-label">Score</div>
-          </div>
-        </div>
-        <div class="score-info">
-          <h3 id="scoreTitleText">Calculating your score...</h3>
-          <p id="scoreDesc">We compare your GREEN platform usage and scan frequency to regional benchmarks for Cameroon agribusiness operators.</p>
-          <div class="score-breakdown" id="scoreBreakdown"></div>
-        </div>
-      </div>
-
-      <!-- Comparison metrics -->
-      <div class="section-title">Your Activity vs. Regional Benchmark <div class="section-title-line"></div></div>
-
-      <div id="metricCards"></div>
-
-      <!-- Chart row -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-6);margin-bottom:var(--sp-8);" class="bench-grid">
-        <div class="chart-card" style="margin-bottom:0;">
-          <div class="chart-card-hdr">
-            <div class="chart-card-title">Disease Detection Distribution</div>
-          </div>
-          <div class="chart-container">
-            <canvas id="donutChart"></canvas>
-          </div>
-        </div>
-        <div class="chart-card" style="margin-bottom:0;">
-          <div class="chart-card-hdr">
-            <div class="chart-card-title">Scan Activity — Last 4 Months</div>
-          </div>
-          <div class="chart-container">
-            <canvas id="activityChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- Best practices & tips -->
-      <div class="section-title">Recommendations <div class="section-title-line"></div></div>
-      <div class="tips-list" id="tipsList"></div>
+      <p class="prog-method" data-i18n="benchmark.method"></p>
 
     </main>
   </div>
@@ -309,295 +108,93 @@
 <script src="/js/app.js"></script>
 <script src="/js/layout.js"></script>
 <script>
-/* ---- Regional benchmark data (Cameroon averages) ---------- */
-const BENCHMARK = {
-  scans_per_month:    4.2,   // avg scans/month by similar operators
-  disease_rate:       0.38,  // avg % of scans returning disease
-  healthy_rate:       0.62,
-  response_time_h:    18,    // hours from detection to treatment order
-  parcels_count:      3.1,
-  chat_sessions:      2.8,
-  scans_per_hectare:  1.8,   // scans per ha per season
-};
+Layout.init({ page: 'benchmark', titleKey: 'nav.benchmark', subtitleKey: 'benchmark.subtitle' });
 
-let _donut = null;
-let _activity = null;
+const MIN_ANALYSES = 3;   // below this, show an explicit empty state instead of charts
+let progress;             // undefined = loading, null = error
+const charts = {};
 
-document.addEventListener('DOMContentLoaded', () => {
-  App.boot();
-  Layout.init({ page: 'benchmark', title: 'Local Benchmark', subtitle: 'Performance analysis' });
-  loadBenchmark();
+document.addEventListener('DOMContentLoaded', async () => {
+  const { data, error } = await API.dashboard.progress(6);
+  progress = error ? null : data;
+  render();
 });
+window.addEventListener('languageChanged', render);
 
-async function loadBenchmark() {
-  const [statsRes, histRes] = await Promise.all([
-    API.dashboard.stats(),
-    API.analysis.history(100, 0),
-  ]);
-
-  const stats   = statsRes.data || {};
-  const history = histRes.data?.items || [];
-
-  const totalAnalyses = stats.analyses || 0;
-  const diseases      = stats.diseases  || 0;
-  const parcels       = stats.parcels   || 0;
-  const chatSessions  = stats.chat_sessions || 0;
-
-  const healthyCount  = history.filter(a => a.detected_disease === 'healthy').length;
-  const diseaseCount  = history.filter(a => a.detected_disease && a.detected_disease !== 'healthy').length;
-  const diseaseRate   = totalAnalyses > 0 ? diseaseCount / totalAnalyses : 0;
-  const healthyRate   = totalAnalyses > 0 ? healthyCount / totalAnalyses : 0;
-
-  // Approximate scans/month (assume 3 months activity)
-  const scansPerMonth = totalAnalyses / 3;
-
-  // Score calculation (0-100)
-  const s1 = Math.min(100, (scansPerMonth / BENCHMARK.scans_per_month) * 100) * 0.30;
-  const s2 = Math.min(100, (chatSessions  / BENCHMARK.chat_sessions)   * 100) * 0.20;
-  const s3 = Math.min(100, (parcels       / BENCHMARK.parcels_count)   * 100) * 0.20;
-  const s4 = (1 - Math.abs(diseaseRate - BENCHMARK.disease_rate)) * 100       * 0.30;
-  const score = Math.round(Math.max(0, Math.min(100, s1 + s2 + s3 + s4)));
-
-  // Ring animation
-  const circumference = 2 * Math.PI * 45;  // 282.74
-  const offset = circumference * (1 - score / 100);
-  document.getElementById('scoreRing').style.strokeDashoffset = offset;
-  document.getElementById('scoreRing').style.stroke = score >= 70 ? 'var(--brand-primary)' : score >= 45 ? '#f59e0b' : '#ef4444';
-  document.getElementById('scoreNum').textContent = score;
-
-  const tier = score >= 75 ? 'Advanced Operator' : score >= 50 ? 'Active Operator' : score >= 25 ? 'Getting Started' : 'New User';
-  document.getElementById('scoreTitleText').textContent = `${tier} — ${score}/100`;
-  document.getElementById('scoreDesc').textContent =
-    score >= 75 ? 'Excellent usage of GREEN platform. Your monitoring frequency and chatbot usage are above the regional average.' :
-    score >= 50 ? 'Good start. Increase scan frequency and use GreenBot for field advice to improve your score.' :
-                  'Your account is new or underutilised. Run more scans and explore GreenBot to unlock full platform value.';
-
-  document.getElementById('scoreBreakdown').innerHTML = `
-    <div class="score-item"><div class="score-item-label">Total Scans</div><div class="score-item-val">${totalAnalyses}</div></div>
-    <div class="score-item"><div class="score-item-label">Disease Rate</div><div class="score-item-val">${(diseaseRate*100).toFixed(0)}%</div></div>
-    <div class="score-item"><div class="score-item-label">Parcels</div><div class="score-item-val">${parcels}</div></div>
-    <div class="score-item"><div class="score-item-label">GreenBot</div><div class="score-item-val">${chatSessions} sessions</div></div>
-  `;
-
-  // Metric cards
-  const metrics = [
-    {
-      title:   'Scan Frequency',
-      desc:    'Scans per month',
-      yours:   scansPerMonth,
-      bench:   BENCHMARK.scans_per_month,
-      format:  v => v.toFixed(1),
-      unit:    'scans/month',
-      tip:     'More frequent scanning enables earlier disease detection and reduces crop losses.',
-      inverse: false,
-    },
-    {
-      title:   'Disease Detection Rate',
-      desc:    'Share of scans returning a disease',
-      yours:   diseaseRate * 100,
-      bench:   BENCHMARK.disease_rate * 100,
-      format:  v => v.toFixed(1) + '%',
-      unit:    '',
-      tip:     'High disease rate may indicate late-stage field conditions or a disease outbreak.',
-      inverse: true,  // lower is better
-    },
-    {
-      title:   'Parcel Coverage',
-      desc:    'Registered parcels on GREEN Map',
-      yours:   parcels,
-      bench:   BENCHMARK.parcels_count,
-      format:  v => Math.round(v),
-      unit:    'parcels',
-      tip:     'More registered parcels enables better traceability and parcel-level disease tracking.',
-      inverse: false,
-    },
-    {
-      title:   'GreenBot Usage',
-      desc:    'AI agronomic consultation sessions',
-      yours:   chatSessions,
-      bench:   BENCHMARK.chat_sessions,
-      format:  v => Math.round(v),
-      unit:    'sessions',
-      tip:     'Users who regularly consult GreenBot detect and treat diseases 2× faster on average.',
-      inverse: false,
-    },
-  ];
-
-  document.getElementById('metricCards').innerHTML = metrics.map(m => {
-    const ratio      = m.bench > 0 ? m.yours / m.bench : 0;
-    const pct        = Math.min(100, ratio * 100);
-    const benchPct   = 100;
-    const isGood     = m.inverse ? ratio <= 1.2 : ratio >= 0.8;
-    const badge      = isGood ? 'good' : ratio >= 0.5 ? 'warning' : 'bad';
-    const badgeText  = isGood ? 'Above average' : ratio >= 0.5 ? 'Near average' : 'Below average';
-    const yourColor  = m.inverse
-      ? (ratio > 1.3 ? '#ef4444' : ratio > 1 ? '#f59e0b' : '#2ECC71')
-      : (ratio >= 0.8 ? '#2ECC71' : ratio >= 0.5 ? '#f59e0b' : '#ef4444');
-
-    return `
-      <div class="metric-compare">
-        <div class="mc-header">
-          <div>
-            <div class="mc-title">${m.title}</div>
-            <div style="font-size:var(--text-xs);color:var(--text-muted);">${m.desc}</div>
-          </div>
-          <span class="mc-badge ${badge}">${badgeText}</span>
-        </div>
-        <div class="mc-bars">
-          <div class="mc-bar-row">
-            <div class="mc-bar-label">You</div>
-            <div class="mc-bar-track">
-              <div class="mc-bar-fill" style="width:${pct}%;background:${yourColor};"></div>
-            </div>
-            <div class="mc-bar-val" style="color:${yourColor};">${m.format(m.yours)}</div>
-          </div>
-          <div class="mc-bar-row">
-            <div class="mc-bar-label">Regional avg</div>
-            <div class="mc-bar-track">
-              <div class="mc-bar-fill" style="width:${benchPct}%;background:rgba(107,114,128,0.4);"></div>
-            </div>
-            <div class="mc-bar-val" style="color:var(--text-muted);">${m.format(m.bench)}</div>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-
-  // Charts
-  renderDonut(healthyCount, diseaseCount);
-  renderActivity(history);
-
-  // Tips
-  renderTips(score, scansPerMonth, diseaseRate, parcels, chatSessions);
+function monthLabel(key) {
+  const [y, m] = key.split('-').map(Number);
+  return I18n.date(new Date(y, m - 1, 15), { month: 'short', year: '2-digit' });
 }
 
-function renderDonut(healthy, disease) {
-  if (typeof Chart === 'undefined') return;
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const canvas = document.getElementById('donutChart');
-  if (!canvas || _donut) return;
-
-  const total = healthy + disease || 1;
-  _donut = new Chart(canvas.getContext('2d'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Healthy', 'Disease'],
-      datasets: [{
-        data: [healthy, disease],
-        backgroundColor: ['rgba(46,204,113,0.7)', 'rgba(239,68,68,0.7)'],
-        borderColor: ['#2ECC71','#ef4444'],
-        borderWidth: 2,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '65%',
-      plugins: {
-        legend: { position: 'bottom', labels: { color: isDark ? '#8B949E' : '#6B7280', font: { family: 'Inter', size: 12 } } },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${((ctx.parsed/total)*100).toFixed(0)}%)` } },
-      }
-    }
-  });
-}
-
-function renderActivity(history) {
-  if (typeof Chart === 'undefined') return;
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const canvas = document.getElementById('activityChart');
-  if (!canvas || _activity) return;
-
-  // Group by month
-  const months = {};
-  const now = new Date();
-  for (let i = 3; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months[`${d.getFullYear()}-${d.getMonth()}`] = { label: d.toLocaleString('default', { month: 'short' }), yours: 0, bench: BENCHMARK.scans_per_month };
+function render() {
+  if (progress === undefined) return;
+  const empty = document.getElementById('progEmpty');
+  const content = document.getElementById('progContent');
+  if (!progress || progress.total < MIN_ANALYSES) {
+    content.style.display = 'none';
+    empty.style.display = '';
+    empty.textContent = progress ? I18n.t('benchmark.empty', { count: progress.total }) : I18n.t('benchmark.error');
+    return;
   }
-  history.forEach(a => {
-    const d = new Date(a.created_at);
-    const k = `${d.getFullYear()}-${d.getMonth()}`;
-    if (months[k]) months[k].yours++;
-  });
+  empty.style.display = 'none';
+  content.style.display = '';
 
-  const keys = Object.keys(months);
-  const gridColor = isDark ? '#21262D' : '#F3F4F6';
-  const tickColor = isDark ? '#6E7681' : '#9CA3AF';
+  const months = progress.months;
+  const cur = months[months.length - 1];
+  const prev = months.slice(0, -1);
+  const prevTotal = prev.reduce((s, m) => s + m.analyses, 0);
+  const prevDiseases = prev.reduce((s, m) => s + m.diseases, 0);
+  const set = (id, v) => { document.getElementById(id).textContent = v; };
 
-  _activity = new Chart(canvas.getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: keys.map(k => months[k].label),
-      datasets: [
-        {
-          label: 'Your scans',
-          data: keys.map(k => months[k].yours),
-          backgroundColor: 'rgba(46,204,113,0.6)', borderColor: '#2ECC71', borderWidth: 1.5, borderRadius: 5,
-        },
-        {
-          label: 'Regional avg',
-          data: keys.map(k => parseFloat(months[k].bench.toFixed(1))),
-          backgroundColor: 'rgba(107,114,128,0.25)', borderColor: 'rgba(107,114,128,0.5)', borderWidth: 1.5, borderRadius: 5, borderDash: [4,4],
-        }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { color: isDark ? '#8B949E' : '#6B7280', font: { family: 'Inter', size: 12 }, boxWidth: 12 } }
-      },
-      scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor, precision: 0 }, beginAtZero: true }
-      }
-    }
-  });
-}
+  set('kThisMonth', I18n.number(cur.analyses));
+  set('kThisMonthSub', I18n.t('benchmark.vs_avg', { avg: I18n.number(prevTotal / prev.length, { maximumFractionDigits: 1 }) }));
+  set('kRate', cur.analyses ? I18n.percent(cur.diseases / cur.analyses) : '—');
+  set('kRateSub', I18n.t('benchmark.disease_rate_prev', { rate: prevTotal ? I18n.percent(prevDiseases / prevTotal) : '—' }));
+  set('kTop', progress.top_disease ? classLabel(progress.top_disease.code) : I18n.t('benchmark.none'));
+  set('kTopSub', progress.top_disease ? I18n.t('benchmark.top_disease_count', { count: progress.top_disease.count }) : '');
+  set('kParcels', I18n.number(progress.parcels_analysed));
 
-function renderTips(score, scansPerMonth, diseaseRate, parcels, chatSessions) {
-  const tips = [];
+  document.getElementById('plantRows').innerHTML = progress.plants.map(p => `
+    <tr>
+      <td>${escapeHtml(plantLabel(p.plant))}</td>
+      <td>${escapeHtml(I18n.number(p.analyses))}</td>
+      <td>${escapeHtml(I18n.percent(p.diseases / p.analyses))}</td>
+    </tr>`).join('');
 
-  const TIP_ICONS = {
-    camera:   { svg:`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`, bg:'rgba(245,158,11,.12)', color:'#d97706' },
-    check:    { svg:`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`, bg:'rgba(46,204,113,.12)', color:'#16a34a' },
-    warning:  { svg:`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`, bg:'rgba(239,68,68,.12)', color:'#dc2626' },
-    leaf:     { svg:`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 19.82A2 2 0 0 0 6 22c5.13 0 9-4.46 9-10V8"/><path d="M12 22s0-8-7-10"/></svg>`, bg:'rgba(46,204,113,.12)', color:'#16a34a' },
-    map:      { svg:`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>`, bg:'rgba(59,130,246,.12)', color:'#2563eb' },
-    bot:      { svg:`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M12 11V7"/><circle cx="12" cy="5" r="2"/><line x1="8" y1="15" x2="8" y2="17"/><line x1="16" y1="15" x2="16" y2="17"/></svg>`, bg:'rgba(139,92,246,.12)', color:'#7c3aed' },
+  if (typeof Chart === 'undefined') { window.addEventListener('load', render, { once: true }); return; }
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const grid = isDark ? '#21262D' : '#F3F4F6';
+  const tick = isDark ? '#8B949E' : '#6B7280';
+  const labels = months.map(m => monthLabel(m.month));
+  const common = {
+    responsive: true, maintainAspectRatio: false, locale: I18n.locale,
+    plugins: { legend: { labels: { color: tick, boxWidth: 12 } } },
   };
+  Object.values(charts).forEach(c => c.destroy());
 
-  if (scansPerMonth < BENCHMARK.scans_per_month) {
-    tips.push({ type:'caution', iconKey:'camera', title:'Increase scan frequency', body:`You average ${scansPerMonth.toFixed(1)} scans/month vs ${BENCHMARK.scans_per_month} for comparable operators. Scanning every 5–7 days enables earlier disease detection.` });
-  } else {
-    tips.push({ type:'positive', iconKey:'check', title:'Great scanning frequency', body:`Your scan rate (${scansPerMonth.toFixed(1)}/month) is above or near the regional average. Keep up regular monitoring especially during the rainy season.` });
-  }
+  charts.monthly = new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label: I18n.t('benchmark.diseases'), data: months.map(m => m.diseases), backgroundColor: 'rgba(239,68,68,.6)', stack: 's', borderRadius: 4 },
+      { label: I18n.t('benchmark.healthy'), data: months.map(m => m.healthy), backgroundColor: 'rgba(46,204,113,.55)', stack: 's', borderRadius: 4 },
+    ] },
+    options: { ...common, scales: {
+      x: { stacked: true, grid: { color: grid }, ticks: { color: tick } },
+      y: { stacked: true, beginAtZero: true, grid: { color: grid }, ticks: { color: tick, precision: 0 } } } },
+  });
 
-  if (diseaseRate > 0.5) {
-    tips.push({ type:'alert', iconKey:'warning', title:'High disease detection rate', body:`${(diseaseRate*100).toFixed(0)}% of your scans detect disease — significantly above the regional average (38%). Consider preventive fungicide treatment and crop rotation.` });
-  } else if (diseaseRate > 0) {
-    tips.push({ type:'positive', iconKey:'leaf', title:'Healthy disease rate', body:`Your disease detection rate (${(diseaseRate*100).toFixed(0)}%) is within normal range. Continue monitoring and apply preventive treatments at peak risk months.` });
-  }
-
-  if (parcels < 1) {
-    tips.push({ type:'caution', iconKey:'map', title:'Register your parcels on GREEN Map', body:'No parcels registered yet. Mapping your fields enables parcel-level disease tracking and automatic GPS tagging of analyses.' });
-  } else {
-    tips.push({ type:'positive', iconKey:'map', title:'Field mapping active', body:`${parcels} parcel${parcels > 1 ? 's' : ''} registered. Analysis results are automatically linked to your field map for traceability.` });
-  }
-
-  if (chatSessions < 2) {
-    tips.push({ type:'caution', iconKey:'bot', title:'Use GreenBot for agronomic advice', body:'GreenBot can interpret your disease results and provide customised treatment recommendations. Users who consult GreenBot weekly respond to disease outbreaks 2× faster.' });
-  } else {
-    tips.push({ type:'positive', iconKey:'bot', title:'Active GreenBot usage', body:`${chatSessions} consultation sessions recorded. Continue using GreenBot for personalised agronomic recommendations linked to your latest scan results.` });
-  }
-
-  document.getElementById('tipsList').innerHTML = tips.map(t => {
-    const ic = TIP_ICONS[t.iconKey] || TIP_ICONS.check;
-    return `
-    <div class="tip-item ${t.type}">
-      <div class="tip-icon" style="background:${ic.bg};color:${ic.color};">${ic.svg}</div>
-      <div>
-        <div class="tip-title">${t.title}</div>
-        <div class="tip-body">${t.body}</div>
-      </div>
-    </div>`;
-  }).join('');
+  charts.rate = new Chart(document.getElementById('rateChart'), {
+    type: 'line',
+    data: { labels, datasets: [{
+      label: I18n.t('benchmark.rate'),
+      data: months.map(m => m.analyses ? Math.round(1000 * m.diseases / m.analyses) / 10 : null),
+      borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.1)', spanGaps: true, tension: .3, fill: true,
+    }] },
+    options: { ...common, plugins: { ...common.plugins, tooltip: { callbacks: { label: c => ' ' + I18n.percent(c.parsed.y / 100) } } },
+      scales: {
+        x: { grid: { color: grid }, ticks: { color: tick } },
+        y: { min: 0, max: 100, grid: { color: grid }, ticks: { color: tick, callback: v => I18n.percent(v / 100) } } } },
+  });
 }
 </script>
 </body>

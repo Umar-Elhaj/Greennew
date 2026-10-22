@@ -311,6 +311,11 @@ const API = {
       return request(`/api/dashboard/disease-trends?days=${days}`, 'GET', null, true);
     },
 
+    /** The user's own monthly history (My progress page). */
+    progress(months = 6) {
+      return request(`/api/dashboard/progress?months=${months}`, 'GET', null, true);
+    },
+
     /** The 5 most recent analyses. */
     recentActivity() {
       return request('/api/dashboard/recent-activity', 'GET', null, true);
