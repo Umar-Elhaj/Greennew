@@ -10,6 +10,7 @@
 #                                       uses analyze-frame (store-and-forward).
 # ============================================================
 
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
@@ -85,6 +86,9 @@ async def analyze_frame(
     parcel_id: Optional[int]   = Form(None),
     latitude:  Optional[float] = Form(None, ge=-90, le=90),
     longitude: Optional[float] = Form(None, ge=-180, le=180),
+    mission_id:  Optional[int]      = Form(None),
+    cell_index:  Optional[int]      = Form(None, ge=1),
+    captured_at: Optional[datetime] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -93,6 +97,7 @@ async def analyze_frame(
         image_bytes, db, current_user, source=source,
         parcel_id=parcel_id, latitude=latitude, longitude=longitude,
         lang=request_lang(request),
+        mission_id=mission_id, cell_index=cell_index, captured_at=captured_at,
     )
 
 
@@ -103,6 +108,9 @@ async def upload_and_analyze(
     parcel_id: Optional[int]   = Form(None),
     latitude:  Optional[float] = Form(None, ge=-90, le=90),
     longitude: Optional[float] = Form(None, ge=-180, le=180),
+    mission_id:  Optional[int]      = Form(None),
+    cell_index:  Optional[int]      = Form(None, ge=1),
+    captured_at: Optional[datetime] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -111,4 +119,5 @@ async def upload_and_analyze(
         image_bytes, db, current_user, source="upload",
         parcel_id=parcel_id, latitude=latitude, longitude=longitude,
         lang=request_lang(request),
+        mission_id=mission_id, cell_index=cell_index, captured_at=captured_at,
     )

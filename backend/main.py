@@ -30,6 +30,7 @@ from routers import chatbot_router     # Phase 6 — GreenBot RAG + Gemini API
 from routers import weather_router     # Phase 6 — OpenWeatherMap proxy
 from routers import diseases_router    # Disease reference database
 from routers import media_router       # Authenticated access to analysed images
+from routers import mission_router     # GREEN Map missions (grid, path, heatmap)
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +126,7 @@ app.include_router(auth_router.router)
 app.include_router(dashboard_router.router)
 app.include_router(analysis_router.router)
 app.include_router(media_router.router)
+app.include_router(mission_router.router)
 app.include_router(camera_router.router)
 app.include_router(parcel_router.router)
 app.include_router(chatbot_router.router)

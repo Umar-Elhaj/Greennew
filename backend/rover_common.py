@@ -5,6 +5,7 @@
 
 import asyncio
 import logging
+from datetime import UTC, datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Tuple
 
@@ -16,8 +17,9 @@ from sqlalchemy.orm import Session
 from config import DEFAULT_DRONE_IP, DEFAULT_DRONE_STREAM_PORT, MODEL_VERSION
 from inference import predict
 from knowledge import build_fiche, class_code, fiche_for_analysis
+import geo
 from media import ProcessedImage, media_url, process_image, save_image
-from models import DiseaseAnalysis, Parcel, User
+from models import DiseaseAnalysis, Mission, Parcel, User
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +98,9 @@ def save_analysis(
     latitude: Optional[float],
     longitude: Optional[float],
     lang: str = "en",
+    mission_id: Optional[int] = None,
+    cell_index: Optional[int] = None,
+    captured_at: Optional[datetime] = None,
 ) -> DiseaseAnalysis:
     # Snapshot of the sheet at analysis time; responses rebuild it in the reader's language
     fiche = build_fiche(
@@ -123,6 +128,9 @@ def save_analysis(
         consent_dataset  = bool(current_user.dataset_consent),
         latitude         = latitude,
         longitude        = longitude,
+        mission_id       = mission_id,
+        cell_index       = cell_index,
+        captured_at      = captured_at,
         fiche_terrain    = fiche,
     )
     db.add(analysis)
@@ -156,6 +164,43 @@ def _stored_disease(a: DiseaseAnalysis) -> dict:
     }
 
 
+def _check_placement(db: Session, user: User, parcel_id: Optional[int], mission_id: Optional[int],
+                     cell_index: Optional[int]) -> tuple:
+    """Ownership and consistency of parcel / mission / cell, before any inference."""
+    mission = None
+    if mission_id is not None:
+        mission = db.query(Mission).filter(Mission.id == mission_id, Mission.user_id == user.id).first()
+        if mission is None:
+            raise HTTPException(status_code=404, detail="Mission not found.")
+        if parcel_id is not None and parcel_id != mission.parcel_id:
+            raise HTTPException(status_code=422, detail="The mission does not belong to this parcel.")
+        parcel_id = mission.parcel_id
+        if cell_index is not None and not (1 <= cell_index <= mission.cells_total):
+            raise HTTPException(status_code=422, detail="The cell is not part of this mission.")
+    elif cell_index is not None:
+        raise HTTPException(status_code=422, detail="The cell is not part of this mission.")
+    if parcel_id is not None:
+        owned = db.query(Parcel.id).filter(Parcel.id == parcel_id, Parcel.user_id == user.id).first()
+        if not owned:
+            raise HTTPException(status_code=404, detail="Parcel not found.")
+    return parcel_id, mission
+
+
+def _locate(db: Session, user: User, parcel_id, mission, cell_index, lat, lng) -> tuple:
+    """With a GPS position only: find the mission cell, or the user's parcel containing it."""
+    if lat is None or lng is None:
+        return parcel_id, cell_index
+    if mission is not None and cell_index is None:
+        cell_index = geo.cell_at(mission.grid, lng, lat)
+    if parcel_id is None:
+        for p in db.query(Parcel).filter(Parcel.user_id == user.id, Parcel.is_active == True,  # noqa: E712
+                                         Parcel.geometry.isnot(None)).all():
+            if geo.point_in_ring((lng, lat), geo.ring_of(p.geometry)):
+                parcel_id = p.id
+                break
+    return parcel_id, cell_index
+
+
 async def analyze_image_bytes(
     image_bytes: bytes,
     db: Session,
@@ -166,11 +211,16 @@ async def analyze_image_bytes(
     longitude: Optional[float] = None,
     save_image_file: bool = True,
     lang: str = "en",
+    mission_id: Optional[int] = None,
+    cell_index: Optional[int] = None,
+    captured_at: Optional[datetime] = None,
 ) -> dict:
-    if parcel_id is not None:
-        owned = db.query(Parcel.id).filter(Parcel.id == parcel_id, Parcel.user_id == current_user.id).first()
-        if not owned:
-            raise HTTPException(status_code=404, detail="Parcel not found.")
+    parcel_id, mission = _check_placement(db, current_user, parcel_id, mission_id, cell_index)
+    if captured_at is not None:
+        if captured_at.tzinfo is not None:   # store naive UTC like every other timestamp
+            captured_at = captured_at.astimezone(UTC).replace(tzinfo=None)
+        if captured_at > datetime.utcnow() + timedelta(days=1):
+            captured_at = None   # device clock obviously wrong
 
     image = await run_in_threadpool(process_image, image_bytes)
 
@@ -189,6 +239,7 @@ async def analyze_image_bytes(
     # EXIF GPS, kept only if the user agreed to it.
     if latitude is None and longitude is None and image.gps and current_user.location_consent:
         latitude, longitude = image.gps
+    parcel_id, cell_index = _locate(db, current_user, parcel_id, mission, cell_index, latitude, longitude)
 
     # Inference first: the image is only kept if the analysis succeeded
     disease = await run_disease_model(image.jpeg)
@@ -196,5 +247,6 @@ async def analyze_image_bytes(
     analysis = save_analysis(
         db, current_user, disease, image, image_path, source,
         parcel_id, latitude, longitude, lang,
+        mission_id=mission.id if mission else None, cell_index=cell_index, captured_at=captured_at,
     )
     return analysis_response(analysis, disease, lang)

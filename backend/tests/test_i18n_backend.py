@@ -44,8 +44,11 @@ def test_every_raised_message_has_a_french_translation():
     missing = []
     for py in list(root.glob("*.py")) + list((root / "routers").glob("*.py")):
         src = py.read_text(encoding="utf-8")
-        for m in re.finditer(r'detail=f?"([^"]+)"', src):
+        for m in re.finditer(r'(?:detail=|GeometryError\(|msg = )f?"([^"]+)"', src):
             msg = m.group(1)
+            if msg.endswith(" ") and m.end() < len(src):   # implicitly concatenated string: take the next one
+                nxt = re.match(r'\s*f?"([^"]+)"', src[m.end():])
+                msg += nxt.group(1) if nxt else ""
             if "{" in msg:
                 sample = re.sub(r"\{[^}]+\}", "1", msg)
                 if i18n.translate(sample, "fr") == sample:

@@ -73,6 +73,26 @@ MESSAGES_FR = {
     # weather
     "The weather service is not configured on this server.": "Le service météo n'est pas configuré sur ce serveur.",
     "The weather service is unavailable.": "Le service météo est indisponible.",
+    # GREEN Map: parcels and missions
+    "The parcel geometry must be a GeoJSON Polygon.": "La géométrie de la parcelle doit être un polygone GeoJSON.",
+    "Parcels with holes are not supported.": "Les parcelles trouées ne sont pas prises en charge.",
+    "Each point must be [longitude, latitude].": "Chaque point doit être [longitude, latitude].",
+    "A parcel needs at least 3 points.": "Une parcelle doit compter au moins 3 points.",
+    "Coordinates out of range: expected [longitude, latitude].":
+        "Coordonnées hors limites : [longitude, latitude] attendu.",
+    "Latitude and longitude seem swapped: GeoJSON expects [longitude, latitude].":
+        "La latitude et la longitude semblent inversées : GeoJSON attend [longitude, latitude].",
+    "The parcel outline crosses itself.": "Le contour de la parcelle se croise lui-même.",
+    "The parcel is too small.": "La parcelle est trop petite.",
+    "The cell size must be between 1 and 50 m.": "La taille de cellule doit être comprise entre 1 et 50 m.",
+    "The parcel is smaller than one cell: choose a smaller cell size.":
+        "La parcelle est plus petite qu'une cellule : choisissez une taille de cellule plus petite.",
+    "This parcel was changed elsewhere in the meantime: the server version is kept.":
+        "Cette parcelle a été modifiée ailleurs entre-temps : la version du serveur est conservée.",
+    "This parcel has no outline: draw it on the map first.":
+        "Cette parcelle n'a pas de contour : tracez-la d'abord sur la carte.",
+    "The cell is not part of this mission.": "Cette cellule ne fait pas partie de la mission.",
+    "The mission does not belong to this parcel.": "La mission n'appartient pas à cette parcelle.",
     # generic
     "Internal server error.": "Erreur interne du serveur.",
 }
@@ -81,6 +101,11 @@ MESSAGES_FR = {
 PATTERNS_FR = [
     (re.compile(r"^Image too large\. Maximum (\d+) MB\.$"), "Image trop volumineuse. Maximum {0} Mo."),
     (re.compile(r"^Disease '(.+)' not found\.$"), "Maladie « {0} » introuvable."),
+    (re.compile(r"^A parcel can have at most (\d+) points\.$"), "Une parcelle peut compter au plus {0} points."),
+    (re.compile(r"^The parcel is too large \(more than (\d+) ha\)\.$"),
+     "La parcelle est trop grande (plus de {0} ha)."),
+    (re.compile(r"^Too many cells \(more than (\d+)\): use cells of at least (\d+) m\.$"),
+     "Trop de cellules (plus de {0}) : utilisez des cellules d'au moins {1} m."),
     (re.compile(r"^Password must be at least (\d+) characters\.$"),
      "Le mot de passe doit contenir au moins {0} caractères."),
     (re.compile(r"^New password must be at least (\d+) characters\.$"),
