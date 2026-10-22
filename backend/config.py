@@ -79,6 +79,9 @@ MODEL_PATH: str = os.getenv(
     "MODEL_PATH",
     os.path.join(os.path.dirname(__file__), '..', 'Models', 'best_efficientnet.pth')
 )
+# End-to-end tests only: deterministic fake predictions without loading the
+# model. Honoured only when DEBUG is on, never in production.
+E2E_FAKE_MODEL: bool = DEBUG and os.getenv("E2E_FAKE_MODEL", "") == "1"
 # Stored with every analysis so the dataset knows which model predicted what
 MODEL_VERSION: str = os.getenv("MODEL_VERSION", "efficientnet-v1")
 

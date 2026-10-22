@@ -76,6 +76,36 @@ const WRONG_LANG_ALLOW: RegExp[] = [/^GREEN( Map| Data)?$/, /^GreenBot$/, /Esri|
 
 let session: { token: string; user: any } | null = null;
 
+/** 16×16 PNG of one colour, built without dependencies. */
+function solidPng(hex: string): Buffer {
+  const zlib = require('zlib');
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const row = Buffer.concat([Buffer.from([0]), Buffer.from(Array(16).fill([r, g, b]).flat())]);
+  const raw = Buffer.concat(Array(16).fill(row));
+  const crcTable = Array.from({ length: 256 }, (_, n) => {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    return c >>> 0;
+  });
+  const crc = (buf: Buffer) => {
+    let c = 0xffffffff;
+    for (const x of buf) c = crcTable[(c ^ x) & 0xff] ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type: string, data: Buffer) => {
+    const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
+    const td = Buffer.concat([Buffer.from(type), data]);
+    const c = Buffer.alloc(4); c.writeUInt32BE(crc(td));
+    return Buffer.concat([len, td, c]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(16, 0); ihdr.writeUInt32BE(16, 4); ihdr[8] = 8; ihdr[9] = 2;
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0)),
+  ]);
+}
+
 async function ensureUser(request: APIRequestContext) {
   if (session) return session;
   const phone = `+2376${Date.now().toString().slice(-8)}`;
@@ -85,6 +115,14 @@ async function ensureUser(request: APIRequestContext) {
   expect(r.status(), await r.text()).toBe(201);
   const body = await r.json();
   session = { token: body.access_token, user: body.user };
+  // A few analyses (fake model, see E2E_FAKE_MODEL) so lists and charts have data
+  for (const color of ['#2a8a3a', '#8a6a2a', '#c04030']) {
+    const up = await request.post('/api/camera/upload', {
+      headers: { Authorization: `Bearer ${body.access_token}` },
+      multipart: { file: { name: 'leaf.png', mimeType: 'image/png', buffer: solidPng(color) } },
+    });
+    expect(up.status(), await up.text()).toBe(200);
+  }
   return session;
 }
 
@@ -182,7 +220,22 @@ for (const lang of LANGS) {
             const overflow = await page.evaluate(
               () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
             );
-            if (overflow > 1) problems.push(`horizontal overflow: ${overflow}px`);
+            if (overflow > 1) {
+              const culprits = await page.evaluate(() => {
+                const W = document.documentElement.clientWidth;
+                const out: string[] = [];
+                document.querySelectorAll('body *').forEach((el) => {
+                  const r = el.getBoundingClientRect();
+                  // innermost elements sticking out on the right
+                  if (r.right > W + 1 && r.width > 0 && !Array.from(el.children).some(
+                    (c) => c.getBoundingClientRect().right > W + 1)) {
+                    out.push(`${el.tagName.toLowerCase()}.${String(el.className).split(' ')[0]}#${el.id}`);
+                  }
+                });
+                return [...new Set(out)].slice(0, 5);
+              });
+              problems.push(`horizontal overflow: ${overflow}px (${culprits.join(', ')})`);
+            }
           }
 
           expect(problems, problems.join('\n')).toEqual([]);

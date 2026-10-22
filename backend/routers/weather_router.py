@@ -7,17 +7,17 @@
 # Endpoints:
 #   GET /api/weather/current   — current conditions
 #   GET /api/weather/forecast  — 5-day / 3-hour forecast
-#   GET /api/weather/agro-tip  — agronomic advice from conditions
 # ============================================================
 
 import logging
 from typing import Optional
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from auth import get_current_user
 from config import WEATHER_API_KEY, OPENWEATHER_BASE_URL
+from i18n import request_lang
 from models import User
 
 logger = logging.getLogger(__name__)
@@ -39,6 +39,41 @@ CAMEROON_COORDS = {
 
 DEFAULT_CITY = "yaounde"
 
+# Region of Cameroon (as stored on users/parcels) → regional capital
+REGION_CAPITALS = {
+    "Adamaoua": "ngaoundere", "Centre": "yaounde", "Est": "bertoua", "Extrême-Nord": "maroua",
+    "Littoral": "douala", "Nord": "garoua", "Nord-Ouest": "bamenda", "Ouest": "bafoussam",
+    "Sud": "ebolowa", "Sud-Ouest": "buea",
+}
+
+# Agronomic tips: code → message per language ({temp}, {humidity} filled in)
+AGRO_TIPS = {
+    "wet": {
+        "en": "Wet weather: high risk of fungal spread (late blight, early blight). "
+              "Inspect your crops and consider a preventive treatment.",
+        "fr": "Temps humide : risque élevé de propagation des champignons (mildiou, alternariose). "
+              "Inspectez vos cultures et envisagez un traitement préventif.",
+    },
+    "humid": {
+        "en": "High humidity ({humidity} %): favourable to fungi and bacteria. Check cassava and tomato.",
+        "fr": "Humidité élevée ({humidity} %) : conditions favorables aux champignons et aux bactéries. "
+              "Surveillez le manioc et la tomate.",
+    },
+    "hot": {
+        "en": "Intense heat ({temp} °C): possible water stress on sensitive crops. Make sure irrigation is sufficient.",
+        "fr": "Forte chaleur ({temp} °C) : stress hydrique possible sur les cultures sensibles. "
+              "Assurez une irrigation suffisante.",
+    },
+    "cool": {
+        "en": "Cool temperatures ({temp} °C): slower growth. Watch for frost risk at altitude.",
+        "fr": "Températures fraîches ({temp} °C) : croissance ralentie. Surveillez le risque de gel en altitude.",
+    },
+    "ok": {
+        "en": "Favourable growing conditions: no immediate weather alert.",
+        "fr": "Conditions favorables aux cultures : aucune alerte météo immédiate.",
+    },
+}
+
 
 # ─────────────────────────────────────────────────────────────
 # HELPERS
@@ -52,11 +87,14 @@ def _require_key():
         )
 
 
-def _resolve_coords(city: Optional[str], lat: Optional[float], lon: Optional[float]) -> dict:
+def _resolve_coords(city: Optional[str], lat: Optional[float], lon: Optional[float],
+                    region: Optional[str] = None) -> dict:
     """Return OWM query params and a display label."""
     if lat is not None and lon is not None:
         return {"params": {"lat": lat, "lon": lon}, "label": f"{lat:.4f}°N, {lon:.4f}°E"}
 
+    if not city and region in REGION_CAPITALS:
+        city = REGION_CAPITALS[region]
     key = (city or DEFAULT_CITY).lower().strip()
     preset = CAMEROON_COORDS.get(key)
     if preset:
@@ -66,51 +104,26 @@ def _resolve_coords(city: Optional[str], lat: Optional[float], lon: Optional[flo
     return {"params": {"q": f"{city},CM"}, "label": city}
 
 
-def _agro_tip(temp: float, humidity: float, weather_id: int) -> dict:
+def _agro_tip(temp: float, humidity: float, weather_id: int, lang: str = "en") -> dict:
     """
-    Return an agronomic risk level and advice based on current conditions.
+    Agronomic risk level and advice from the current conditions.
     weather_id = OWM condition code (2xx thunder, 3xx drizzle, 5xx rain, 8xx clear/cloud…)
     """
-    # Rain / thunder → fungal disease risk
     if 200 <= weather_id < 600:
-        return {
-            "level":   "warning",
-            "message": (
-                "Conditions humides — risque élevé de propagation fongique (mildiou, "
-                "alternariose). Inspectez les cultures et envisagez un traitement préventif."
-            ),
-        }
-    if humidity > 85:
-        return {
-            "level":   "warning",
-            "message": (
-                f"Humidité élevée ({humidity} %) — conditions favorables aux champignons "
-                "et bactéries. Vérifiez le manioc et la tomate."
-            ),
-        }
-    if temp > 36:
-        return {
-            "level":   "caution",
-            "message": (
-                f"Chaleur intense ({temp:.0f} °C) — stress hydrique possible sur les cultures "
-                "sensibles. Assurez une irrigation adéquate."
-            ),
-        }
-    if temp < 14:
-        return {
-            "level":   "info",
-            "message": (
-                f"Températures fraîches ({temp:.0f} °C) — croissance ralentie. "
-                "Idéal pour les cultures de saison fraîche ; surveillez les risques de gel en altitude."
-            ),
-        }
-    return {
-        "level":   "ok",
-        "message": "Conditions agronomiques favorables — aucune alerte météo immédiate.",
-    }
+        level, code = "warning", "wet"
+    elif humidity > 85:
+        level, code = "warning", "humid"
+    elif temp > 36:
+        level, code = "caution", "hot"
+    elif temp < 14:
+        level, code = "info", "cool"
+    else:
+        level, code = "ok", "ok"
+    message = AGRO_TIPS[code]["fr" if lang == "fr" else "en"].format(temp=f"{temp:.0f}", humidity=humidity)
+    return {"level": level, "code": code, "message": message}
 
 
-def _format_current(raw: dict, label: str) -> dict:
+def _format_current(raw: dict, label: str, lang: str = "en") -> dict:
     """Flatten OWM /weather response into a clean dict."""
     main    = raw.get("main", {})
     wind    = raw.get("wind", {})
@@ -121,7 +134,7 @@ def _format_current(raw: dict, label: str) -> dict:
     humidity = main.get("humidity",   0)
     w_id     = weather.get("id",      800)
 
-    tip = _agro_tip(temp, humidity, w_id)
+    tip = _agro_tip(temp, humidity, w_id, lang)
 
     return {
         "city":        raw.get("name", label),
@@ -145,13 +158,12 @@ def _format_current(raw: dict, label: str) -> dict:
     }
 
 
-def _format_forecast(raw: dict, label: str) -> list:
+def _format_forecast(raw: dict, label: str, lang: str = "en") -> list:
     """
     Convert OWM /forecast (3h steps) to a list of daily summaries.
     Groups by date, picks the midday (12:00) entry or the first of the day.
     """
     from collections import defaultdict
-    import datetime
 
     days: dict = defaultdict(list)
     for item in raw.get("list", []):
@@ -175,7 +187,6 @@ def _format_forecast(raw: dict, label: str) -> list:
 
         result.append({
             "date":        date_str,
-            "day":         datetime.date.fromisoformat(date_str).strftime("%A"),   # Monday…
             "temp_max":    round(max(e["main"]["temp"] for e in entries), 1),
             "temp_min":    round(min(e["main"]["temp"] for e in entries), 1),
             "temp":        round(temp, 1),
@@ -184,7 +195,7 @@ def _format_forecast(raw: dict, label: str) -> list:
             "weather_id":  w_id,
             "description": weather.get("description", "").capitalize(),
             "icon":        weather.get("icon", "01d"),
-            "agro_tip":    _agro_tip(temp, humidity, w_id),
+            "agro_tip":    _agro_tip(temp, humidity, w_id, lang),
         })
     return result
 
@@ -193,25 +204,28 @@ def _format_forecast(raw: dict, label: str) -> list:
 # ENDPOINTS
 # ─────────────────────────────────────────────────────────────
 
-@router.get("/current", summary="Météo actuelle pour une ville ou des coordonnées GPS")
+@router.get("/current", summary="Current weather for a city, a region or GPS coordinates")
 async def get_current_weather(
-    city: Optional[str]  = Query(None, description="Ville (ex: Yaoundé, Douala…)"),
-    lat:  Optional[float]= Query(None, description="Latitude GPS"),
-    lon:  Optional[float]= Query(None, description="Longitude GPS"),
+    request: Request,
+    city: Optional[str]  = Query(None, description="City (e.g. Yaoundé, Douala…)"),
+    region: Optional[str]= Query(None, description="Region of Cameroon (its capital is used)"),
+    lat:  Optional[float]= Query(None, description="GPS latitude"),
+    lon:  Optional[float]= Query(None, description="GPS longitude"),
     current_user: User   = Depends(get_current_user),
 ):
     """
-    Retourne les conditions météo actuelles via OpenWeatherMap.
-    Priorité : coordonnées GPS > nom de ville > Yaoundé par défaut.
+    Current conditions from OpenWeatherMap, in the request language.
+    Priority: GPS coordinates > city > region > Yaoundé.
     """
     _require_key()
-    resolved = _resolve_coords(city, lat, lon)
+    lang = request_lang(request)
+    resolved = _resolve_coords(city, lat, lon, region)
 
     params = {
         **resolved["params"],
         "appid": WEATHER_API_KEY,
         "units": "metric",
-        "lang":  "fr",
+        "lang":  lang,
     }
 
     try:
@@ -220,28 +234,31 @@ async def get_current_weather(
             if r.status_code == 404:
                 raise HTTPException(status_code=404, detail=f"City not found: {city}")
             r.raise_for_status()
-            return _format_current(r.json(), resolved["label"])
+            return _format_current(r.json(), resolved["label"], lang)
     except httpx.HTTPError as exc:
         logger.error(f"[Weather] OpenWeather error: {exc}")
         raise HTTPException(status_code=502, detail="The weather service is unavailable.")
 
 
-@router.get("/forecast", summary="Prévisions sur 5 jours (résumé journalier)")
+@router.get("/forecast", summary="5-day forecast (daily summary)")
 async def get_forecast(
+    request: Request,
     city: Optional[str]  = Query(None),
+    region: Optional[str]= Query(None),
     lat:  Optional[float]= Query(None),
     lon:  Optional[float]= Query(None),
     current_user: User   = Depends(get_current_user),
 ):
-    """Retourne les prévisions météo sur 5 jours via OpenWeatherMap."""
+    """5-day forecast from OpenWeatherMap, in the request language."""
     _require_key()
-    resolved = _resolve_coords(city, lat, lon)
+    lang = request_lang(request)
+    resolved = _resolve_coords(city, lat, lon, region)
 
     params = {
         **resolved["params"],
         "appid": WEATHER_API_KEY,
         "units": "metric",
-        "lang":  "fr",
+        "lang":  lang,
         "cnt":   40,   # 5 days × 8 slots/day
     }
 
@@ -253,7 +270,7 @@ async def get_forecast(
             r.raise_for_status()
             return {
                 "city":     resolved["label"],
-                "forecast": _format_forecast(r.json(), resolved["label"]),
+                "forecast": _format_forecast(r.json(), resolved["label"], lang),
             }
     except httpx.HTTPError as exc:
         logger.error(f"[Weather] OpenWeather forecast error: {exc}")

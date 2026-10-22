@@ -309,6 +309,7 @@
    ============================================================ */
 .app-main {
   flex: 1;
+  min-width: 0;   /* flex child: never grow wider than the viewport because of wide content */
   margin-left: var(--sidebar-width);
   display: flex;
   flex-direction: column;
@@ -460,6 +461,7 @@ body.sidebar-collapsed .app-main {
    ============================================================ */
 .app-content {
   flex: 1;
+  min-width: 0;
   padding: var(--sp-8);
   overflow-y: auto;
   background: var(--bg-subtle);

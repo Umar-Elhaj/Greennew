@@ -1,0 +1,62 @@
+{
+  "en": {
+    "plants": { "Cassava": "Cassava", "Corn": "Maize", "Tomato": "Tomato" },
+    "classes": {
+      "Cassava_Mosaic": "Cassava mosaic",
+      "Corn_Brown_Spots": "Maize brown spots",
+      "Corn_Healthy": "Healthy maize",
+      "Corn_Leaf_Blight": "Maize leaf blight",
+      "Corn_Mildew": "Maize mildew",
+      "Corn_Streak": "Maize streak",
+      "Corn_Stripe": "Maize stripe",
+      "Corn_Yellowing": "Maize yellowing",
+      "Tomato_Brown_Spots": "Tomato brown spots",
+      "Tomato_Blight_Leaf": "Tomato leaf blight",
+      "Tomato_Healthy": "Healthy tomato",
+      "healthy": "Healthy plant"
+    },
+    "alert": {
+      "title": "Alert level",
+      "help": "Based on the model's confidence, not on the extent of the damage.",
+      "none": "None (healthy)",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "result": {
+      "healthy": "Healthy",
+      "diseased": "Probable disease",
+      "uncertain": "Uncertain result"
+    }
+  },
+  "fr": {
+    "plants": { "Cassava": "Manioc", "Corn": "Maïs", "Tomato": "Tomate" },
+    "classes": {
+      "Cassava_Mosaic": "Mosaïque du manioc",
+      "Corn_Brown_Spots": "Taches brunes du maïs",
+      "Corn_Healthy": "Maïs sain",
+      "Corn_Leaf_Blight": "Brûlure des feuilles du maïs",
+      "Corn_Mildew": "Mildiou du maïs",
+      "Corn_Streak": "Striure du maïs",
+      "Corn_Stripe": "Rayure du maïs",
+      "Corn_Yellowing": "Jaunissement du maïs",
+      "Tomato_Brown_Spots": "Taches brunes de la tomate",
+      "Tomato_Blight_Leaf": "Brûlure des feuilles de la tomate",
+      "Tomato_Healthy": "Tomate saine",
+      "healthy": "Plante saine"
+    },
+    "alert": {
+      "title": "Niveau d'alerte",
+      "help": "Fondé sur la confiance du modèle, pas sur l'étendue des dégâts.",
+      "none": "Aucun (sain)",
+      "low": "Faible",
+      "medium": "Moyen",
+      "high": "Élevé"
+    },
+    "result": {
+      "healthy": "Sain",
+      "diseased": "Maladie probable",
+      "uncertain": "Résultat incertain"
+    }
+  }
+}

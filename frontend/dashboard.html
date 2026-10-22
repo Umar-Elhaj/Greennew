@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <!--
   GREEN App — Dashboard Page
   First inner page. Shows the full app shell (sidebar + header).
@@ -36,7 +36,7 @@
     })();
   </script>
 
-  <!-- Chart.js — loaded now, used in Phase 3 -->
+  <!-- Chart.js 4.4.0 (exact version, CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 
   <style>
@@ -252,7 +252,9 @@
     }
     .pill-high    { background: rgba(239,68,68,0.12);  color: var(--color-error); }
     .pill-medium  { background: rgba(245,158,11,0.12); color: var(--color-warning); }
-    .pill-low     { background: rgba(34,197,94,0.12);  color: var(--color-success); }
+    .pill-low     { background: rgba(59,130,246,0.12); color: var(--color-info); }
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .chart-empty  { height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text-muted); font-size: var(--text-sm); padding: var(--sp-4); }
     .pill-healthy { background: rgba(46,204,113,0.12); color: var(--brand-primary); }
 
     /* Weather widget */
@@ -312,26 +314,19 @@
         <!-- ---- Welcome Banner ----------------------------- -->
         <div class="welcome-banner" id="welcomeBanner">
           <div class="welcome-text">
-            <div class="welcome-greeting">Good morning,</div>
-            <div class="welcome-title" id="welcomeTitle">Welcome back</div>
-            <div class="welcome-subtitle">
-              Here's an overview of your agricultural operations.
-              No disease alerts today — your fields look healthy.
-            </div>
+            <div class="welcome-greeting" id="welcomeGreeting"></div>
+            <div class="welcome-title" id="welcomeTitle"></div>
+            <div class="welcome-subtitle" id="welcomeSubtitle" data-i18n="dashboard.banner.loading"></div>
           </div>
           <div class="welcome-actions">
-            <button class="btn-banner btn-banner-primary" onclick="window.location.href='/camera'">
-              &#9654; Start Drone Scan
-            </button>
-            <button class="btn-banner btn-banner-secondary" onclick="window.location.href='/chatbot'">
-              Ask GreenBot
-            </button>
+            <a class="btn-banner btn-banner-primary" href="/camera">&#9654; <span data-i18n="dashboard.actions.analyse"></span></a>
+            <a class="btn-banner btn-banner-secondary" href="/chatbot" data-i18n="dashboard.actions.ask_bot"></a>
           </div>
         </div>
 
         <!-- ---- KPI Cards ---------------------------------- -->
         <div class="section-title">
-          Key Metrics
+          <span data-i18n="dashboard.kpi.title"></span>
           <div class="section-title-line"></div>
         </div>
 
@@ -339,7 +334,7 @@
           <!-- KPI 1 — Active Parcels -->
           <div class="kpi-card">
             <div class="kpi-header">
-              <span class="kpi-label">Active Parcels</span>
+              <span class="kpi-label" data-i18n="dashboard.kpi.parcels"></span>
               <div class="kpi-icon-wrap kpi-icon-green">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
@@ -348,14 +343,14 @@
             </div>
             <div class="kpi-value" id="kpiParcels">—</div>
             <div class="kpi-change neutral">
-              <span class="kpi-change-label">Mapped on GREEN Map</span>
+              <span class="kpi-change-label" data-i18n="dashboard.kpi.parcels_hint"></span>
             </div>
           </div>
 
           <!-- KPI 2 — Total Analyses -->
           <div class="kpi-card">
             <div class="kpi-header">
-              <span class="kpi-label">Total Analyses</span>
+              <span class="kpi-label" data-i18n="dashboard.kpi.analyses"></span>
               <div class="kpi-icon-wrap kpi-icon-blue">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -364,14 +359,14 @@
             </div>
             <div class="kpi-value" id="kpiAnalyses">—</div>
             <div id="kpiAnalysesChange" class="kpi-change neutral">
-              <span class="kpi-change-label">Disease scans performed</span>
+              <span class="kpi-change-label" data-i18n="dashboard.kpi.total_hint"></span>
             </div>
           </div>
 
           <!-- KPI 3 — Diseases Detected -->
           <div class="kpi-card">
             <div class="kpi-header">
-              <span class="kpi-label">Diseases Detected</span>
+              <span class="kpi-label" data-i18n="dashboard.kpi.diseases"></span>
               <div class="kpi-icon-wrap kpi-icon-orange">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -381,14 +376,14 @@
             </div>
             <div class="kpi-value" id="kpiDiseases">—</div>
             <div id="kpiDiseasesChange" class="kpi-change neutral">
-              <span class="kpi-change-label">This season</span>
+              <span class="kpi-change-label" data-i18n="dashboard.kpi.total_hint"></span>
             </div>
           </div>
 
           <!-- KPI 4 — Healthy Plants -->
           <div class="kpi-card">
             <div class="kpi-header">
-              <span class="kpi-label">Healthy Plants</span>
+              <span class="kpi-label" data-i18n="dashboard.kpi.healthy"></span>
               <div class="kpi-icon-wrap kpi-icon-orange">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -397,14 +392,14 @@
             </div>
             <div class="kpi-value" id="kpiHealthy">—</div>
             <div id="kpiHealthyChange" class="kpi-change neutral">
-              <span class="kpi-change-label">Plantes saines détectées</span>
+              <span class="kpi-change-label" data-i18n="dashboard.kpi.total_hint"></span>
             </div>
           </div>
 
           <!-- KPI 5 — GreenBot Sessions -->
           <div class="kpi-card">
             <div class="kpi-header">
-              <span class="kpi-label">GreenBot Sessions</span>
+              <span class="kpi-label" data-i18n="dashboard.kpi.chats"></span>
               <div class="kpi-icon-wrap kpi-icon-purple">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -413,14 +408,14 @@
             </div>
             <div class="kpi-value" id="kpiChatSessions">—</div>
             <div id="kpiChatsChange" class="kpi-change neutral">
-              <span class="kpi-change-label">Agronomic consultations</span>
+              <span class="kpi-change-label" data-i18n="dashboard.kpi.total_hint"></span>
             </div>
           </div>
         </div>
 
         <!-- ---- Charts + Weather Row ----------------------- -->
         <div class="section-title">
-          Analysis Overview
+          <span data-i18n="dashboard.trend.section"></span>
           <div class="section-title-line"></div>
         </div>
 
@@ -429,13 +424,13 @@
           <div class="card">
             <div class="card-header">
               <div>
-                <div class="card-title">Disease Detection — Last 30 Days</div>
-                <div class="card-subtitle">Number of positive detections per week</div>
+                <div class="card-title" data-i18n="dashboard.trend.title"></div>
+                <div class="card-subtitle" data-i18n="dashboard.trend.subtitle"></div>
               </div>
-              <div class="badge badge-green">Live</div>
             </div>
             <div class="chart-container">
-              <canvas id="diseaseTrendChart"></canvas>
+              <canvas id="diseaseTrendChart" role="img" data-i18n-aria-label="dashboard.trend.title"></canvas>
+              <div class="chart-empty" id="trendEmpty" style="display:none;"></div>
             </div>
           </div>
 
@@ -443,8 +438,8 @@
           <div class="weather-widget" id="weatherWidget">
             <div class="weather-header">
               <div>
-                <div class="card-title">Weather</div>
-                <div class="weather-location" id="weatherLocation">Yaoundé, Centre — Loading...</div>
+                <div class="card-title" data-i18n="dashboard.weather.title"></div>
+                <div class="weather-location" id="weatherLocation"></div>
               </div>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" stroke-width="2">
                 <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
@@ -454,37 +449,33 @@
               </svg>
             </div>
             <div>
-              <div class="weather-temp" id="weatherTemp">--°C</div>
-              <div class="weather-desc" id="weatherDesc">Fetching weather data...</div>
+              <div class="weather-temp" id="weatherTemp">—</div>
+              <div class="weather-desc" id="weatherDesc" data-i18n="dashboard.weather.loading"></div>
             </div>
             <div class="weather-details">
               <div class="weather-detail">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
                 </svg>
-                <span id="weatherHumidity">--% Humidity</span>
+                <span id="weatherHumidity">—</span>
               </div>
               <div class="weather-detail">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>
                 </svg>
-                <span id="weatherWind">-- km/h Wind</span>
+                <span id="weatherWind">—</span>
               </div>
             </div>
             <div style="margin-top: auto; padding-top: var(--sp-3); border-top: 1px solid var(--border-subtle);">
-              <div style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--sp-2);">
-                Agricultural tip
-              </div>
-              <div style="font-size: var(--text-sm); color: var(--text-secondary);" id="weatherTip">
-                Loading agronomic recommendation...
-              </div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--sp-2);" data-i18n="dashboard.weather.tip"></div>
+              <div style="font-size: var(--text-sm); color: var(--text-secondary);" id="weatherTip">—</div>
             </div>
           </div>
         </div>
 
         <!-- ---- Quick Access ------------------------------ -->
         <div class="section-title">
-          Quick Access
+          <span data-i18n="dashboard.quick.title"></span>
           <div class="section-title-line"></div>
         </div>
 
@@ -493,57 +484,57 @@
             <div class="quick-tile-icon kpi-icon-green kpi-icon-wrap">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M2 12h2M20 12h2M12 2v2M12 20v2"/><circle cx="6" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="6" cy="18" r="1.5" fill="currentColor" stroke="none"/><circle cx="18" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
             </div>
-            <div class="quick-tile-label">Launch Drone Scan</div>
-            <div class="quick-tile-desc">Connect your drone and start a real-time field analysis.</div>
+            <div class="quick-tile-label" data-i18n="dashboard.quick.camera"></div>
+            <div class="quick-tile-desc" data-i18n="dashboard.quick.camera_desc"></div>
           </a>
 
           <a href="/chatbot" class="quick-tile">
             <div class="quick-tile-icon kpi-icon-purple kpi-icon-wrap" style="background:rgba(139,92,246,0.12);color:#8B5CF6;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
-            <div class="quick-tile-label">Ask GreenBot</div>
-            <div class="quick-tile-desc">Get instant agronomic advice from your AI field expert.</div>
+            <div class="quick-tile-label" data-i18n="dashboard.quick.chatbot"></div>
+            <div class="quick-tile-desc" data-i18n="dashboard.quick.chatbot_desc"></div>
           </a>
 
           <a href="/map" class="quick-tile">
             <div class="quick-tile-icon kpi-icon-blue kpi-icon-wrap">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             </div>
-            <div class="quick-tile-label">View GREEN Map</div>
-            <div class="quick-tile-desc">See all parcels and disease locations on your field map.</div>
+            <div class="quick-tile-label" data-i18n="dashboard.quick.map"></div>
+            <div class="quick-tile-desc" data-i18n="dashboard.quick.map_desc"></div>
           </a>
 
           <a href="/calendar" class="quick-tile">
             <div class="quick-tile-icon kpi-icon-orange kpi-icon-wrap">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             </div>
-            <div class="quick-tile-label">Ag. Calendar</div>
-            <div class="quick-tile-desc">Check planting schedules and seasonal recommendations.</div>
+            <div class="quick-tile-label" data-i18n="dashboard.quick.calendar"></div>
+            <div class="quick-tile-desc" data-i18n="dashboard.quick.calendar_desc"></div>
           </a>
 
           <a href="/history" class="quick-tile">
             <div class="quick-tile-icon kpi-icon-wrap" style="background:rgba(107,114,128,0.12);color:var(--text-muted);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
-            <div class="quick-tile-label">Analysis History</div>
-            <div class="quick-tile-desc">Browse all past disease scans and terrain sheets.</div>
+            <div class="quick-tile-label" data-i18n="dashboard.quick.history"></div>
+            <div class="quick-tile-desc" data-i18n="dashboard.quick.history_desc"></div>
           </a>
 
           <a href="/diseases" class="quick-tile">
             <div class="quick-tile-icon kpi-icon-red kpi-icon-wrap">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </div>
-            <div class="quick-tile-label">Disease Database</div>
-            <div class="quick-tile-desc">Explore the complete reference of 39+ crop diseases.</div>
+            <div class="quick-tile-label" data-i18n="dashboard.quick.diseases"></div>
+            <div class="quick-tile-desc" data-i18n="dashboard.quick.diseases_desc"></div>
           </a>
         </div>
 
         <!-- ---- Recent Analyses ---------------------------- -->
         <div class="section-title">
-          Recent Analyses
+          <span data-i18n="dashboard.recent.title"></span>
           <div class="section-title-line"></div>
           <a href="/history" style="font-size:var(--text-sm); color:var(--brand-primary); font-weight:500; white-space:nowrap; margin-left: auto;">
-            View all &rarr;
+            <span data-i18n="common.actions.view_all"></span> &rarr;
           </a>
         </div>
 
@@ -556,13 +547,9 @@
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
               </div>
-              <div class="empty-state-title">No analyses yet</div>
-              <div class="empty-state-description">
-                Connect your drone and run your first field scan to see disease detection results here.
-              </div>
-              <a href="/camera" class="btn btn-primary" style="margin-top: var(--sp-2);">
-                Start First Scan
-              </a>
+              <div class="empty-state-title" data-i18n="dashboard.recent.empty_title"></div>
+              <div class="empty-state-description" data-i18n="dashboard.recent.empty_text"></div>
+              <a href="/camera" class="btn btn-primary" style="margin-top: var(--sp-2);" data-i18n="dashboard.recent.start"></a>
             </div>
           </div>
         </div>
@@ -579,139 +566,137 @@
 
   <script>
     /* ---- Initialise layout -------------------------------- */
-    Layout.init({
-      page: 'dashboard',
-      title: 'Dashboard',
-      subtitle: 'Operations overview'
-    });
+    Layout.init({ page: 'dashboard', titleKey: 'nav.dashboard', subtitleKey: 'dashboard.subtitle' });
 
-    /* ---- Set welcome message with user's name ------------ */
+    let dashStats = null;      // last /stats payload (null = error, undefined = loading)
+    let trendData = null;
+    let trendChart = null;
+    let recentItems = null;
+
     document.addEventListener('DOMContentLoaded', () => {
-      const user = Auth.getUser();
-      if (user) {
-        const welcomeTitle = document.getElementById('welcomeTitle');
-        const hour = new Date().getHours();
-        const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-
-        // Update banner greeting dynamically
-        const bannerGreeting = document.querySelector('.welcome-greeting');
-        if (bannerGreeting) bannerGreeting.textContent = greeting + ',';
-        if (welcomeTitle)
-          welcomeTitle.textContent = user.first_name
-            ? `${user.first_name} ${user.last_name || ''}`
-            : 'Welcome back';
-      }
-
-      /* ---- Load dashboard stats ------------------------- */
+      renderGreeting();
       loadDashboardStats();
-
-      /* ---- Load disease trend chart --------------------- */
-      initDiseaseTrendChart();
-
-      /* ---- Load weather --------------------------------- */
+      loadTrend();
       loadWeather();
-
-      /* ---- Load recent analyses ------------------------- */
       loadRecentAnalyses();
     });
 
+    // Everything rendered from JS is re-rendered in the new language
+    window.addEventListener('languageChanged', () => {
+      renderGreeting();
+      renderStats();
+      renderTrend();
+      renderRecent();
+      loadWeather();   // descriptions and tips come from the server in the request language
+    });
 
-    /* ====================================================
-       DASHBOARD DATA LOADERS  (Phase 3 — live API data)
-       ==================================================== */
-
-    /** Load the 4 KPI cards from /api/dashboard/stats */
-    async function loadDashboardStats() {
-      const { data } = await API.dashboard.stats();
-      const vals = data || { parcels: 0, analyses: 0, diseases: 0, healthy: 0, chat_sessions: 0,
-                             new_analyses_week: 0, new_diseases_week: 0, new_healthy_week: 0, new_chats_week: 0 };
-
-      document.getElementById('kpiParcels').textContent      = vals.parcels;
-      document.getElementById('kpiAnalyses').textContent     = vals.analyses;
-      document.getElementById('kpiDiseases').textContent     = vals.diseases;
-      document.getElementById('kpiHealthy').textContent      = vals.healthy ?? '—';
-      document.getElementById('kpiChatSessions').textContent = vals.chat_sessions;
-
-      // ---- Weekly change indicators ----
-      _setKpiChange('kpiAnalysesChange', vals.new_analyses_week,  'new this week');
-      _setKpiChange('kpiDiseasesChange', vals.new_diseases_week,  'new this week',  true);
-      _setKpiChange('kpiHealthyChange',  vals.new_healthy_week,   'new this week');
-      _setKpiChange('kpiChatsChange',    vals.new_chats_week,     'new this week');
-
-      // Update banner subtitle based on disease count
-      const sub = document.querySelector('.welcome-subtitle');
-      if (sub) {
-        sub.textContent = vals.diseases > 0
-          ? `${vals.diseases} disease detection${vals.diseases > 1 ? 's' : ''} recorded this season. Check the GREEN Map for affected parcels.`
-          : `No disease alerts recorded. Your fields look healthy — keep monitoring with regular drone scans.`;
-      }
+    function renderGreeting() {
+      const user = Auth.getUser() || {};
+      const hour = new Date().getHours();
+      const part = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+      document.getElementById('welcomeGreeting').textContent = I18n.t(`dashboard.greeting.${part}`);
+      document.getElementById('welcomeTitle').textContent =
+        user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : I18n.t('dashboard.welcome');
     }
 
-    function _setKpiChange(elId, count, label, isWarning = false) {
+    /* ---- KPI cards ---------------------------------------- */
+    async function loadDashboardStats() {
+      const { data, error } = await API.dashboard.stats();
+      dashStats = error ? null : data;
+      renderStats();
+    }
+
+    function renderStats() {
+      const sub = document.getElementById('welcomeSubtitle');
+      sub.removeAttribute('data-i18n');
+      const ids = { kpiParcels: 'parcels', kpiAnalyses: 'analyses', kpiDiseases: 'diseases',
+                    kpiHealthy: 'healthy', kpiChatSessions: 'chat_sessions' };
+      if (!dashStats) {
+        // Never show zeros as if they were real figures
+        Object.keys(ids).forEach(id => { document.getElementById(id).textContent = '—'; });
+        sub.textContent = I18n.t('dashboard.banner.unavailable');
+        return;
+      }
+      for (const [id, field] of Object.entries(ids)) {
+        document.getElementById(id).textContent = I18n.number(dashStats[field] ?? 0);
+      }
+      _setKpiChange('kpiAnalysesChange', dashStats.new_analyses_week);
+      _setKpiChange('kpiDiseasesChange', dashStats.new_diseases_week, true);
+      _setKpiChange('kpiHealthyChange',  dashStats.new_healthy_week);
+      _setKpiChange('kpiChatsChange',    dashStats.new_chats_week);
+
+      if (!dashStats.analyses) sub.textContent = I18n.t('dashboard.banner.no_analyses');
+      else if (dashStats.new_diseases_week > 0)
+        sub.textContent = I18n.t('dashboard.banner.alerts_week', { count: dashStats.new_diseases_week });
+      else sub.textContent = I18n.t('dashboard.banner.no_alert_week');
+    }
+
+    function _setKpiChange(elId, count, isWarning = false) {
       const el = document.getElementById(elId);
       if (!el) return;
+      const span = document.createElement('span');
       if (count > 0) {
-        el.innerHTML = `<span>+${count} ${label}</span>`;
+        span.textContent = I18n.t('dashboard.kpi.new_week', { count });
         el.className = `kpi-change ${isWarning ? 'down' : 'up'}`;
       } else {
-        el.innerHTML = `<span class="kpi-change-label">${label}</span>`;
+        span.className = 'kpi-change-label';
+        span.textContent = I18n.t('dashboard.kpi.total_hint');
         el.className = 'kpi-change neutral';
       }
+      el.replaceChildren(span);
     }
 
-    /** Load disease trend chart from /api/dashboard/disease-trends */
-    async function initDiseaseTrendChart() {
+    /* ---- Trend chart -------------------------------------- */
+    async function loadTrend() {
+      const { data, error } = await API.dashboard.diseaseTrends(28);
+      trendData = error ? null : data;
+      // Chart.js is loaded with defer: wait for it if needed
+      if (typeof Chart === 'undefined') window.addEventListener('load', renderTrend, { once: true });
+      else renderTrend();
+    }
+
+    function renderTrend() {
       const canvas = document.getElementById('diseaseTrendChart');
-      if (!canvas || typeof Chart === 'undefined') return;
+      const empty  = document.getElementById('trendEmpty');
+      if (trendChart) { trendChart.destroy(); trendChart = null; }
+      if (!trendData || typeof Chart === 'undefined') {
+        canvas.style.display = 'none';
+        empty.style.display = '';
+        empty.textContent = I18n.t(trendData ? 'common.states.error' : 'dashboard.trend.error');
+        return;
+      }
+      if (!trendData.total_analyses) {
+        canvas.style.display = 'none';
+        empty.style.display = '';
+        empty.textContent = I18n.t('dashboard.trend.empty');
+        return;
+      }
+      canvas.style.display = '';
+      empty.style.display = 'none';
 
-      const ctx    = canvas.getContext('2d');
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-
-      // Fetch real data from backend
-      const { data: trends } = await API.dashboard.diseaseTrends(28);
-
-      // Fall back to empty 4-week labels if API not ready
-      const labels     = trends?.labels     ?? ['Week 1','Week 2','Week 3','Week 4'];
-      const detections = trends?.detections ?? [0, 0, 0, 0];
-      const healthy    = trends?.healthy    ?? [0, 0, 0, 0];
-
       const gridColor  = isDark ? '#21262D' : '#F3F4F6';
-      const tickColor  = isDark ? '#6E7681' : '#9CA3AF';
-      const labelColor = isDark ? '#8B949E' : '#6B7280';
+      const tickColor  = isDark ? '#8B949E' : '#6B7280';
+      const labels = (trendData.week_starts || []).map(d =>
+        I18n.t('dashboard.trend.week_of', { date: I18n.date(d, { day: 'numeric', month: 'short' }) }));
 
-      new Chart(ctx, {
+      trendChart = new Chart(canvas.getContext('2d'), {
         type: 'bar',
         data: {
           labels,
           datasets: [
-            {
-              label: 'Diseases detected',
-              data: detections,
-              backgroundColor: 'rgba(239, 68, 68, 0.60)',
-              borderColor: '#EF4444',
-              borderWidth: 1.5,
-              borderRadius: 6,
-              order: 1,
-            },
-            {
-              label: 'Healthy results',
-              data: healthy,
-              backgroundColor: 'rgba(46, 204, 113, 0.55)',
-              borderColor: '#2ECC71',
-              borderWidth: 1.5,
-              borderRadius: 6,
-              order: 2,
-            }
+            { label: I18n.t('dashboard.trend.diseases'), data: trendData.detections,
+              backgroundColor: 'rgba(239, 68, 68, 0.60)', borderColor: '#EF4444', borderWidth: 1.5, borderRadius: 6, order: 1 },
+            { label: I18n.t('dashboard.trend.healthy'), data: trendData.healthy,
+              backgroundColor: 'rgba(46, 204, 113, 0.55)', borderColor: '#2ECC71', borderWidth: 1.5, borderRadius: 6, order: 2 },
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          locale: I18n.locale,
           plugins: {
-            legend: {
-              position: 'top',
-              labels: { color: labelColor, font: { family: 'Inter', size: 12 }, boxWidth: 12, padding: 16 }
-            },
+            legend: { position: 'top', labels: { color: tickColor, font: { family: 'Inter', size: 12 }, boxWidth: 12, padding: 16 } },
             tooltip: {
               backgroundColor: isDark ? '#161B22' : '#FFFFFF',
               borderColor: isDark ? '#30363D' : '#E5E7EB',
@@ -719,82 +704,90 @@
               titleColor: isDark ? '#E6EDF3' : '#0E1117',
               bodyColor:  isDark ? '#8B949E' : '#6B7280',
               callbacks: {
-                label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} scan${ctx.parsed.y !== 1 ? 's' : ''}`
+                label: c => ' ' + I18n.t('dashboard.trend.tooltip', { label: c.dataset.label, count: c.parsed.y }),
               }
             }
           },
           scales: {
             x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 12 } } },
-            y: {
-              grid: { color: gridColor },
-              ticks: { color: tickColor, font: { size: 12 }, precision: 0 },
-              beginAtZero: true,
-            }
+            y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 12 }, precision: 0 }, beginAtZero: true }
           }
         }
       });
     }
 
+    /* ---- Weather (server proxy, user's region) ------------ */
     async function loadWeather() {
-      // Calls the backend OpenWeatherMap proxy (/api/weather/current).
-      // The API key stays server-side; the browser only needs its auth token.
-      try {
-        const { data, error } = await API.weather.current('yaounde');
-        if (error || !data) throw new Error(error || 'No data');
-
-        document.getElementById('weatherTemp').textContent     = `${data.temp}°C`;
-        document.getElementById('weatherHumidity').textContent = `${data.humidity}% Humidity`;
-        document.getElementById('weatherWind').textContent     = `${data.wind_speed} km/h Wind`;
-        document.getElementById('weatherLocation').textContent = data.label || data.city;
-        document.getElementById('weatherDesc').textContent     = data.description;
-        document.getElementById('weatherTip').textContent      = data.agro_tip?.message || '';
-
-      } catch {
-        document.getElementById('weatherDesc').textContent = 'Weather data unavailable.';
-        document.getElementById('weatherTip').textContent  = 'Check server connectivity or WEATHER_API_KEY.';
-      }
-    }
-
-    async function loadRecentAnalyses() {
-      const { data } = await API.analysis.history(5);
-      const container = document.getElementById('recentAnalysesContainer');
-      const emptyEl   = document.getElementById('recentAnalysesEmpty');
-
-      if (!data || data.length === 0) {
-        // Keep empty state visible
+      const user = Auth.getUser() || {};
+      const { data, error, status } = await API.weather.current(null, null, null, user.region || null);
+      const desc = document.getElementById('weatherDesc');
+      desc.removeAttribute('data-i18n');
+      if (error || !data) {
+        document.getElementById('weatherTemp').textContent = '—';
+        document.getElementById('weatherLocation').textContent = '';
+        desc.textContent = I18n.t(status === 503 ? 'dashboard.weather.not_configured' : 'dashboard.weather.unavailable');
+        document.getElementById('weatherHumidity').textContent = '—';
+        document.getElementById('weatherWind').textContent = '—';
+        document.getElementById('weatherTip').textContent = '—';
         return;
       }
+      document.getElementById('weatherTemp').textContent     = `${I18n.number(data.temp)}°C`;
+      document.getElementById('weatherHumidity').textContent = I18n.t('dashboard.weather.humidity', { value: data.humidity });
+      document.getElementById('weatherWind').textContent     = I18n.t('dashboard.weather.wind', { value: data.wind_speed });
+      document.getElementById('weatherLocation').textContent = data.label || data.city;
+      desc.textContent = data.description;
+      document.getElementById('weatherTip').textContent      = data.agro_tip?.message || '—';
+    }
 
-      // Build table
+    /* ---- Recent analyses ---------------------------------- */
+    async function loadRecentAnalyses() {
+      const { data, error } = await API.dashboard.recentActivity();
+      recentItems = error ? null : (Array.isArray(data) ? data : []);
+      renderRecent();
+    }
+
+    function renderRecent() {
+      const container = document.getElementById('recentAnalysesContainer');
+      const emptyEl   = document.getElementById('recentAnalysesEmpty');
+      container.querySelectorAll('.table-scroll, .card-error').forEach(el => el.remove());
+      if (recentItems === null) {
+        emptyEl.style.display = 'none';
+        container.insertAdjacentHTML('beforeend',
+          `<div class="card-error empty-state">${escapeHtml(I18n.t('dashboard.recent.error'))}</div>`);
+        return;
+      }
+      if (!recentItems.length) { emptyEl.style.display = ''; return; }
       emptyEl.style.display = 'none';
-      container.innerHTML = `
-        <table class="activity-table">
+
+      const color = lvl => lvl === 'high' ? 'var(--color-error)' : lvl === 'medium' ? 'var(--color-warning)'
+                         : lvl === 'low' ? 'var(--color-info)' : 'var(--color-success)';
+      container.insertAdjacentHTML('beforeend', `
+        <div class="table-scroll"><table class="activity-table">
           <thead>
             <tr>
-              <th>Disease / Result</th>
-              <th>Plant</th>
-              <th>Severity</th>
-              <th>Confidence</th>
-              <th>Date</th>
+              <th>${escapeHtml(I18n.t('dashboard.recent.result'))}</th>
+              <th>${escapeHtml(I18n.t('dashboard.recent.plant'))}</th>
+              <th title="${escapeHtml(I18n.t('model.alert.help'))}">${escapeHtml(I18n.t('dashboard.recent.alert'))}</th>
+              <th>${escapeHtml(I18n.t('dashboard.recent.confidence'))}</th>
+              <th>${escapeHtml(I18n.t('dashboard.recent.date'))}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            ${data.map(a => `
+            ${recentItems.map(a => {
+              const lvl = alertLevel(a);
+              return `
               <tr>
-                <td>
-                  <span class="disease-dot" style="background:${a.severity==='high'?'var(--color-error)':a.severity==='medium'?'var(--color-warning)':'var(--color-success)'}"></span>
-                  ${a.disease_name || 'Healthy'}
-                </td>
-                <td>${a.plant_type || '—'}</td>
-                <td><span class="pill pill-${a.severity||'healthy'}">${a.severity || 'N/A'}</span></td>
-                <td>${a.confidence ? Math.round(a.confidence * 100) + '%' : '—'}</td>
-                <td>${formatDate(a.created_at)}</td>
-                <td><a href="/history" style="color:var(--brand-primary);font-size:var(--text-sm);">View</a></td>
-              </tr>
-            `).join('')}
+                <td><span class="disease-dot" style="background:${color(lvl)}"></span>${escapeHtml(analysisLabel(a))}</td>
+                <td>${escapeHtml(plantLabel(a.plant_type))}</td>
+                <td><span class="pill pill-${lvl === 'none' ? 'healthy' : lvl}">${escapeHtml(alertLabel(lvl))}</span></td>
+                <td>${a.confidence != null ? escapeHtml(I18n.percent(a.confidence)) : '—'}</td>
+                <td style="white-space:nowrap;">${escapeHtml(I18n.date(a.created_at, { day: 'numeric', month: 'short' }))}</td>
+                <td><a href="/history?id=${encodeURIComponent(a.id)}" style="color:var(--brand-primary);font-size:var(--text-sm);">${escapeHtml(I18n.t('common.actions.view'))}</a></td>
+              </tr>`;
+            }).join('')}
           </tbody>
-        </table>`;
+        </table></div>`);
     }
   </script>
 </body>

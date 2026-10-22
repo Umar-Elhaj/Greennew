@@ -354,6 +354,54 @@ function fillRegionSelect(select, selected) {
   select.value = current || '';
 }
 
+/* ============================================================
+   MODEL PREDICTIONS — labels in the current language
+   detected_disease is the model class code (e.g. "Corn_Leaf_Blight")
+   or "healthy" (then plant_type tells which plant).
+   ============================================================ */
+const PLANT_CODES = ['Cassava', 'Corn', 'Tomato'];
+
+function plantLabel(plant) {
+  if (!plant) return I18n.t('common.unknown');
+  const code = PLANT_CODES.find(p => p.toLowerCase() === String(plant).toLowerCase());
+  return code ? I18n.t(`model.plants.${code}`) : plant;
+}
+
+/** Class code of an analysis-like object {detected_disease, plant_type}. */
+function analysisClassCode(a) {
+  if (!a) return null;
+  if (a.detected_disease === 'healthy' || !a.detected_disease) {
+    const plant = PLANT_CODES.find(p => p.toLowerCase() === String(a.plant_type || '').toLowerCase());
+    return plant ? `${plant}_Healthy` : 'healthy';
+  }
+  return a.detected_disease;
+}
+
+/** Display name of a model class code ("Corn_Leaf_Blight", "Corn Leaf Blight" or "healthy"). */
+function classLabel(code) {
+  if (!code) return I18n.t('common.unknown');
+  const key = String(code).trim().replace(/\s+/g, '_');
+  return I18n.has(`model.classes.${key}`) ? I18n.t(`model.classes.${key}`) : String(code).replace(/_/g, ' ');
+}
+
+function analysisLabel(a) {
+  return classLabel(analysisClassCode(a));
+}
+
+function isHealthy(a) {
+  return !a || !a.detected_disease || a.detected_disease === 'healthy';
+}
+
+/** Alert level of a prediction: none (healthy) / low / medium / high. */
+function alertLevel(a) {
+  if (isHealthy(a)) return 'none';
+  return ['low', 'medium', 'high'].includes(a.severity) ? a.severity : 'low';
+}
+
+function alertLabel(level) {
+  return I18n.t(`model.alert.${level || 'none'}`);
+}
+
 /**
  * Debounce a function (limit how often it fires).
  * @param {Function} fn

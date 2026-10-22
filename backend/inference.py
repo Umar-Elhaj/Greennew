@@ -18,7 +18,7 @@ import logging
 
 from PIL import Image
 
-from config import MODEL_PATH
+from config import E2E_FAKE_MODEL, MODEL_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -96,11 +96,13 @@ CLASS_FR_NAMES: dict[str, str] = {
     "Tomato_Healthy":     "Tomate saine",
 }
 
-# Confidence thresholds for severity labelling
+# Alert level of a DISEASE prediction, derived from the model confidence.
+# It is not a measure of damage: the classifier cannot estimate that.
+# Healthy predictions always get "none". The UI labels it accordingly.
 SEVERITY_THRESHOLDS = {
-    "high":   0.80,   # ≥ 80 % → high risk
-    "medium": 0.55,   # 55–79 % → moderate
-    "low":    0.0,    # < 55 % → low / uncertain
+    "high":   0.80,   # ≥ 80 %
+    "medium": 0.55,   # 55–79 %
+    "low":    0.0,    # < 55 %
 }
 
 
@@ -228,7 +230,9 @@ def get_model():
 # ============================================================
 # INFERENCE FUNCTION
 # ============================================================
-def _get_severity(confidence: float) -> str:
+def _get_severity(confidence: float, is_healthy: bool = False) -> str:
+    if is_healthy:
+        return "none"
     if confidence >= SEVERITY_THRESHOLDS["high"]:
         return "high"
     if confidence >= SEVERITY_THRESHOLDS["medium"]:
@@ -247,10 +251,13 @@ def predict(image_bytes: bytes) -> dict:
             "disease_name":    str,    # human-readable label
             "plant_type":      str,    # "tomate" | "maïs" | "manioc"
             "confidence":      float,  # 0.0 – 1.0
-            "severity":        str,    # "low" | "medium" | "high"
+            "severity":        str,    # "none" (healthy) | "low" | "medium" | "high" (alert level)
             "top3":            list,   # [{class, confidence}, ...] for display
         }
     """
+    if E2E_FAKE_MODEL:
+        return _fake_predict(image_bytes)
+
     model = get_model()
     device = next(model.parameters()).device
 
@@ -293,6 +300,7 @@ def predict(image_bytes: bytes) -> dict:
     top3_indices = probs.topk(3).indices.tolist()
     top3 = [
         {
+            "code":       CLASS_NAMES[i],
             "class":      CLASS_NAMES[i].replace("_", " "),
             "confidence": round(probs[i].item() * 100, 1),
         }
@@ -305,6 +313,26 @@ def predict(image_bytes: bytes) -> dict:
         "disease_name":     disease_name,
         "plant_type":       plant_type,
         "confidence":       round(confidence, 4),
-        "severity":         _get_severity(confidence),
+        "severity":         _get_severity(confidence, is_healthy),
         "top3":             top3,
+    }
+
+
+def _fake_predict(image_bytes: bytes) -> dict:
+    """E2E tests (DEBUG + E2E_FAKE_MODEL=1): class chosen from the image colour."""
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB").resize((8, 8))
+    r, g, b = (sum(c) / len(c) for c in zip(*image.getdata(), strict=True))
+    class_raw = CLASS_NAMES[int(r + 2 * g + 3 * b) % len(CLASS_NAMES)]
+    is_healthy = class_raw in HEALTHY_CLASSES
+    confidence = 0.6 + (int(r) % 40) / 100
+    return {
+        "class_raw":        class_raw,
+        "detected_disease": "healthy" if is_healthy else class_raw,
+        "disease_name":     CLASS_EN_NAMES[class_raw],
+        "plant_type":       PLANT_TYPE_MAP[class_raw.split("_")[0]],
+        "confidence":       round(confidence, 4),
+        "severity":         _get_severity(confidence, is_healthy),
+        "top3": [
+            {"code": class_raw, "class": class_raw.replace("_", " "), "confidence": round(confidence * 100, 1)},
+        ],
     }

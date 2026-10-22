@@ -108,11 +108,12 @@ def get_disease_trends(
     Returns weekly aggregated counts of disease detections vs healthy results
     for the last `days` days. Used to render the bar chart on the dashboard.
 
-    Response shape:
+    Response shape (week_starts are ISO dates; the client formats them
+    in the user's language):
     {
-      "labels":     ["Week 1", "Week 2", ...],
-      "detections": [3, 1, 5, 2],
-      "healthy":    [10, 8, 14, 7]
+      "week_starts": ["2026-09-24", "2026-10-01", ...],
+      "detections":  [3, 1, 5, 2],
+      "healthy":     [10, 8, 14, 7]
     }
     """
     uid   = current_user.id
@@ -147,13 +148,13 @@ def get_disease_trends(
             and (not a.detected_disease or a.detected_disease == "healthy")
         )
         buckets.append({
-            "label":      f"Week {i + 1}",
+            "week_start": week_start.date().isoformat(),
             "detections": detections,
             "healthy":    healthy,
         })
 
     return {
-        "labels":     [b["label"]      for b in buckets],
+        "week_starts": [b["week_start"] for b in buckets],
         "detections": [b["detections"] for b in buckets],
         "healthy":    [b["healthy"]    for b in buckets],
         "period_days": days,
@@ -182,7 +183,7 @@ def get_recent_activity(
     return [
         {
             "id":               a.id,
-            "disease_name":     a.disease_name or "Healthy",
+            "disease_name":     a.disease_name,
             "detected_disease": a.detected_disease,
             "plant_type":       a.plant_type,
             "severity":         a.severity,

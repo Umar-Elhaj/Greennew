@@ -312,8 +312,13 @@ const API = {
     },
 
     /** Get disease trend data for charts. */
-    diseaseTrends(days = 30) {
+    diseaseTrends(days = 28) {
       return request(`/api/dashboard/disease-trends?days=${days}`, 'GET', null, true);
+    },
+
+    /** The 5 most recent analyses. */
+    recentActivity() {
+      return request('/api/dashboard/recent-activity', 'GET', null, true);
     }
   },
 
@@ -327,9 +332,10 @@ const API = {
      * @param {number|null} lat   - GPS latitude
      * @param {number|null} lon   - GPS longitude
      */
-    current(city = null, lat = null, lon = null) {
+    current(city = null, lat = null, lon = null, region = null) {
       const params = new URLSearchParams();
       if (city) params.set('city', city);
+      if (region) params.set('region', region);
       if (lat !== null) params.set('lat', lat);
       if (lon !== null) params.set('lon', lon);
       return request(`/api/weather/current?${params}`, 'GET', null, true);

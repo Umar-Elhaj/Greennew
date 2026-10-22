@@ -182,6 +182,120 @@ window.GREEN_I18N_DICT = {
     "Sud-Ouest": "South-West"
    }
   },
+  "dashboard": {
+   "subtitle": "Overview of your farm",
+   "greeting": {
+    "morning": "Good morning,",
+    "afternoon": "Good afternoon,",
+    "evening": "Good evening,"
+   },
+   "welcome": "Welcome",
+   "banner": {
+    "loading": "Loading your overview…",
+    "no_analyses": "You have not analysed any image yet. Start with a photo of a leaf.",
+    "no_alert_week": "No probable disease detected this week.",
+    "alerts_week_one": "{{count}} probable disease detected this week. Check the affected parcels on GREEN Map.",
+    "alerts_week_other": "{{count}} probable diseases detected this week. Check the affected parcels on GREEN Map.",
+    "unavailable": "Your overview could not be loaded."
+   },
+   "actions": {
+    "analyse": "Analyse an image",
+    "ask_bot": "Ask GreenBot"
+   },
+   "kpi": {
+    "title": "Key figures",
+    "parcels": "Active parcels",
+    "parcels_hint": "Drawn on GREEN Map",
+    "analyses": "Analyses",
+    "diseases": "Probable diseases",
+    "healthy": "Healthy results",
+    "chats": "GreenBot conversations",
+    "total_hint": "Since you joined",
+    "new_week": "+{{count}} this week",
+    "error": "Figures unavailable"
+   },
+   "trend": {
+    "section": "Analyses over time",
+    "title": "Results over the last 4 weeks",
+    "subtitle": "Number of analyses per week",
+    "week_of": "Week of {{date}}",
+    "diseases": "Probable diseases",
+    "healthy": "Healthy",
+    "tooltip": "{{label}}: {{count}}",
+    "empty": "No analyses in the last 4 weeks.",
+    "error": "The chart could not be loaded."
+   },
+   "weather": {
+    "title": "Weather",
+    "humidity": "Humidity {{value}} %",
+    "wind": "Wind {{value}} km/h",
+    "tip": "Agronomic tip",
+    "loading": "Loading the weather…",
+    "unavailable": "Weather unavailable.",
+    "not_configured": "The weather service is not enabled on this server."
+   },
+   "quick": {
+    "title": "Quick access",
+    "camera": "Analyse an image",
+    "camera_desc": "Take or upload a photo of a leaf, or use the rover camera.",
+    "chatbot": "Ask GreenBot",
+    "chatbot_desc": "Get agronomic advice from the AI assistant.",
+    "map": "Open GREEN Map",
+    "map_desc": "Draw your parcels and see analysis results on the map.",
+    "calendar": "Crop calendar",
+    "calendar_desc": "Planting and harvest periods by crop.",
+    "history": "Analysis history",
+    "history_desc": "All your past analyses and their field sheets.",
+    "diseases": "Disease library",
+    "diseases_desc": "Symptoms and recommended actions for common crop diseases."
+   },
+   "recent": {
+    "title": "Recent analyses",
+    "result": "Result",
+    "plant": "Plant",
+    "alert": "Alert level",
+    "confidence": "Confidence",
+    "date": "Date",
+    "empty_title": "No analyses yet",
+    "empty_text": "Analyse your first leaf photo to see the results here.",
+    "start": "Analyse a first image",
+    "error": "Recent analyses could not be loaded."
+   }
+  },
+  "model": {
+   "plants": {
+    "Cassava": "Cassava",
+    "Corn": "Maize",
+    "Tomato": "Tomato"
+   },
+   "classes": {
+    "Cassava_Mosaic": "Cassava mosaic",
+    "Corn_Brown_Spots": "Maize brown spots",
+    "Corn_Healthy": "Healthy maize",
+    "Corn_Leaf_Blight": "Maize leaf blight",
+    "Corn_Mildew": "Maize mildew",
+    "Corn_Streak": "Maize streak",
+    "Corn_Stripe": "Maize stripe",
+    "Corn_Yellowing": "Maize yellowing",
+    "Tomato_Brown_Spots": "Tomato brown spots",
+    "Tomato_Blight_Leaf": "Tomato leaf blight",
+    "Tomato_Healthy": "Healthy tomato",
+    "healthy": "Healthy plant"
+   },
+   "alert": {
+    "title": "Alert level",
+    "help": "Based on the model's confidence, not on the extent of the damage.",
+    "none": "None (healthy)",
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High"
+   },
+   "result": {
+    "healthy": "Healthy",
+    "diseased": "Probable disease",
+    "uncertain": "Uncertain result"
+   }
+  },
   "nav": {
    "sections": {
     "main": "Main",
@@ -407,6 +521,120 @@ window.GREEN_I18N_DICT = {
     "Ouest": "Ouest",
     "Sud": "Sud",
     "Sud-Ouest": "Sud-Ouest"
+   }
+  },
+  "dashboard": {
+   "subtitle": "Vue d'ensemble de votre exploitation",
+   "greeting": {
+    "morning": "Bonjour,",
+    "afternoon": "Bon après-midi,",
+    "evening": "Bonsoir,"
+   },
+   "welcome": "Bienvenue",
+   "banner": {
+    "loading": "Chargement de votre vue d'ensemble…",
+    "no_analyses": "Vous n'avez encore analysé aucune image. Commencez par la photo d'une feuille.",
+    "no_alert_week": "Aucune maladie probable détectée cette semaine.",
+    "alerts_week_one": "{{count}} maladie probable détectée cette semaine. Consultez les parcelles concernées sur GREEN Map.",
+    "alerts_week_other": "{{count}} maladies probables détectées cette semaine. Consultez les parcelles concernées sur GREEN Map.",
+    "unavailable": "Impossible de charger votre vue d'ensemble."
+   },
+   "actions": {
+    "analyse": "Analyser une image",
+    "ask_bot": "Interroger GreenBot"
+   },
+   "kpi": {
+    "title": "Chiffres clés",
+    "parcels": "Parcelles actives",
+    "parcels_hint": "Tracées sur GREEN Map",
+    "analyses": "Analyses",
+    "diseases": "Maladies probables",
+    "healthy": "Résultats sains",
+    "chats": "Conversations GreenBot",
+    "total_hint": "Depuis votre inscription",
+    "new_week": "+{{count}} cette semaine",
+    "error": "Chiffres indisponibles"
+   },
+   "trend": {
+    "section": "Évolution des analyses",
+    "title": "Résultats des 4 dernières semaines",
+    "subtitle": "Nombre d'analyses par semaine",
+    "week_of": "Sem. du {{date}}",
+    "diseases": "Maladies probables",
+    "healthy": "Sains",
+    "tooltip": "{{label}} : {{count}}",
+    "empty": "Aucune analyse au cours des 4 dernières semaines.",
+    "error": "Impossible de charger le graphique."
+   },
+   "weather": {
+    "title": "Météo",
+    "humidity": "Humidité {{value}} %",
+    "wind": "Vent {{value}} km/h",
+    "tip": "Conseil agronomique",
+    "loading": "Chargement de la météo…",
+    "unavailable": "Météo indisponible.",
+    "not_configured": "Le service météo n'est pas activé sur ce serveur."
+   },
+   "quick": {
+    "title": "Accès rapide",
+    "camera": "Analyser une image",
+    "camera_desc": "Prenez ou importez la photo d'une feuille, ou utilisez la caméra du rover.",
+    "chatbot": "Interroger GreenBot",
+    "chatbot_desc": "Obtenez des conseils agronomiques auprès de l'assistant IA.",
+    "map": "Ouvrir GREEN Map",
+    "map_desc": "Tracez vos parcelles et visualisez les résultats d'analyse sur la carte.",
+    "calendar": "Calendrier cultural",
+    "calendar_desc": "Périodes de semis et de récolte par culture.",
+    "history": "Historique des analyses",
+    "history_desc": "Toutes vos analyses passées et leurs fiches terrain.",
+    "diseases": "Bibliothèque des maladies",
+    "diseases_desc": "Symptômes et actions recommandées pour les maladies courantes des cultures."
+   },
+   "recent": {
+    "title": "Analyses récentes",
+    "result": "Résultat",
+    "plant": "Plante",
+    "alert": "Niveau d'alerte",
+    "confidence": "Confiance",
+    "date": "Date",
+    "empty_title": "Aucune analyse pour l'instant",
+    "empty_text": "Analysez la photo d'une première feuille pour voir les résultats ici.",
+    "start": "Analyser une première image",
+    "error": "Impossible de charger les analyses récentes."
+   }
+  },
+  "model": {
+   "plants": {
+    "Cassava": "Manioc",
+    "Corn": "Maïs",
+    "Tomato": "Tomate"
+   },
+   "classes": {
+    "Cassava_Mosaic": "Mosaïque du manioc",
+    "Corn_Brown_Spots": "Taches brunes du maïs",
+    "Corn_Healthy": "Maïs sain",
+    "Corn_Leaf_Blight": "Brûlure des feuilles du maïs",
+    "Corn_Mildew": "Mildiou du maïs",
+    "Corn_Streak": "Striure du maïs",
+    "Corn_Stripe": "Rayure du maïs",
+    "Corn_Yellowing": "Jaunissement du maïs",
+    "Tomato_Brown_Spots": "Taches brunes de la tomate",
+    "Tomato_Blight_Leaf": "Brûlure des feuilles de la tomate",
+    "Tomato_Healthy": "Tomate saine",
+    "healthy": "Plante saine"
+   },
+   "alert": {
+    "title": "Niveau d'alerte",
+    "help": "Fondé sur la confiance du modèle, pas sur l'étendue des dégâts.",
+    "none": "Aucun (sain)",
+    "low": "Faible",
+    "medium": "Moyen",
+    "high": "Élevé"
+   },
+   "result": {
+    "healthy": "Sain",
+    "diseased": "Maladie probable",
+    "uncertain": "Résultat incertain"
    }
   },
   "nav": {
