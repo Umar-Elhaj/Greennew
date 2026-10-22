@@ -76,10 +76,15 @@ DEFAULT_CAMERA_IP          = DEFAULT_DRONE_IP
 DEFAULT_CAMERA_PORT        = DEFAULT_DRONE_STREAM_PORT
 
 # ---- Models -------------------------------------------------
-# Disease detection model (EfficientNet — cassava / maize / tomato)
-MODEL_PATH: str = os.getenv(
-    "MODEL_PATH",
-    os.path.join(os.path.dirname(__file__), '..', 'Models', 'best_efficientnet.pth')
+# Inference engine: "onnx" (production: onnxruntime, ~16 MB model, no
+# PyTorch) or "torch" (development: needs torch + timm, see requirements.txt).
+INFERENCE_BACKEND: str = os.getenv("INFERENCE_BACKEND", "onnx").strip().lower()
+if INFERENCE_BACKEND not in ("onnx", "torch"):
+    raise RuntimeError("INFERENCE_BACKEND must be 'onnx' or 'torch'.")
+# Disease detection model (EfficientNet-B0 — cassava / maize / tomato)
+_DEFAULT_MODEL = "best_efficientnet.onnx" if INFERENCE_BACKEND == "onnx" else "best_efficientnet.pth"
+MODEL_PATH: str = os.getenv("MODEL_PATH", "").strip() or os.path.join(
+    os.path.dirname(__file__), '..', 'Models', _DEFAULT_MODEL
 )
 # End-to-end tests only: deterministic fake predictions without loading the
 # model. Honoured only when DEBUG is on, never in production.

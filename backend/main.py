@@ -54,8 +54,8 @@ def _warmup_models():
 
     def load_efficientnet():
         try:
-            from inference import get_model
-            get_model()
+            from inference import load
+            load()
             logger.info("[Warmup] EfficientNet ready.")
         except Exception as e:
             logger.error(f"[Warmup] EfficientNet FAILED to load: {e}")
@@ -106,6 +106,24 @@ app = FastAPI(
     docs_url="/docs" if DEBUG else None,
     redoc_url="/redoc" if DEBUG else None,
 )
+
+# ---- Security headers (any host: Passenger, uvicorn) ----------
+# HSTS is set by the web server for HTTPS only (deploy/o2switch/htaccess-snippet.conf).
+SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "X-Frame-Options": "DENY",
+    "Permissions-Policy": "camera=(self), geolocation=(self), microphone=()",
+}
+
+
+@app.middleware("http")
+async def security_headers(request, call_next):
+    response = await call_next(request)
+    for name, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(name, value)
+    return response
+
 
 # ---- Translated error messages (Accept-Language / ?lang=) ---
 import i18n  # noqa: E402
@@ -228,8 +246,8 @@ async def benchmark_page():
 @app.get("/api/health", tags=["Health"])
 async def health_check():
     """Returns server status and which models are already loaded."""
-    from config import GEMINI_API_KEY, MODEL_VERSION, WEATHER_API_KEY
-    from inference import _model as _eff_model
+    from config import GEMINI_API_KEY, INFERENCE_BACKEND, MODEL_VERSION, WEATHER_API_KEY
+    from inference import is_loaded
     from routers.chatbot_router import _chunks
     return {
         "status":            "ok",
@@ -237,7 +255,8 @@ async def health_check():
         "version":           APP_VERSION,
         "model_version":     MODEL_VERSION,
         "models": {
-            "efficientnet":  "ready" if _eff_model  is not None else "lazy",
+            "efficientnet":  "ready" if is_loaded() else "lazy",
+            "inference_backend": INFERENCE_BACKEND,
             "rag_index":     "ready" if len(_chunks) > 0             else "lazy",
         },
         # Optional services: false = feature disabled with a clear message in the UI

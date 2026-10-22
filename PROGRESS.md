@@ -80,12 +80,12 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 
 ## LOT 7 — Déploiement o2switch
 
-- [ ] 7.1 Diagnostic serveur (lecture seule, ou liste de commandes pour l'humain)
-- [ ] 7.2 `backend/passenger_wsgi.py` (a2wsgi) + vérification du lifespan / chargement paresseux verrouillé
-- [ ] 7.3 `requirements-prod.txt` (onnxruntime, sans torch) + `INFERENCE_BACKEND=onnx|torch`
-- [ ] 7.4 Test de parité ONNX ⇄ PyTorch (≥ 20 images, top-1 identique, |Δp| < 1e-3) + temps et RAM
-- [ ] 7.5 `.env.example` complet, `.htaccess`, `docs/DEPLOY_O2SWITCH.md`, `scripts/smoke_prod.sh`
-- [ ] CP3 — aucune modification serveur sans validation ; `smoke_prod.sh` après déploiement
+- [x] 7.1 Diagnostic serveur (lecture seule, ou liste de commandes pour l'humain) — pas d'alias SSH : commandes et critères dans `docs/DEPLOY_O2SWITCH.md` §1, avec le modèle de demande au support
+- [x] 7.2 `backend/passenger_wsgi.py` (a2wsgi) + vérification du lifespan / chargement paresseux verrouillé
+- [x] 7.3 `requirements-prod.txt` (onnxruntime, sans torch) + `INFERENCE_BACKEND=onnx|torch`
+- [x] 7.4 Test de parité ONNX ⇄ PyTorch (≥ 20 images, top-1 identique, |Δp| < 1e-3) + temps et RAM — 24/24 top-1, max |Δp| 3,19e-06 ; ONNX 19 ms/image, pic 177 Mo ; PyTorch 48 ms/image, pic 437 Mo
+- [x] 7.5 `.env.example` complet, `.htaccess`, `docs/DEPLOY_O2SWITCH.md`, `scripts/smoke_prod.sh`
+- [ ] CP3 — aucune modification serveur sans validation ; `smoke_prod.sh` après déploiement (répétition locale : environnement virtuel propre avec `requirements-prod.txt` seul, servi par `passenger_wsgi` via WSGI, `DEBUG=false` → smoke 8/8 PASS, `/docs` 404)
 
 ## LOT 8 — Cohérence globale et revue
 
@@ -128,6 +128,8 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 | D28 | Palette des graphiques validée (`dataviz/validate_palette.js`, clair et sombre) : couleur fixe par classe de maladie, bleu séquentiel pour les grandeurs, palette de statut réservée aux niveaux d'alerte ; la heatmap GREEN Map passe d'un arc-en-ciel à une rampe mono-teinte | Les couleurs suivent l'entité (un filtre ne repeint rien) ; lisible pour les daltoniens. |
 | D29 | `scripts/set_role.py` pour attribuer les rôles (aucune interface d'administration) ; `POST /api/analysis/{id}/verify` pour les agronomes | Sans eux, aucun compte partenaire ni aucune mesure de qualité du modèle n'est possible. |
 | D30 | Base SQLite de développement migrée par Alembic au démarrage (et non `create_all`) | Un `green.db` existant recevait sinon le nouveau code sans les nouvelles colonnes. |
+| D31 | Pas de préchargement du modèle sous Passenger (lifespan non exécuté par a2wsgi) ; chargement paresseux protégé par un verrou ; `WARMUP=1` pour précharger | Chaque processus Passenger coûterait ~180 Mo ; limites LVE. |
+| D32 | `vercel.json` généré par `scripts/configure_vercel.py <origine-api>` (réécriture `/api/*`, redirections `/drone`, en-têtes de sécurité) | Le domaine o2switch n'est pas encore connu ; pas de valeur fictive dans un fichier de production. |
 | D2 | Dépendances de dev dans `backend/requirements-dev.txt` (pytest, ruff, onnx) | Ne pas alourdir le serveur de production. |
 | D1 | Clone de `Umar-Elhaj/Greennew` dans `Greennew/` (et non `TCHOUANANG-dimitri/GREEN`) | Le prompt maître cible ce dépôt ; HEAD distant = `36d4768`, identique au contexte vérifié. |
 

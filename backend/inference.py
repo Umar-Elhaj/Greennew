@@ -15,10 +15,12 @@
 
 import io
 import logging
+import threading
 
+import numpy as np
 from PIL import Image
 
-from config import E2E_FAKE_MODEL, MODEL_PATH
+from config import E2E_FAKE_MODEL, INFERENCE_BACKEND, MODEL_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -107,8 +109,29 @@ SEVERITY_THRESHOLDS = {
 
 
 # ============================================================
-# IMAGE PRE-PROCESSING PIPELINE  (lazy — built on first use)
+# IMAGE PRE-PROCESSING
+# The ONNX path reproduces torchvision's PIL pipeline with PIL + numpy:
+# Resize(256) (shorter side, bilinear) → CenterCrop(224) → ToTensor →
+# Normalize(ImageNet). Parity is checked by scripts/onnx_parity.py.
 # ============================================================
+IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(3, 1, 1)
+IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32).reshape(3, 1, 1)
+
+
+def preprocess_np(image: Image.Image) -> np.ndarray:
+    """(1, 3, 224, 224) float32, identical to the torchvision transform below."""
+    w, h = image.size
+    short, long_ = (w, h) if w <= h else (h, w)
+    new_short, new_long = 256, int(256 * long_ / short)
+    size = (new_short, new_long) if w <= h else (new_long, new_short)
+    img = image.resize(size, Image.BILINEAR)
+    w, h = img.size
+    top, left = int(round((h - 224) / 2.0)), int(round((w - 224) / 2.0))
+    img = img.crop((left, top, left + 224, top + 224))
+    x = np.asarray(img, dtype=np.float32).transpose(2, 0, 1) / 255.0
+    return ((x - IMAGENET_MEAN) / IMAGENET_STD)[None].astype(np.float32)
+
+
 _transform = None
 
 def _get_transform():
@@ -130,8 +153,40 @@ def _get_transform():
 
 # ============================================================
 # MODEL LOADER  (singleton — loaded once at first call)
+# Under Passenger (a2wsgi) the ASGI lifespan does not run, so the warm-up
+# thread may not exist: loading is lazy and guarded by a lock so that two
+# first requests never load the model twice.
 # ============================================================
 _model = None   # type: ignore[assignment]
+_session = None
+_load_lock = threading.Lock()
+
+
+def _onnx_session():
+    global _session
+    if _session is None:
+        with _load_lock:
+            if _session is None:
+                import onnxruntime as ort  # lazy import
+
+                opts = ort.SessionOptions()
+                opts.intra_op_num_threads = 2   # shared hosting: stay within the CPU quota
+                opts.inter_op_num_threads = 1
+                logger.info(f"Loading ONNX model from {MODEL_PATH}")
+                _session = ort.InferenceSession(MODEL_PATH, sess_options=opts, providers=["CPUExecutionProvider"])
+    return _session
+
+
+def is_loaded() -> bool:
+    return (_session if INFERENCE_BACKEND == "onnx" else _model) is not None
+
+
+def load() -> None:
+    """Load the configured engine now (warm-up)."""
+    if INFERENCE_BACKEND == "onnx":
+        _onnx_session()
+    else:
+        get_model()
 
 
 def _build_efficientnet(num_classes: int, state_dict_keys: list):
@@ -195,7 +250,15 @@ def _build_efficientnet(num_classes: int, state_dict_keys: list):
 
 
 def get_model():
-    """Return the loaded model (lazy singleton — imports torch on first call)."""
+    """Return the loaded PyTorch model (lazy singleton — imports torch on first call)."""
+    global _model
+    if _model is not None:
+        return _model
+    with _load_lock:
+        return _load_torch()
+
+
+def _load_torch():
     global _model
     if _model is None:
         import torch  # lazy import
@@ -240,6 +303,30 @@ def _get_severity(confidence: float, is_healthy: bool = False) -> str:
     return "low"
 
 
+def _softmax(logits: np.ndarray) -> np.ndarray:
+    z = logits - logits.max()
+    e = np.exp(z)
+    return e / e.sum()
+
+
+def forward_probs(image: Image.Image, backend: str = None) -> np.ndarray:
+    """Class probabilities (11,) for a PIL RGB image with the given engine."""
+    backend = backend or INFERENCE_BACKEND
+    if backend == "onnx":
+        session = _onnx_session()
+        logits = session.run(None, {session.get_inputs()[0].name: preprocess_np(image)})[0][0]
+        return _softmax(logits.astype(np.float64)).astype(np.float32)
+
+    import torch                    # lazy — already cached by Python after first import
+    import torch.nn.functional as F
+
+    model = get_model()
+    device = next(model.parameters()).device
+    tensor = _get_transform()(image).unsqueeze(0).to(device)
+    with torch.inference_mode():   # fully disables autograd (faster than no_grad)
+        return F.softmax(model(tensor), dim=1)[0].cpu().numpy()
+
+
 def predict(image_bytes: bytes) -> dict:
     """
     Run EfficientNet inference on raw image bytes.
@@ -258,29 +345,15 @@ def predict(image_bytes: bytes) -> dict:
     if E2E_FAKE_MODEL:
         return _fake_predict(image_bytes)
 
-    model = get_model()
-    device = next(model.parameters()).device
-
-    # Decode and preprocess
     try:
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     except Exception as exc:
         raise ValueError(f"Cannot decode image: {exc}") from exc
 
-    import torch                    # lazy — already cached by Python after first import
-    import torch.nn.functional as F
-
-    tensor = _get_transform()(image).unsqueeze(0).to(device)
-
-    # Forward pass — inference_mode fully disables autograd (faster than no_grad)
-    with torch.inference_mode():
-        logits = model(tensor)                      # (1, 11)
-        probs  = F.softmax(logits, dim=1)[0]        # (11,)
-
+    probs = forward_probs(image)
     # Top-1 prediction
-    confidence, class_idx = probs.max(0)
-    confidence = confidence.item()
-    class_idx  = class_idx.item()
+    class_idx = int(np.argmax(probs))
+    confidence = float(probs[class_idx])
     class_raw  = CLASS_NAMES[class_idx]
 
     # Derive plant type and disease ID
@@ -297,12 +370,12 @@ def predict(image_bytes: bytes) -> dict:
         detected_disease = class_raw  # used as disease ID in the DB
 
     # Top-3 for the fiche terrain display
-    top3_indices = probs.topk(3).indices.tolist()
+    top3_indices = np.argsort(-probs)[:3].tolist()
     top3 = [
         {
             "code":       CLASS_NAMES[i],
             "class":      CLASS_NAMES[i].replace("_", " "),
-            "confidence": round(probs[i].item() * 100, 1),
+            "confidence": round(float(probs[i]) * 100, 1),
         }
         for i in top3_indices
     ]

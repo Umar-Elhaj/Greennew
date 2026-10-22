@@ -1,6 +1,7 @@
 # ============================================================
-# GREEN App — Backend Dependencies
+# GREEN App — Backend Dependencies (development, includes PyTorch)
 # Install with: pip install -r requirements.txt
+# Production (o2switch) uses requirements-prod.txt: ONNX Runtime, no torch.
 # ============================================================
 
 # PyTorch CPU-only wheel index (avoids downloading ~1.4 GB of CUDA libs on CPU-only servers)
@@ -22,20 +23,19 @@ bcrypt==4.2.1          # Used directly — passlib has a bug with bcrypt>=4.x
 # Form data / file uploads
 python-multipart==0.0.12
 
-# Static file serving
-aiofiles==24.1.0
-
 # Environment variables
 python-dotenv==1.0.1
 
-# HTTP client (for drone stream fetching, weather API)
+# HTTP client (rover stream in local development, weather API)
 httpx==0.28.1
-requests==2.32.3
 
 # Image processing (for AI inference on drone frames)
 Pillow==11.1.0
 
-# AI model inference (EfficientNet — best_efficientnet.pth)
+# AI model inference: ONNX Runtime (default, INFERENCE_BACKEND=onnx) and
+# PyTorch for INFERENCE_BACKEND=torch / the parity check
+onnxruntime==1.31.0
+a2wsgi==1.10.10
 torch==2.13.0+cpu
 torchvision==0.28.0+cpu
 timm==1.0.27
