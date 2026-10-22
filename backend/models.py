@@ -42,8 +42,16 @@ class User(Base):
     avatar_url    = Column(String(500), nullable=True)
     is_active     = Column(Boolean, default=True, nullable=False)
     dataset_consent = Column(Boolean, default=False, nullable=False)  # Green Data opt-in
+    # Keep the GPS position found in uploaded photos (EXIF); off by default
+    location_consent = Column(Boolean, default=False, nullable=False)
+    # farmer | agronomist (verifies analyses) | partner (GREEN Data) | admin
+    role          = Column(String(20), default="farmer", nullable=False)
     created_at    = Column(DateTime, default=utcnow, nullable=False)
     updated_at    = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    __table_args__ = (
+        CheckConstraint("role in ('farmer', 'agronomist', 'partner', 'admin')", name="users_role_check"),
+    )
 
     # Relationships
     parcels          = relationship("Parcel",          back_populates="owner", cascade="all, delete-orphan")
@@ -99,6 +107,9 @@ class DiseaseAnalysis(Base):
     source          = Column(String(50), default="camera")  # "camera" | "upload" | "drone"
     image_path      = Column(String(500), nullable=True)   # Relative path inside MEDIA_DIR
     image_sha256    = Column(CHAR(64),    nullable=True)   # Duplicate detection (indexed below)
+    image_bytes     = Column(Integer, nullable=True)       # Size of the stored JPEG
+    image_width     = Column(Integer, nullable=True)
+    image_height    = Column(Integer, nullable=True)
 
     # Detection output — Disease model (EfficientNet)
     detected_disease= Column(String(255), nullable=True)   # Disease class ID or "healthy"

@@ -9,6 +9,7 @@ point at Supabase) is never used: real env vars win over .env.
 
 import io
 import os
+import shutil
 import sys
 import tempfile
 
@@ -52,9 +53,11 @@ FAKE_PREDICTION = {
 
 @pytest.fixture(autouse=True)
 def _fresh_db():
-    """Every test starts from an empty schema."""
+    """Every test starts from an empty schema and an empty MEDIA_DIR."""
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    shutil.rmtree(os.environ["MEDIA_DIR"], ignore_errors=True)
+    os.makedirs(os.environ["MEDIA_DIR"], exist_ok=True)
     yield
 
 

@@ -51,8 +51,12 @@ MEDIA_DIR: str = os.path.abspath(os.getenv(
     "MEDIA_DIR",
     os.path.join(os.path.dirname(__file__), '..', 'data', 'captures')
 ))
-# Public URL prefix — under /api so the Vercel rewrite proxies it too
+# URL prefix of the authenticated media endpoint (under /api so the
+# Vercel rewrite proxies it too). On o2switch MEDIA_DIR must be outside
+# public_html, e.g. /home/<account>/green_media.
 MEDIA_URL_PREFIX: str = "/api/media"
+# Maximum size of one uploaded image
+MAX_UPLOAD_MB: int = int(os.getenv("MAX_UPLOAD_MB", "8"))
 
 # ---- Gemini AI (GreenBot chatbot + camera disease research) --
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")

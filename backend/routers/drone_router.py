@@ -11,13 +11,13 @@ from auth import get_current_user
 from config import DEFAULT_DRONE_IP, DEFAULT_DRONE_STREAM_PORT
 from database import get_db
 from models import User
+from media import read_upload
 from rover_common import (
     analyze_image_bytes,
     check_stream,
     grab_frame,
     parse_ip_port,
     stream_url,
-    validate_upload,
 )
 
 router = APIRouter(prefix="/api/drone", tags=["Drone"])
@@ -76,7 +76,7 @@ async def upload_and_analyze(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    image_bytes = await validate_upload(file)
+    image_bytes = await read_upload(file)
     return await analyze_image_bytes(
         image_bytes, db, current_user, source="upload",
         parcel_id=parcel_id, latitude=latitude, longitude=longitude,

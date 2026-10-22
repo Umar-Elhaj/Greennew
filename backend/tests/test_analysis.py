@@ -54,19 +54,19 @@ def test_dashboard_stats_count_analyses(client, user, fake_model):
     assert s["analyses"] == 1 and s["diseases"] == 1 and s["healthy"] == 0
 
 
-@pytest.mark.xfail(strict=True, reason="Lot 2.2 — /api/media est encore un montage StaticFiles public")
 def test_media_requires_auth_and_ownership(client, user, other_user, fake_model):
     path = _upload(client, user["headers"]).json()["image_path"]
     assert path.startswith("/api/media/")
+    path = path.split("?")[0]  # header-based access, without the signed query
     assert client.get(path).status_code == 401
     assert client.get(path, headers=other_user["headers"]).status_code == 403
     assert client.get(path, headers=user["headers"]).status_code == 200
 
 
-@pytest.mark.xfail(strict=True, reason="Lot 2.1 — pas encore de déduplication par sha256")
 def test_same_image_same_user_is_not_reanalysed(client, user, fake_model):
     img = jpeg_bytes()
     a = _upload(client, user["headers"], content=img).json()
     b = _upload(client, user["headers"], content=img).json()
     assert a["analysis_id"] == b["analysis_id"]
+    assert b["duplicate"] is True and a["duplicate"] is False
     assert len(fake_model) == 1

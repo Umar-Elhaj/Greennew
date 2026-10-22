@@ -10,7 +10,6 @@
 # ============================================================
 
 import json
-import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -20,7 +19,7 @@ from database import get_db
 from models import User, DiseaseAnalysis
 from auth import get_current_user
 from config import DISEASES_DB_PATH
-from rover_common import media_file, media_url
+from media import delete_image, media_url
 
 router = APIRouter(prefix="/api/analysis", tags=["Disease Analysis"])
 
@@ -132,7 +131,8 @@ def get_history(
                 "parcel_id":        a.parcel_id,
                 "latitude":         a.latitude,
                 "longitude":        a.longitude,
-                "image_path":       media_url(a.image_path),
+                "image_path":       media_url(a.image_path, a.user_id),
+                "thumb_path":       media_url(a.image_path, a.user_id, thumb=True),
                 "created_at":       a.created_at.isoformat(),
                 "has_fiche":        a.fiche_terrain is not None,
             }
@@ -183,7 +183,8 @@ def get_analysis(
         "latitude":         analysis.latitude,
         "longitude":        analysis.longitude,
         "notes":            analysis.notes,
-        "image_path":       media_url(analysis.image_path),
+        "image_path":       media_url(analysis.image_path, analysis.user_id),
+        "thumb_path":       media_url(analysis.image_path, analysis.user_id, thumb=True),
         "created_at":       analysis.created_at.isoformat(),
         "fiche_terrain":    fiche,
     }
@@ -211,16 +212,11 @@ def delete_analysis(
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found.")
 
-    # Remove saved image file if it exists
-    image_file = media_file(analysis.image_path)
-    if image_file and os.path.exists(image_file):
-        try:
-            os.remove(image_file)
-        except OSError:
-            pass  # Non-critical — proceed with DB deletion
-
+    image_path = analysis.image_path
     db.delete(analysis)
     db.commit()
+    # Remove image + thumbnail once the row is gone (orphans are listed by media_report.py)
+    delete_image(image_path)
     return {"message": "Analysis deleted.", "success": True}
 
 

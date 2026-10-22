@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from config import APP_NAME, APP_VERSION, CORS_ORIGINS, DEBUG, MEDIA_DIR, MEDIA_URL_PREFIX
+from config import APP_NAME, APP_VERSION, CORS_ORIGINS, DEBUG
 from database import engine, Base, IS_SQLITE
 
 # ---- Import routers -----------------------------------------
@@ -30,6 +30,7 @@ from routers import parcel_router      # Phase 5 — Parcel CRUD
 from routers import chatbot_router     # Phase 6 — GreenBot RAG + Gemini API
 from routers import weather_router     # Phase 6 — OpenWeatherMap proxy
 from routers import diseases_router    # Disease reference database
+from routers import media_router       # Authenticated access to analysed images
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +122,7 @@ app.include_router(auth_router.router)
 app.include_router(dashboard_router.router)
 app.include_router(analysis_router.router)
 app.include_router(drone_router.router)
+app.include_router(media_router.router)
 app.include_router(camera_router.router)
 app.include_router(parcel_router.router)
 app.include_router(chatbot_router.router)
@@ -226,10 +228,7 @@ async def health_check():
     }
 
 
-# ---- Mount analysed images (Green Data) ---------------------
-# Must be mounted before "/" which would otherwise catch the path.
-os.makedirs(MEDIA_DIR, exist_ok=True)
-app.mount(MEDIA_URL_PREFIX, StaticFiles(directory=MEDIA_DIR), name="media")
+# Analysed images are NOT mounted publicly: see routers/media_router.py.
 
 # ---- Mount static assets ------------------------------------
 app.mount(

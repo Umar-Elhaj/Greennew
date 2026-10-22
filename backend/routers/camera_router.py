@@ -15,13 +15,13 @@ from sqlalchemy.orm import Session
 from auth import get_current_user
 from database import get_db
 from models import User
+from media import read_upload
 from rover_common import (
     analyze_image_bytes,
     check_stream,
     grab_frame,
     parse_ip_port,
     stream_url,
-    validate_upload,
 )
 
 router = APIRouter(prefix="/api/camera", tags=["Camera"])
@@ -80,7 +80,7 @@ async def analyze_frame(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    image_bytes = await validate_upload(file)
+    image_bytes = await read_upload(file)
     return await analyze_image_bytes(
         image_bytes, db, current_user, source="camera",
         parcel_id=parcel_id, latitude=latitude, longitude=longitude,
@@ -96,7 +96,7 @@ async def upload_and_analyze(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    image_bytes = await validate_upload(file)
+    image_bytes = await read_upload(file)
     return await analyze_image_bytes(
         image_bytes, db, current_user, source="upload",
         parcel_id=parcel_id, latitude=latitude, longitude=longitude,

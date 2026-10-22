@@ -63,11 +63,32 @@ def decode_access_token(token: str) -> Optional[dict]:
 
 # ---- FastAPI Dependency: Current User -----------------------
 # Used to protect routes that require authentication.
-bearer_scheme = HTTPBearer()
+# auto_error=False: a missing header is answered with 401 (not FastAPI's 403).
+bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def _user_from_token(token: Optional[str], db: Session):
+    from models import User  # Local import to avoid circular dependency
+
+    payload = decode_access_token(token) if token else None
+    user_id = payload.get("sub") if payload else None
+    if user_id is None:
+        return None
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None or not user.is_active:
+        return None
+    return user
+
+
+def user_from_request(request, db: Session):
+    """The authenticated user of a request, or None (no exception)."""
+    header = request.headers.get("authorization") or ""
+    scheme, _, token = header.partition(" ")
+    return _user_from_token(token.strip(), db) if scheme.lower() == "bearer" else None
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     db: Session = Depends(get_db)
 ):
     """
@@ -81,26 +102,11 @@ def get_current_user(
 
     Raises 401 if the token is missing, invalid, or expired.
     """
-    from models import User  # Local import to avoid circular dependency
-
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid or expired token. Please sign in again.",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    token = credentials.credentials
-    payload = decode_access_token(token)
-
-    if payload is None:
-        raise credentials_exception
-
-    user_id: str = payload.get("sub")
-    if user_id is None:
-        raise credentials_exception
-
-    user = db.query(User).filter(User.id == int(user_id)).first()
-    if user is None or not user.is_active:
-        raise credentials_exception
-
+    user = _user_from_token(credentials.credentials if credentials else None, db)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token. Please sign in again.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return user

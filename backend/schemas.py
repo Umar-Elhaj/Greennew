@@ -56,6 +56,9 @@ class UserUpdate(BaseModel):
     company_name: Optional[str] = None
     region:       Optional[str] = None
     avatar_url:   Optional[str] = None
+    # Consents (Green Data dataset reuse, GPS read from photo metadata)
+    dataset_consent:  Optional[bool] = None
+    location_consent: Optional[bool] = None
 
 
 class PasswordChange(BaseModel):
@@ -86,6 +89,9 @@ class UserResponse(BaseModel):
     region:       Optional[str]
     avatar_url:   Optional[str]
     is_active:    bool
+    role:         str = "farmer"
+    dataset_consent:  bool = False
+    location_consent: bool = False
     created_at:   datetime
 
     model_config = {"from_attributes": True}  # Pydantic v2: allow ORM objects

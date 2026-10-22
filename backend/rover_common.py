@@ -4,31 +4,27 @@
 # ============================================================
 
 import asyncio
-import hashlib
 import json
 import logging
-import os
-import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Optional, Tuple
 
 import httpx
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
 from config import (
-    DEFAULT_DRONE_IP, DEFAULT_DRONE_STREAM_PORT, DISEASES_DB_PATH,
-    MEDIA_DIR, MEDIA_URL_PREFIX, MODEL_VERSION,
+    DEFAULT_DRONE_IP, DEFAULT_DRONE_STREAM_PORT, DISEASES_DB_PATH, MODEL_VERSION,
 )
 from inference import CLASS_FR_NAMES, predict
-from models import DiseaseAnalysis, User
+from media import ProcessedImage, media_url, process_image, save_image
+from models import DiseaseAnalysis, Parcel, User
 
 logger = logging.getLogger(__name__)
 
 _executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="rover_inf")
-
-os.makedirs(MEDIA_DIR, exist_ok=True)
 
 # Map EfficientNet class labels → diseases.json entry ids
 CLASS_TO_DISEASE_ID = {
@@ -103,39 +99,6 @@ async def grab_frame(ip: str, port: int = None) -> bytes:
             ),
         )
     raise HTTPException(status_code=502, detail="No JPEG frame found in stream.")
-
-
-def save_capture(image_bytes: bytes) -> Tuple[str, str]:
-    """
-    Write the image under MEDIA_DIR/YYYY/MM/ and return
-    (relative path stored in DB, sha256 of the bytes).
-    """
-    now = datetime.utcnow()
-    rel_path = f"{now:%Y}/{now:%m}/{uuid.uuid4().hex}.jpg"
-    filepath = os.path.join(MEDIA_DIR, rel_path)
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, "wb") as f:
-        f.write(image_bytes)
-    return rel_path, hashlib.sha256(image_bytes).hexdigest()
-
-
-def media_url(rel_path: Optional[str]) -> Optional[str]:
-    """Public URL of a stored image (what the frontend puts in <img src>)."""
-    if not rel_path:
-        return None
-    if rel_path.startswith("/"):   # legacy rows: "/assets/captures/..."
-        return rel_path
-    return f"{MEDIA_URL_PREFIX}/{rel_path}"
-
-
-def media_file(rel_path: Optional[str]) -> Optional[str]:
-    """Absolute path on disk of a stored image, or None if outside MEDIA_DIR."""
-    if not rel_path or rel_path.startswith("/"):
-        return None
-    filepath = os.path.abspath(os.path.join(MEDIA_DIR, rel_path))
-    if not filepath.startswith(MEDIA_DIR + os.sep):
-        return None
-    return filepath
 
 
 async def run_disease_model(image_bytes: bytes) -> dict:
@@ -231,8 +194,8 @@ def save_analysis(
     db: Session,
     current_user: User,
     disease: dict,
+    image: Optional[ProcessedImage],
     image_path: Optional[str],
-    image_sha256: Optional[str],
     source: str,
     parcel_id: Optional[int],
     latitude: Optional[float],
@@ -245,7 +208,10 @@ def save_analysis(
         parcel_id        = parcel_id,
         source           = source,
         image_path       = image_path,
-        image_sha256     = image_sha256,
+        image_sha256     = image.sha256 if image else None,
+        image_bytes      = len(image.jpeg) if image and image_path else None,
+        image_width      = image.width if image else None,
+        image_height     = image.height if image else None,
         detected_disease = disease["detected_disease"],
         disease_name     = disease["disease_name"],
         confidence       = disease["confidence"],
@@ -264,6 +230,31 @@ def save_analysis(
     return analysis
 
 
+def analysis_response(analysis: DiseaseAnalysis, disease: dict, duplicate: bool = False) -> dict:
+    return {
+        "success":       True,
+        "analysis_id":   analysis.id,
+        "duplicate":     duplicate,
+        "image_path":    media_url(analysis.image_path, analysis.user_id),
+        "thumb_path":    media_url(analysis.image_path, analysis.user_id, thumb=True),
+        "disease":       disease,
+        "fiche_terrain": analysis.fiche_terrain,
+    }
+
+
+def _stored_disease(a: DiseaseAnalysis) -> dict:
+    """The `disease` block of a previous analysis (duplicate upload)."""
+    return {
+        "class_raw":        (a.fiche_terrain or {}).get("disease_id") or a.detected_disease,
+        "detected_disease": a.detected_disease,
+        "disease_name":     a.disease_name,
+        "plant_type":       a.plant_type,
+        "confidence":       a.confidence,
+        "severity":         a.severity,
+        "top3":             a.predictions or [],
+    }
+
+
 async def analyze_image_bytes(
     image_bytes: bytes,
     db: Session,
@@ -272,29 +263,36 @@ async def analyze_image_bytes(
     parcel_id: Optional[int] = None,
     latitude: Optional[float] = None,
     longitude: Optional[float] = None,
-    save_image: bool = True,
+    save_image_file: bool = True,
 ) -> dict:
+    if parcel_id is not None:
+        owned = db.query(Parcel.id).filter(Parcel.id == parcel_id, Parcel.user_id == current_user.id).first()
+        if not owned:
+            raise HTTPException(status_code=404, detail="Parcel not found.")
+
+    image = await run_in_threadpool(process_image, image_bytes)
+
+    # The same photo sent twice by the same user is not analysed again.
+    previous = (
+        db.query(DiseaseAnalysis)
+          .filter(DiseaseAnalysis.user_id == current_user.id,
+                  DiseaseAnalysis.image_sha256 == image.sha256)
+          .order_by(DiseaseAnalysis.id)
+          .first()
+    )
+    if previous is not None:
+        return analysis_response(previous, _stored_disease(previous), duplicate=True)
+
+    # Position typed or sent by the browser wins; otherwise the photo's own
+    # EXIF GPS, kept only if the user agreed to it.
+    if latitude is None and longitude is None and image.gps and current_user.location_consent:
+        latitude, longitude = image.gps
+
     # Inference first: the image is only kept if the analysis succeeded
-    disease = await run_disease_model(image_bytes)
-    image_path, image_sha256 = save_capture(image_bytes) if save_image else (None, None)
+    disease = await run_disease_model(image.jpeg)
+    image_path = save_image(image) if save_image_file else None
     analysis = save_analysis(
-        db, current_user, disease, image_path, image_sha256, source,
+        db, current_user, disease, image, image_path, source,
         parcel_id, latitude, longitude,
     )
-    return {
-        "success":       True,
-        "analysis_id":   analysis.id,
-        "image_path":    media_url(image_path),
-        "disease":       disease,
-        "fiche_terrain": analysis.fiche_terrain,
-    }
-
-
-async def validate_upload(file: UploadFile) -> bytes:
-    content_type = file.content_type or ""
-    if not content_type.startswith("image/"):
-        raise HTTPException(status_code=415, detail="Only image files are accepted.")
-    image_bytes = await file.read()
-    if len(image_bytes) > 10 * 1024 * 1024:
-        raise HTTPException(status_code=413, detail="Image too large. Maximum 10 MB.")
-    return image_bytes
+    return analysis_response(analysis, disease)
