@@ -220,3 +220,22 @@ Serveur : `DEBUG=true DATABASE_URL=sqlite:///… uvicorn main:app` (venv Python 
 | T17 | `dataset_consent` absent de `UserResponse`/`UserUpdate` : aucun utilisateur ne pouvait consentir, GREEN Data serait toujours vide | cassé | Exposé et modifiable via `PUT /api/auth/me` (lot 2) |
 | T18 | `parcel_id` d'upload non vérifié : une analyse pouvait être rattachée à la parcelle d'un autre utilisateur | cassé (sécurité) | 404 si la parcelle n'appartient pas à l'utilisateur (lot 2) |
 | T19 | En-tête `Authorization` absent → 403 au lieu de 401 | partiel | `HTTPBearer(auto_error=False)` + 401 (lot 2) |
+
+## Suivi des corrections (lots 3–4, au 22/10/2026)
+
+| Réf. | Statut | Commit |
+|---|---|---|
+| T1 médias publics | corrigé (lot 2) | `c7414c4` |
+| T2 IDOR GreenBot | corrigé, test `test_other_users_analysis_is_never_used` | `751ee61` |
+| T3 XSS | corrigé sur toutes les pages réécrites (`escapeHtml`, toasts en texte) ; `map.html` au lot 5 | plusieurs |
+| T4 « sévérité » | corrigé : `none` si sain, « niveau d'alerte » expliqué | `28def9d` |
+| T5 diagnostic | corrigé : « maladie probable » + mention sur chaque fiche | `e246b41`, `c891734` |
+| T6 / T7 i18n | corrigé hors `map.html` ; clé de langue unique `green_lang` | `4f88877` et suivants |
+| T8 « [object Object] » | corrigé (serveur et client) | `4f88877` |
+| T9 double boot | corrigé (boot idempotent) | `4f88877` |
+| T10 flux rover | voie de production = file IndexedDB (P1-a) ; avertissement HTTPS | `12fe55e` |
+| T11 analyses sans contexte | parcelle + GPS joints aux captures ; mission au lot 5 | `12fe55e` |
+| T12 upload | corrigé (lot 2) | `c7414c4` |
+| T16 correspondances | corrigé, à valider par un agronome | `c891734` |
+| Pages dashboard, profile, settings, history, camera, chatbot, diseases, calendar, economics, benchmark, marketplace, index, register | toutes les lignes « cassé / partiel / trompeur / mort » traitées dans le commit de la page | voir `git log` |
+| `map.html` | lot 5 | — |

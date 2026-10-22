@@ -43,18 +43,18 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 
 ## LOT 3 — Internationalisation FR/EN intégrale
 
-- [ ] 3.1 `i18n.js` étendu (attributs, interpolation, pluriels, `Intl` fr-CM/en-CM XAF), langue appliquée avant le premier rendu, sélecteur dans l'en-tête
-- [ ] 3.2 Dictionnaire hiérarchisé + glossaire `docs/i18n_glossary.md`
-- [ ] 3.3 Pages : balisage `data-i18n*` de toutes les pages
-- [ ] 3.4 JS dynamique : chaînes JS, toasts, Chart.js, popups Leaflet, redessin sur `languageChanged`
-- [ ] 3.5 Backend : `Accept-Language`/`lang`, `diseases.json` fr/en, erreurs API, GreenBot dans la langue de l'utilisateur
-- [ ] 3.6 `check_i18n.py` vert + Playwright vert dans les deux langues
+- [x] 3.1 `i18n.js` étendu (attributs, interpolation, pluriels, `Intl` fr-CM/en-CM XAF), langue appliquée avant le premier rendu, sélecteur dans l'en-tête
+- [x] 3.2 Dictionnaire hiérarchisé + glossaire `docs/i18n_glossary.md` — sources `frontend/i18n/<ns>.json` → `js/translations.js` (`scripts/build_i18n.py`), 754 clés/langue
+- [~] 3.3 Pages : balisage `data-i18n*` de toutes les pages — 13/14 pages faites ; `map.html` réécrite au lot 5 (54 chaînes restantes, toutes dans `map.html`)
+- [x] 3.4 JS dynamique : chaînes JS, toasts, Chart.js, popups Leaflet, redessin sur `languageChanged`
+- [x] 3.5 Backend : `Accept-Language`/`lang`, `diseases.json` fr/en, erreurs API, GreenBot dans la langue de l'utilisateur
+- [ ] 3.6 `check_i18n.py` vert + Playwright vert dans les deux langues (après le lot 5)
 
 ## LOT 4 — Audit et réparation fonctionnelle
 
-- [ ] 4.1 Corriger chaque ligne « cassé »/« partiel » d'`AUDIT.md` (test ou étape Playwright à chaque fois)
+- [~] 4.1 Corriger chaque ligne « cassé »/« partiel » d'`AUDIT.md` (test ou étape Playwright à chaque fois)
 - [x] 4.2 Legacy drone : `drone.html` hors navigation + redirection ; `drone_router` supprimé s'il n'a plus d'appelant — `drone.html`, `drone.css`, `drone_router.py` et `API.drone` supprimés (seul appelant : la page morte) ; `/drone` et `/drone.html` → 307 `/camera` (test)
-- [ ] 4.3 Caméra : file d'attente IndexedDB (P1-a), indicateur « N en attente », envoi au retour du réseau, reprise, choix parcelle/mission
+- [~] 4.3 Caméra : file d'attente IndexedDB (P1-a), indicateur « N en attente », envoi au retour du réseau, reprise, choix parcelle/mission — fait sauf le choix de mission (lot 5) ; preuve : `qa/flows.spec.ts` « camera: photos imported offline… »
 
 ## LOT 5 — GREEN Map
 
@@ -113,6 +113,15 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 | D13 | Images stockées réduites à 2048 px de grand côté, JPEG q88 | Le modèle travaille en 224 px ; économise le quota disque du mutualisé. |
 | D14 | `users.role` créé dès la révision 0002 (utilisé par l'accès aux médias), garde GREEN Data au lot 6 | Une seule migration pour les colonnes utilisateur. |
 | D15 | Les anciens chemins publics `/assets/captures/...` ne sont plus servis | Ils étaient publics ; `media_report.py` les signale. |
+| D16 | Lots 3 et 4 menés ensemble, page par page (un commit par page) | Chaque page n'est ouverte qu'une fois ; le contenu inventé (D8) est supprimé au lieu d'être traduit. |
+| D17 | Dictionnaire chargé en script synchrone dans `<head>` (`translations.js` généré depuis `frontend/i18n/*.json`) ; page masquée jusqu'à la traduction (filet de sécurité de 1,5 s) | Pas de flash de texte non traduit ; fonctionne hors ligne (GREEN Map). |
+| D18 | Erreurs serveur écrites en anglais et traduites par un gestionnaire d'exceptions selon `Accept-Language`/`?lang` ; 422 aplati en une phrase | Un seul catalogue ; aucun routeur à modifier pour la langue ; test qui échoue si un message levé n'a pas de traduction. |
+| D19 | Fiche terrain reconstruite à la lecture dans la langue du lecteur (`knowledge.py`) ; la colonne `fiche_terrain` reste un instantané | Une analyse faite en français se relit en anglais. |
+| D20 | `severity` = « niveau d'alerte » fondé sur la confiance, `none` pour une plante saine (T4) | Le classifieur ne mesure pas l'étendue des dégâts ; l'interface le dit. |
+| D21 | Correspondance classe → fiche corrigée (T16) et fiches ajoutées (rayure, helminthosporiose, mildiou du maïs, jaunissement) ; pourriture des cabosses à *Moniliophthora* (absente d'Afrique) remplacée par *P. megakarya* | Erreurs factuelles qui menaient au mauvais traitement ; validation agronome toujours demandée. |
+| D22 | Marché = catalogue de types d'intrants génériques à prix indicatifs ; marques, photos de produits (licence inconnue), panier et formulaire factice supprimés | D8. |
+| D23 | Benchmark → « Ma progression » (historique propre, `GET /api/dashboard/progress`) | D8 ; aucune moyenne inventée. |
+| D24 | `GEMINI_MODEL` configurable, défaut `gemini-3.1-flash-lite` (vérifié stable sur ai.google.dev le 22/10/2026 ; `gemini-3.5-flash-lite` recommandé pour les nouveaux projets) | Pas de changement de comportement sans décision humaine. |
 | D2 | Dépendances de dev dans `backend/requirements-dev.txt` (pytest, ruff, onnx) | Ne pas alourdir le serveur de production. |
 | D1 | Clone de `Umar-Elhaj/Greennew` dans `Greennew/` (et non `TCHOUANANG-dimitri/GREEN`) | Le prompt maître cible ce dépôt ; HEAD distant = `36d4768`, identique au contexte vérifié. |
 
@@ -124,6 +133,12 @@ _Aucun pour l'instant._
 
 1. Fournir le domaine public de l'API sur o2switch (pour la réécriture `/api/*` de `vercel.json`, lot 7).
 2. T16 : faire valider par un agronome la correspondance classe du modèle → fiche maladie (lot 4).
+
+## Risques et notes de vérification
+
+- Le balayage Playwright dépend de CDN externes (Google Fonts, Chart.js) : une coupure réseau donne un faux échec (`ERR_CONNECTION_RESET`), relancer.
+- Le cache des navigateurs Playwright (`~/.cache/ms-playwright`) a disparu une fois pendant la session : `npx playwright install chromium` le rétablit.
+- GreenBot avec une vraie clé n'est testé que côté backend (LLM simulé) ; aucune clé n'est disponible ici.
 
 ## Écarts constatés par rapport au contexte fourni
 
