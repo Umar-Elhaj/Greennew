@@ -14,6 +14,28 @@ import re
 # AUTH SCHEMAS
 # =============================================================
 
+MIN_PASSWORD_LENGTH = 8
+EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+
+def _clean_email(v: Optional[str]) -> Optional[str]:
+    if v is None:
+        return None
+    v = v.strip().lower()
+    if not v:
+        return None
+    if len(v) > 255 or not EMAIL_RE.match(v):
+        raise ValueError("Invalid email address.")
+    return v
+
+
+def _required_text(v: str) -> str:
+    v = (v or "").strip()
+    if not v:
+        raise ValueError("This field cannot be empty.")
+    return v
+
+
 class UserRegister(BaseModel):
     """Data required to create a new account."""
     first_name:   str
@@ -23,6 +45,7 @@ class UserRegister(BaseModel):
     password:     str
     company_name: Optional[str] = None
     region:       Optional[str] = None
+    dataset_consent: bool = False   # explicit opt-in, unchecked by default
 
     @field_validator("phone")
     @classmethod
@@ -33,12 +56,21 @@ class UserRegister(BaseModel):
             raise ValueError("Invalid phone number format.")
         return cleaned
 
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def validate_names(cls, v: str) -> str:
+        return _required_text(v)
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: Optional[str]) -> Optional[str]:
+        return _clean_email(v)
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str) -> str:
-        """Password must be at least 6 characters."""
-        if len(v) < 6:
-            raise ValueError("Password must be at least 6 characters.")
+        if len(v) < MIN_PASSWORD_LENGTH:
+            raise ValueError(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.")
         return v
 
 
@@ -60,6 +92,17 @@ class UserUpdate(BaseModel):
     dataset_consent:  Optional[bool] = None
     location_consent: Optional[bool] = None
 
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def validate_names(cls, v: Optional[str]) -> Optional[str]:
+        return None if v is None else _required_text(v)
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: Optional[str]) -> Optional[str]:
+        # "" clears the email (handled in the router), anything else must be valid
+        return "" if v is not None and not v.strip() else _clean_email(v)
+
 
 class PasswordChange(BaseModel):
     """For changing password from the profile settings."""
@@ -69,8 +112,8 @@ class PasswordChange(BaseModel):
     @field_validator("new_password")
     @classmethod
     def validate_new_password(cls, v: str) -> str:
-        if len(v) < 6:
-            raise ValueError("New password must be at least 6 characters.")
+        if len(v) < MIN_PASSWORD_LENGTH:
+            raise ValueError(f"New password must be at least {MIN_PASSWORD_LENGTH} characters.")
         return v
 
 

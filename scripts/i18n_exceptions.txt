@@ -35,3 +35,9 @@ ONNX
 EfficientNet-B0
 Leaflet
 OpenStreetMap
+
+# Language switch: each language is named in its own language
+FR
+EN
+Français
+English

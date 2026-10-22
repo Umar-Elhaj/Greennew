@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="fr">
 <!--
   GREEN App — Login Page
   Entry point of the platform. Users sign in with phone/email + password.
@@ -11,8 +11,8 @@
   <!-- i18n: dictionary + language applied before the first paint -->
   <script src="/js/translations.js"></script>
   <script src="/js/i18n.js"></script>
-  <title>GREEN — Sign In</title>
-  <meta name="description" content="Sign in to GREEN, the agricultural intelligence platform for Cameroonian agribusiness." />
+  <title data-i18n="titles.login">GREEN</title>
+  <meta name="description" content="Connectez-vous à GREEN, la plateforme d'intelligence agricole pour les exploitations camerounaises." />
 
   <!-- Favicon (using the logo) -->
   <link rel="icon" type="image/png" href="assets/logo.png" />
@@ -41,34 +41,15 @@
 <body>
   <div class="auth-page">
 
-    <!-- Language Selector (Top Right) -->
-    <div style="position: fixed; top: 20px; right: 20px; z-index: 100; display: flex; gap: 8px;">
-      <button class="lang-btn-login active" id="langEnLogin" onclick="switchLoginLang('en')">EN</button>
-      <button class="lang-btn-login" id="langFrLogin" onclick="switchLoginLang('fr')">FR</button>
+    <!-- Language selector (top right) -->
+    <div class="auth-lang-switch">
+      <div class="lang-switch" role="group" data-i18n-aria-label="common.lang_switch_aria">
+        <button type="button" class="lang-switch-btn" data-lang="fr" lang="fr" title="Français">FR</button>
+        <button type="button" class="lang-switch-btn" data-lang="en" lang="en" title="English">EN</button>
+      </div>
     </div>
 
-    <!-- Add this CSS for language buttons on login -->
     <style>
-      .lang-btn-login {
-        height: 32px;
-        padding: 0 12px;
-        border-radius: 6px;
-        border: 1.5px solid var(--border-default);
-        background: transparent;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text-secondary);
-        font-family: var(--font-sans);
-        cursor: pointer;
-        transition: all 200ms ease-out;
-      }
-      .lang-btn-login:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
-      .lang-btn-login.active {
-        border-color: var(--brand-primary);
-        background: rgba(46, 204, 113, 0.1);
-        color: var(--brand-primary);
-      }
-
       /* Stronger login-page branding sizing */
       .auth-page .auth-logo img {
         width: 4.25rem !important;
@@ -91,61 +72,54 @@
       <div class="auth-left-content">
         <!-- Logo -->
         <div class="auth-logo">
-          <img src="assets/logo.png" alt="GREEN Logo" />
-          <span class="auth-logo-name" data-i18n="app.name">GREEN</span>
+          <img src="assets/logo.png" alt="GREEN" />
+          <span class="auth-logo-name">GREEN</span>
         </div>
 
         <!-- Headline section -->
         <div class="auth-headline">
-          <!-- "AI Platform" pill tag -->
           <div class="auth-tag">
             <span class="auth-tag-dot"></span>
-            <span data-i18n="auth.ai_platform">Agricultural AI Platform</span>
+            <span data-i18n="auth.panel.tag">Plateforme agricole d'IA</span>
           </div>
 
           <h1 class="auth-title">
-            <span data-i18n="auth.precision_farming">Precision farming</span><br />
-            <span data-i18n="auth.for_africas_fields">for Africa's fields.</span>
+            <span data-i18n="auth.panel.title_1">L'agriculture de précision</span><br />
+            <span data-i18n="auth.panel.title_2">pour les champs d'Afrique.</span>
           </h1>
 
-          <p class="auth-subtitle" data-i18n="auth.monitor_crops">
+          <p class="auth-subtitle" data-i18n="auth.panel.subtitle"></p>
+
           <!-- Feature list -->
           <div class="auth-features">
-            <!-- Feature 1 -->
             <div class="auth-feature">
               <div class="auth-feature-icon">
-                <!-- Drone icon -->
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                  <path d="M2 17l10 5 10-5"/>
-                  <path d="M2 12l10 5 10-5"/>
+                  <path d="M23 7l-7 5 7 5V7z"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                 </svg>
               </div>
               <div class="auth-feature-text">
-                <h4>Drone Disease Detection</h4>
-                <p>Connect your drone, stream live footage, get AI disease analysis in under 3 seconds.</p>
+                <h4 data-i18n="auth.panel.feature_camera_title"></h4>
+                <p data-i18n="auth.panel.feature_camera_text"></p>
               </div>
             </div>
 
-            <!-- Feature 2 -->
             <div class="auth-feature">
               <div class="auth-feature-icon">
-                <!-- Map pin icon -->
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                   <circle cx="12" cy="10" r="3"/>
                 </svg>
               </div>
               <div class="auth-feature-text">
-                <h4>GREEN Map — Field Intelligence</h4>
-                <p>Map every parcel, pinpoint disease locations, and track your full estate in real time.</p>
+                <h4 data-i18n="auth.panel.feature_map_title"></h4>
+                <p data-i18n="auth.panel.feature_map_text"></p>
               </div>
             </div>
 
-            <!-- Feature 3 -->
             <div class="auth-feature">
               <div class="auth-feature-icon">
-                <!-- Chart icon -->
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" y1="20" x2="18" y2="10"/>
                   <line x1="12" y1="20" x2="12" y2="4"/>
@@ -153,28 +127,12 @@
                 </svg>
               </div>
               <div class="auth-feature-text">
-                <h4>Enterprise Analytics Dashboard</h4>
-                <p>Decision-level KPIs, disease trends, economic projections — built for agribusiness leaders.</p>
+                <h4 data-i18n="auth.panel.feature_dashboard_title"></h4>
+                <p data-i18n="auth.panel.feature_dashboard_text"></p>
               </div>
             </div>
           </div><!-- /auth-features -->
         </div><!-- /auth-headline -->
-
-        <!-- Stats row -->
-        <div class="auth-stats">
-          <div>
-            <div class="auth-stat-value">39+</div>
-            <div class="auth-stat-label">Diseases detected</div>
-          </div>
-          <div>
-            <div class="auth-stat-value">3s</div>
-            <div class="auth-stat-label">Analysis time</div>
-          </div>
-          <div>
-            <div class="auth-stat-value">10</div>
-            <div class="auth-stat-label">Cameroon regions</div>
-          </div>
-        </div>
 
       </div><!-- /auth-left-content -->
     </aside>
@@ -187,14 +145,14 @@
 
         <!-- Mobile logo (visible only when left panel is hidden) -->
         <div class="auth-mobile-logo">
-          <img src="assets/logo.png" alt="GREEN Logo" />
+          <img src="assets/logo.png" alt="GREEN" />
           <span class="auth-mobile-logo-name">GREEN</span>
         </div>
 
         <!-- Card header -->
         <div class="auth-card-header">
-          <h2 class="auth-greeting">Welcome back</h2>
-          <p class="auth-description">Sign in to your enterprise account</p>
+          <h2 class="auth-greeting" data-i18n="auth.login.greeting"></h2>
+          <p class="auth-description" data-i18n="auth.login.description"></p>
         </div>
 
         <!-- Global alert (shown on API error or success) -->
@@ -205,9 +163,8 @@
 
           <!-- Identifier: phone or email -->
           <div class="form-group">
-            <label class="form-label" for="identifier">Phone number or Email</label>
+            <label class="form-label" for="identifier" data-i18n="auth.login.identifier"></label>
             <div class="input-wrapper">
-              <!-- Phone/Mail icon -->
               <span class="input-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
@@ -218,9 +175,10 @@
                 id="identifier"
                 name="identifier"
                 class="form-input"
-                placeholder="+237 6XX XXX XXX or name@company.cm"
+                data-i18n-placeholder="auth.login.identifier_placeholder"
                 autocomplete="username"
-                inputmode="tel"
+                autocapitalize="off"
+                spellcheck="false"
                 required
               />
             </div>
@@ -229,9 +187,8 @@
 
           <!-- Password -->
           <div class="form-group">
-            <label class="form-label" for="password">Password</label>
+            <label class="form-label" for="password" data-i18n="auth.login.password"></label>
             <div class="input-wrapper">
-              <!-- Lock icon -->
               <span class="input-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -243,23 +200,20 @@
                 id="password"
                 name="password"
                 class="form-input has-action"
-                placeholder="Enter your password"
+                data-i18n-placeholder="auth.login.password_placeholder"
                 autocomplete="current-password"
                 required
               />
-              <!-- Show/Hide password toggle -->
               <button
                 type="button"
                 id="togglePassword"
                 class="input-action"
-                aria-label="Toggle password visibility"
+                data-i18n-aria-label="auth.show_password"
               >
-                <!-- Eye open (visible when password is hidden) -->
                 <svg class="icon-eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                   <circle cx="12" cy="12" r="3"/>
                 </svg>
-                <!-- Eye closed (visible when password is shown) -->
                 <svg class="icon-eye-close" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
                   <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
                   <line x1="1" y1="1" x2="23" y2="23"/>
@@ -269,9 +223,6 @@
             <span id="password_error" class="field-error"></span>
           </div>
 
-          <!-- Forgot password -->
-          <a href="#" class="forgot-password" tabindex="0">Forgot password?</a>
-
           <!-- Submit button -->
           <button
             type="submit"
@@ -279,21 +230,15 @@
             class="btn btn-primary btn-full btn-submit"
           >
             <span class="spinner"></span>
-            <span class="btn-text">Sign In</span>
+            <span class="btn-text" data-i18n="auth.login.submit"></span>
           </button>
 
         </form><!-- /loginForm -->
 
         <!-- Sign up redirect -->
         <p class="auth-footer">
-          Don't have an account?
-          <a href="/register">Create one &rarr;</a>
-        </p>
-
-        <!-- Legal -->
-        <p class="auth-terms">
-          By signing in, you agree to our
-          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+          <span data-i18n="auth.login.no_account"></span>
+          <a href="/register" data-i18n="auth.login.create_one"></a>
         </p>
 
       </div><!-- /auth-card -->
@@ -302,34 +247,8 @@
   </div><!-- /auth-page -->
 
   <!-- Scripts (load after DOM) -->
-  <script src="js/utils.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/auth.js"></script>
-  
-  <script>
-    /**
-     * Handle language switching on login page
-     */
-    function switchLoginLang(lang) {
-      if (typeof i18n !== 'undefined') {
-        i18n.setLanguage(lang);
-        updateLoginLangButtons();
-      }
-    }
-
-    function updateLoginLangButtons() {
-      const lang = (typeof i18n !== 'undefined') ? i18n.getLang() : 'en';
-      document.getElementById('langEnLogin').classList.toggle('active', lang === 'en');
-      document.getElementById('langFrLogin').classList.toggle('active', lang === 'fr');
-    }
-
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', async () => {
-      if (typeof i18n !== 'undefined') {
-        await i18n.init();
-        updateLoginLangButtons();
-      }
-    });
-  </script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
 </body>
 </html>

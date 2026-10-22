@@ -83,7 +83,19 @@
       "strong": "strong"
     },
     "items_one": "{{count}} item",
-    "items_other": "{{count}} items"
+    "items_other": "{{count}} items",
+    "regions": {
+      "Adamaoua": "Adamawa",
+      "Centre": "Centre",
+      "Est": "East",
+      "Extrême-Nord": "Far North",
+      "Littoral": "Littoral",
+      "Nord": "North",
+      "Nord-Ouest": "North-West",
+      "Ouest": "West",
+      "Sud": "South",
+      "Sud-Ouest": "South-West"
+    }
   },
   "fr": {
     "app_name": "GREEN",
@@ -169,6 +181,18 @@
       "strong": "élevée"
     },
     "items_one": "{{count}} élément",
-    "items_other": "{{count}} éléments"
+    "items_other": "{{count}} éléments",
+    "regions": {
+      "Adamaoua": "Adamaoua",
+      "Centre": "Centre",
+      "Est": "Est",
+      "Extrême-Nord": "Extrême-Nord",
+      "Littoral": "Littoral",
+      "Nord": "Nord",
+      "Nord-Ouest": "Nord-Ouest",
+      "Ouest": "Ouest",
+      "Sud": "Sud",
+      "Sud-Ouest": "Sud-Ouest"
+    }
   }
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="fr">
 <!--
   GREEN App — Register Page
   New enterprise users create their account here.
@@ -12,8 +12,7 @@
   <!-- i18n: dictionary + language applied before the first paint -->
   <script src="/js/translations.js"></script>
   <script src="/js/i18n.js"></script>
-  <title>GREEN — Create Account</title>
-  <meta name="description" content="Create your GREEN enterprise account and start managing your agricultural operations with AI." />
+  <title data-i18n="titles.register">GREEN</title>
 
   <link rel="icon" type="image/png" href="assets/logo.png" />
 
@@ -111,11 +110,29 @@
     }
     .step-actions .btn-ghost { flex: 0 0 auto; min-width: 110px; }
     .step-actions .btn-submit { flex: 1; }
+    .consent-check {
+      display: flex;
+      gap: var(--sp-3);
+      align-items: flex-start;
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      line-height: 1.45;
+      cursor: pointer;
+    }
+    .consent-check input { margin-top: 3px; width: 16px; height: 16px; flex: none; accent-color: var(--brand-primary); }
   </style>
 </head>
 
 <body>
   <div class="auth-page">
+
+    <!-- Language selector (top right) -->
+    <div class="auth-lang-switch">
+      <div class="lang-switch" role="group" data-i18n-aria-label="common.lang_switch_aria">
+        <button type="button" class="lang-switch-btn" data-lang="fr" lang="fr" title="Français">FR</button>
+        <button type="button" class="lang-switch-btn" data-lang="en" lang="en" title="English">EN</button>
+      </div>
+    </div>
 
     <!-- =========================================================
          LEFT PANEL — Branding
@@ -126,25 +143,22 @@
       <div class="auth-left-content">
         <!-- Logo -->
         <div class="auth-logo">
-          <img src="assets/logo.png" alt="GREEN Logo" />
+          <img src="assets/logo.png" alt="GREEN" />
           <span class="auth-logo-name">GREEN</span>
         </div>
 
         <div class="auth-headline">
           <div class="auth-tag">
             <span class="auth-tag-dot"></span>
-            Enterprise Platform
+            <span data-i18n="auth.panel.register_tag"></span>
           </div>
 
           <h1 class="auth-title">
-            Join Africa's<br />
-            <span>agricultural future.</span>
+            <span data-i18n="auth.panel.register_title_1"></span><br />
+            <span data-i18n="auth.panel.register_title_2"></span>
           </h1>
 
-          <p class="auth-subtitle">
-            Create your enterprise account and get access to drone-powered disease detection,
-            field intelligence mapping, and AI-driven agronomic guidance.
-          </p>
+          <p class="auth-subtitle" data-i18n="auth.panel.register_subtitle"></p>
 
           <!-- What you get -->
           <div class="auth-features">
@@ -157,8 +171,8 @@
                 </svg>
               </div>
               <div class="auth-feature-text">
-                <h4>GreenBot — AI Agronomist</h4>
-                <p>Your 24/7 crop advisor, powered by expert agricultural knowledge and AI.</p>
+                <h4 data-i18n="auth.panel.feature_bot_title"></h4>
+                <p data-i18n="auth.panel.feature_bot_text"></p>
               </div>
             </div>
 
@@ -170,8 +184,8 @@
                 </svg>
               </div>
               <div class="auth-feature-text">
-                <h4>Smart Agricultural Calendar</h4>
-                <p>Planting schedules adapted to Cameroon's climate and your specific crops.</p>
+                <h4 data-i18n="auth.panel.feature_calendar_title"></h4>
+                <p data-i18n="auth.panel.feature_calendar_text"></p>
               </div>
             </div>
 
@@ -186,26 +200,10 @@
                 </svg>
               </div>
               <div class="auth-feature-text">
-                <h4>Anonymous Local Benchmarking</h4>
-                <p>Know what's happening on nearby farms — disease outbreaks, seasonal alerts — anonymously.</p>
+                <h4 data-i18n="auth.panel.feature_progress_title"></h4>
+                <p data-i18n="auth.panel.feature_progress_text"></p>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- Stats -->
-        <div class="auth-stats">
-          <div>
-            <div class="auth-stat-value">Free</div>
-            <div class="auth-stat-label">To get started</div>
-          </div>
-          <div>
-            <div class="auth-stat-value">2 min</div>
-            <div class="auth-stat-label">To set up</div>
-          </div>
-          <div>
-            <div class="auth-stat-value">∞</div>
-            <div class="auth-stat-label">Potential yield</div>
           </div>
         </div>
       </div>
@@ -219,14 +217,14 @@
 
         <!-- Mobile logo -->
         <div class="auth-mobile-logo">
-          <img src="assets/logo.png" alt="GREEN Logo" />
+          <img src="assets/logo.png" alt="GREEN" />
           <span class="auth-mobile-logo-name">GREEN</span>
         </div>
 
         <!-- Card header -->
         <div class="auth-card-header">
-          <h2 class="auth-greeting">Create your account</h2>
-          <p class="auth-description">Join the GREEN enterprise platform — it only takes 2 minutes.</p>
+          <h2 class="auth-greeting" data-i18n="auth.register.greeting"></h2>
+          <p class="auth-description" data-i18n="auth.register.description"></p>
         </div>
 
         <!-- Global alert -->
@@ -236,12 +234,12 @@
         <div class="form-steps-indicator" id="formStepsIndicator">
           <div class="step-indicator-item active" data-step-indicator="1">
             <span class="step-indicator-num">1</span>
-            <span class="step-indicator-label">Personal info</span>
+            <span class="step-indicator-label" data-i18n="auth.register.step_personal"></span>
           </div>
           <div class="step-indicator-line"></div>
           <div class="step-indicator-item" data-step-indicator="2">
             <span class="step-indicator-num">2</span>
-            <span class="step-indicator-label">Enterprise &amp; security</span>
+            <span class="step-indicator-label" data-i18n="auth.register.step_farm"></span>
           </div>
         </div>
 
@@ -254,12 +252,12 @@
         <div class="form-step" id="registerStep1" data-step="1">
 
           <!-- ---- SECTION: Personal Information --------------- -->
-          <div class="form-section-label">Personal information</div>
+          <div class="form-section-label" data-i18n="auth.register.section_personal"></div>
 
           <!-- First & Last Name (side by side) -->
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="first_name">First name</label>
+              <label class="form-label" for="first_name" data-i18n="auth.register.first_name"></label>
               <div class="input-wrapper">
                 <span class="input-icon">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -272,7 +270,7 @@
                   id="first_name"
                   name="first_name"
                   class="form-input"
-                  placeholder="Jean"
+                  data-i18n-placeholder="auth.register.first_name_placeholder"
                   autocomplete="given-name"
                   required
                 />
@@ -281,7 +279,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="last_name">Last name</label>
+              <label class="form-label" for="last_name" data-i18n="auth.register.last_name"></label>
               <div class="input-wrapper">
                 <span class="input-icon">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -294,7 +292,7 @@
                   id="last_name"
                   name="last_name"
                   class="form-input"
-                  placeholder="Mbarga"
+                  data-i18n-placeholder="auth.register.last_name_placeholder"
                   autocomplete="family-name"
                   required
                 />
@@ -304,12 +302,12 @@
           </div><!-- /form-row -->
 
           <!-- ---- SECTION: Contact ---------------------------- -->
-          <div class="form-section-label" style="margin-top: var(--sp-2);">Contact</div>
+          <div class="form-section-label" style="margin-top: var(--sp-2);" data-i18n="auth.register.section_contact"></div>
 
           <!-- Phone (required) -->
           <div class="form-group">
             <label class="form-label" for="phone">
-              Phone number <span style="color: var(--color-error);">*</span>
+              <span data-i18n="auth.register.phone"></span> <span style="color: var(--color-error);">*</span>
             </label>
             <div class="input-wrapper">
               <span class="input-icon">
@@ -322,7 +320,7 @@
                 id="phone"
                 name="phone"
                 class="form-input"
-                placeholder="+237 6XX XXX XXX"
+                data-i18n-placeholder="auth.register.phone_placeholder"
                 autocomplete="tel"
                 inputmode="tel"
                 required
@@ -334,8 +332,8 @@
           <!-- Email (optional) -->
           <div class="form-group">
             <label class="form-label" for="email">
-              Email address
-              <span style="color: var(--text-muted); font-weight: var(--weight-regular);">(optional)</span>
+              <span data-i18n="auth.register.email"></span>
+              <span style="color: var(--text-muted); font-weight: var(--weight-regular);">(<span data-i18n="common.optional"></span>)</span>
             </label>
             <div class="input-wrapper">
               <span class="input-icon">
@@ -349,7 +347,7 @@
                 id="email"
                 name="email"
                 class="form-input"
-                placeholder="name@company.cm"
+                data-i18n-placeholder="auth.register.email_placeholder"
                 autocomplete="email"
                 inputmode="email"
               />
@@ -359,9 +357,7 @@
 
           <!-- Step 1 actions -->
           <div class="step-actions">
-            <button type="button" id="registerNextBtn" class="btn btn-primary btn-full">
-              Next
-            </button>
+            <button type="button" id="registerNextBtn" class="btn btn-primary btn-full" data-i18n="auth.register.next"></button>
           </div>
 
         </div><!-- /registerStep1 -->
@@ -372,13 +368,13 @@
         <div class="form-step" id="registerStep2" data-step="2" style="display:none;">
 
           <!-- ---- SECTION: Enterprise Details ----------------- -->
-          <div class="form-section-label">Enterprise details</div>
+          <div class="form-section-label" data-i18n="auth.register.section_farm"></div>
 
           <!-- Company name -->
           <div class="form-group">
             <label class="form-label" for="company_name">
-              Company / Farm name
-              <span style="color: var(--text-muted); font-weight: var(--weight-regular);">(optional)</span>
+              <span data-i18n="auth.register.company"></span>
+              <span style="color: var(--text-muted); font-weight: var(--weight-regular);">(<span data-i18n="common.optional"></span>)</span>
             </label>
             <div class="input-wrapper">
               <span class="input-icon">
@@ -392,7 +388,7 @@
                 id="company_name"
                 name="company_name"
                 class="form-input"
-                placeholder="e.g. Plantation du Moungo S.A."
+                data-i18n-placeholder="auth.register.company_placeholder"
               />
             </div>
           </div>
@@ -400,8 +396,8 @@
           <!-- Region of Cameroon -->
           <div class="form-group">
             <label class="form-label" for="region">
-              Region of Cameroon
-              <span style="color: var(--text-muted); font-weight: var(--weight-regular);">(optional)</span>
+              <span data-i18n="auth.register.region"></span>
+              <span style="color: var(--text-muted); font-weight: var(--weight-regular);">(<span data-i18n="common.optional"></span>)</span>
             </label>
             <div class="input-wrapper">
               <span class="input-icon">
@@ -411,29 +407,17 @@
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                 </svg>
               </span>
-              <select id="region" name="region" class="form-select">
-                <option value="">Select your region...</option>
-                <option value="Adamaoua">Adamaoua</option>
-                <option value="Centre">Centre</option>
-                <option value="Est">East (Est)</option>
-                <option value="Extrême-Nord">Far North (Extrême-Nord)</option>
-                <option value="Littoral">Littoral</option>
-                <option value="Nord">North (Nord)</option>
-                <option value="Nord-Ouest">North West (Nord-Ouest)</option>
-                <option value="Ouest">West (Ouest)</option>
-                <option value="Sud">South (Sud)</option>
-                <option value="Sud-Ouest">South West (Sud-Ouest)</option>
-              </select>
+              <select id="region" name="region" class="form-select" data-placeholder-key="auth.register.region_placeholder"></select>
             </div>
           </div>
 
           <!-- ---- SECTION: Security --------------------------- -->
-          <div class="form-section-label" style="margin-top: var(--sp-2);">Security</div>
+          <div class="form-section-label" style="margin-top: var(--sp-2);" data-i18n="auth.register.section_security"></div>
 
           <!-- Password -->
           <div class="form-group">
             <label class="form-label" for="password">
-              Password <span style="color: var(--color-error);">*</span>
+              <span data-i18n="auth.register.password"></span> <span style="color: var(--color-error);">*</span>
             </label>
             <div class="input-wrapper">
               <span class="input-icon">
@@ -447,7 +431,7 @@
                 id="password"
                 name="password"
                 class="form-input has-action"
-                placeholder="At least 6 characters"
+                data-i18n-placeholder="auth.register.password_placeholder"
                 autocomplete="new-password"
                 required
               />
@@ -455,7 +439,7 @@
                 type="button"
                 id="togglePassword"
                 class="input-action"
-                aria-label="Toggle password visibility"
+                data-i18n-aria-label="auth.show_password"
               >
                 <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -480,7 +464,7 @@
           <!-- Confirm Password -->
           <div class="form-group">
             <label class="form-label" for="confirm_password">
-              Confirm password <span style="color: var(--color-error);">*</span>
+              <span data-i18n="auth.register.confirm_password"></span> <span style="color: var(--color-error);">*</span>
             </label>
             <div class="input-wrapper">
               <span class="input-icon">
@@ -493,7 +477,7 @@
                 id="confirm_password"
                 name="confirm_password"
                 class="form-input has-action"
-                placeholder="Repeat your password"
+                data-i18n-placeholder="auth.register.confirm_password_placeholder"
                 autocomplete="new-password"
                 required
               />
@@ -501,7 +485,7 @@
                 type="button"
                 id="toggleConfirmPassword"
                 class="input-action"
-                aria-label="Toggle confirm password visibility"
+                data-i18n-aria-label="auth.show_password"
               >
                 <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -516,18 +500,23 @@
             <span id="confirm_password_error" class="field-error"></span>
           </div>
 
+          <!-- ---- SECTION: Consent (optional, off by default) ---- -->
+          <div class="form-section-label" style="margin-top: var(--sp-2);" data-i18n="auth.register.section_consent"></div>
+          <label class="consent-check">
+            <input type="checkbox" id="dataset_consent" name="dataset_consent" />
+            <span data-i18n="auth.register.dataset_consent"></span>
+          </label>
+
           <!-- Step 2 actions -->
           <div class="step-actions">
-            <button type="button" id="registerBackBtn" class="btn btn-ghost">
-              Back
-            </button>
+            <button type="button" id="registerBackBtn" class="btn btn-ghost" data-i18n="auth.register.back"></button>
             <button
               type="submit"
               id="registerSubmitBtn"
               class="btn btn-primary btn-submit"
             >
               <span class="spinner"></span>
-              <span class="btn-text">Create Account</span>
+              <span class="btn-text" data-i18n="auth.register.submit"></span>
             </button>
           </div>
 
@@ -537,14 +526,8 @@
 
         <!-- Sign in redirect -->
         <p class="auth-footer">
-          Already have an account?
-          <a href="/">Sign in &rarr;</a>
-        </p>
-
-        <!-- Legal -->
-        <p class="auth-terms">
-          By creating an account, you agree to our
-          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+          <span data-i18n="auth.register.have_account"></span>
+          <a href="/" data-i18n="auth.register.sign_in"></a>
         </p>
 
       </div><!-- /auth-card -->
@@ -553,8 +536,8 @@
   </div><!-- /auth-page -->
 
   <!-- Scripts -->
-  <script src="js/utils.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/auth.js?v=2"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
 </body>
 </html>

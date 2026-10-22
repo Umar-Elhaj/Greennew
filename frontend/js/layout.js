@@ -305,7 +305,6 @@ const Layout = {
     const sub = document.getElementById('headerPageSubtitle');
     if (title && this.titleKey) title.textContent = I18n.t(this.titleKey);
     if (sub && this.subtitleKey) sub.textContent = I18n.t(this.subtitleKey);
-    if (this.titleKey) document.title = `GREEN — ${I18n.t(this.titleKey)}`;
   },
 
   /* ----------------------------------------------------------

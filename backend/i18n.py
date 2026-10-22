@@ -45,6 +45,9 @@ MESSAGES_FR = {
     "Invalid or expired token. Please sign in again.": "Session invalide ou expirée. Veuillez vous reconnecter.",
     "Authentication required.": "Authentification requise.",
     "You do not have access to this page.": "Vous n'avez pas accès à cette page.",
+    "Invalid phone number format.": "Format de numéro de téléphone invalide.",
+    "Invalid email address.": "Adresse e-mail invalide.",
+    "This field cannot be empty.": "Ce champ ne peut pas être vide.",
     # resources
     "Analysis not found.": "Analyse introuvable.",
     "Parcel not found.": "Parcelle introuvable.",
@@ -78,6 +81,10 @@ MESSAGES_FR = {
 PATTERNS_FR = [
     (re.compile(r"^Image too large\. Maximum (\d+) MB\.$"), "Image trop volumineuse. Maximum {0} Mo."),
     (re.compile(r"^Disease '(.+)' not found\.$"), "Maladie « {0} » introuvable."),
+    (re.compile(r"^Password must be at least (\d+) characters\.$"),
+     "Le mot de passe doit contenir au moins {0} caractères."),
+    (re.compile(r"^New password must be at least (\d+) characters\.$"),
+     "Le nouveau mot de passe doit contenir au moins {0} caractères."),
     (re.compile(r"^City not found: (.+)$"), "Ville introuvable : {0}"),
     (re.compile(r"^Could not reach the camera stream at (.+)\. Check the rover Wi-Fi and the IP/port\.$"),
      "Impossible de joindre le flux caméra à {0}. Vérifiez le Wi-Fi du rover et l'adresse IP/le port."),

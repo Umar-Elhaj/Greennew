@@ -314,6 +314,46 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
+/* ============================================================
+   REGIONS OF CAMEROON
+   Stored values are the official French names; labels follow the
+   current language (common.regions.*).
+   ============================================================ */
+const CAMEROON_REGIONS = ['Adamaoua', 'Centre', 'Est', 'Extrême-Nord', 'Littoral',
+                          'Nord', 'Nord-Ouest', 'Ouest', 'Sud', 'Sud-Ouest'];
+
+function regionLabel(value) {
+  return CAMEROON_REGIONS.includes(value) ? I18n.t(`common.regions.${value}`) : (value || '');
+}
+
+/**
+ * Fill a <select> with the regions (first option = placeholder taken from
+ * its data-placeholder-key). Keeps the current selection; call again after
+ * a language change.
+ */
+function fillRegionSelect(select, selected) {
+  if (!select) return;
+  const current = selected !== undefined ? selected : select.value;
+  select.innerHTML = '';
+  const ph = document.createElement('option');
+  ph.value = '';
+  ph.textContent = I18n.t(select.dataset.placeholderKey || 'common.none');
+  select.appendChild(ph);
+  CAMEROON_REGIONS.forEach(r => {
+    const o = document.createElement('option');
+    o.value = r;
+    o.textContent = regionLabel(r);
+    select.appendChild(o);
+  });
+  if (current && !CAMEROON_REGIONS.includes(current)) {
+    const o = document.createElement('option');  // legacy free-text value
+    o.value = current;
+    o.textContent = current;
+    select.appendChild(o);
+  }
+  select.value = current || '';
+}
+
 /**
  * Debounce a function (limit how often it fires).
  * @param {Function} fn

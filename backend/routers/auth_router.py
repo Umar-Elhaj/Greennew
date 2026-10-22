@@ -52,6 +52,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
         password_hash=hash_password(user_data.password),
         company_name=user_data.company_name,
         region=user_data.region,
+        dataset_consent=user_data.dataset_consent,
     )
     db.add(new_user)
     db.commit()
@@ -74,7 +75,9 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     Sign in using phone number OR email address + password.
     Returns a JWT token and the user profile.
     """
+    # Same normalisation as at registration: lower-case email, phone without separators
     identifier = credentials.identifier.strip()
+    identifier = identifier.lower() if "@" in identifier else identifier.replace(" ", "").replace("-", "")
 
     # Search by phone or email
     user = db.query(User).filter(
@@ -136,8 +139,13 @@ def update_me(
                 detail="This email is already used by another account."
             )
 
-    # Apply changes (only fields that were provided)
-    for field, value in update_data.model_dump(exclude_none=True).items():
+    # Apply the fields that were sent; "" clears an optional text field
+    clearable = {"email", "company_name", "region", "avatar_url"}
+    for field, value in update_data.model_dump(exclude_unset=True).items():
+        if value is None:
+            continue
+        if field in clearable and isinstance(value, str) and not value.strip():
+            value = None
         setattr(current_user, field, value)
 
     db.commit()

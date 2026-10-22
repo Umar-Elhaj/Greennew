@@ -71,3 +71,33 @@ def test_legacy_drone_page_redirects_and_api_is_gone(client):
         r = client.get(path, follow_redirects=False)
         assert r.status_code in (302, 307) and r.headers["location"] == "/camera"
     assert client.post("/api/drone/connect", json={}).status_code in (404, 405)
+
+
+def test_register_validation_rules(client):
+    base = {"first_name": "A", "last_name": "B", "phone": "+237690001234", "password": "1234567"}
+    r = client.post("/api/auth/register", json=base, headers={"Accept-Language": "fr"})
+    assert r.status_code == 422 and "au moins 8 caractères" in r.json()["detail"]
+    r = client.post("/api/auth/register", json={**base, "password": "12345678", "first_name": "  "})
+    assert r.status_code == 422
+    r = client.post("/api/auth/register", json={**base, "password": "12345678", "email": "nope"})
+    assert r.status_code == 422 and "Invalid email address" in r.json()["detail"]
+    r = client.post("/api/auth/register", json={**base, "password": "12345678", "email": " A@B.CM "})
+    assert r.status_code == 201 and r.json()["user"]["email"] == "a@b.cm"
+
+
+def test_profile_fields_can_be_cleared(client, user):
+    h = user["headers"]
+    client.put("/api/auth/me", json={"company_name": "Agro SA", "email": "x@y.cm"}, headers=h)
+    r = client.put("/api/auth/me", json={"company_name": "", "email": ""}, headers=h)
+    assert r.status_code == 200
+    assert r.json()["company_name"] is None and r.json()["email"] is None
+    assert client.put("/api/auth/me", json={"first_name": ""}, headers=h).status_code == 422
+
+
+def test_login_normalises_identifier_and_consent_at_register(client):
+    r = client.post("/api/auth/register", json={"first_name": "A", "last_name": "B", "phone": "+237 690-111-222",
+                                                "email": "Mixed@Case.cm", "password": "secret123",
+                                                "dataset_consent": True})
+    assert r.status_code == 201 and r.json()["user"]["dataset_consent"] is True
+    for ident in ("+237 690 111 222", "MIXED@case.CM"):
+        assert client.post("/api/auth/login", json={"identifier": ident, "password": "secret123"}).status_code == 200

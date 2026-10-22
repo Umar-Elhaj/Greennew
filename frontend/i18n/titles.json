@@ -1,0 +1,36 @@
+{
+  "en": {
+    "login": "GREEN — Sign in",
+    "register": "GREEN — Create an account",
+    "dashboard": "GREEN — Dashboard",
+    "map": "GREEN — GREEN Map",
+    "camera": "GREEN — Camera analysis",
+    "chatbot": "GREEN — GreenBot",
+    "diseases": "GREEN — Disease library",
+    "calendar": "GREEN — Crop calendar",
+    "economics": "GREEN — Economic scenarios",
+    "benchmark": "GREEN — My progress",
+    "marketplace": "GREEN — Marketplace",
+    "history": "GREEN — Analysis history",
+    "green_data": "GREEN — GREEN Data",
+    "settings": "GREEN — Settings",
+    "profile": "GREEN — Profile"
+  },
+  "fr": {
+    "login": "GREEN — Connexion",
+    "register": "GREEN — Créer un compte",
+    "dashboard": "GREEN — Tableau de bord",
+    "map": "GREEN — GREEN Map",
+    "camera": "GREEN — Analyse caméra",
+    "chatbot": "GREEN — GreenBot",
+    "diseases": "GREEN — Bibliothèque des maladies",
+    "calendar": "GREEN — Calendrier cultural",
+    "economics": "GREEN — Scénarios économiques",
+    "benchmark": "GREEN — Ma progression",
+    "marketplace": "GREEN — Marché",
+    "history": "GREEN — Historique des analyses",
+    "green_data": "GREEN — GREEN Data",
+    "settings": "GREEN — Paramètres",
+    "profile": "GREEN — Profil"
+  }
+}
