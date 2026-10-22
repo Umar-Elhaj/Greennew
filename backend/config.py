@@ -7,6 +7,8 @@
 import os
 from dotenv import load_dotenv
 
+from db_url import normalize_database_url
+
 # Load .env file from the project root (one level above /backend).
 # Real environment variables win over .env (cPanel / tests must not be
 # silently overridden by a developer's local file).
@@ -33,15 +35,14 @@ ALGORITHM: str = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
 # ---- Database -----------------------------------------------
-# Production: Supabase PostgreSQL (session pooler URI, see .env).
+# Production: Supabase PostgreSQL through the pooler (see .env.example).
 # Fallback: SQLite for local development — file stored at project root
 DATABASE_URL: str = os.getenv(
     "DATABASE_URL",
     "sqlite:///" + os.path.join(os.path.dirname(__file__), '..', 'green.db')
 )
-# SQLAlchemy needs the "postgresql://" scheme (Supabase sometimes shows "postgres://")
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+# postgres:// → postgresql://, sslmode=require added for PostgreSQL (db_url.py)
+DATABASE_URL = normalize_database_url(DATABASE_URL)
 
 # ---- Media (Green Data images) ------------------------------
 # Analysed images are stored on the server disk, NOT in the database.

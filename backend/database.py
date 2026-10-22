@@ -2,33 +2,27 @@
 # GREEN App — Database Setup
 # PostgreSQL (Supabase) or SQLite + SQLAlchemy ORM configuration.
 # Creates the engine, session factory, and declarative base.
+# The schema itself is managed by Alembic (backend/migrations).
 # ============================================================
+
+import logging
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from config import DATABASE_URL
+from db_url import database_warnings, engine_kwargs, mask_database_url
+
+logger = logging.getLogger(__name__)
 
 # ---- Engine -------------------------------------------------
-if DATABASE_URL.startswith("sqlite"):
-    # check_same_thread=False is required for SQLite because
-    # FastAPI uses multiple threads.
-    engine = create_engine(
-        DATABASE_URL,
-        connect_args={"check_same_thread": False},
-        echo=False  # Set True to log SQL queries for debugging
-    )
-else:
-    # Supabase: pre_ping drops connections closed by the pooler,
-    # recycle avoids reusing connections older than 30 min.
-    engine = create_engine(
-        DATABASE_URL,
-        pool_pre_ping=True,
-        pool_recycle=1800,
-        pool_size=5,
-        max_overflow=5,
-        connect_args={"sslmode": "require"},
-        echo=False
-    )
+# Pool choice depends on the URL (NullPool behind the Supabase
+# transaction pooler, a small pool otherwise): see db_url.engine_kwargs.
+engine = create_engine(DATABASE_URL, echo=False, **engine_kwargs(DATABASE_URL))
+IS_SQLITE = engine.dialect.name == "sqlite"
+
+logger.info("Database: %s", mask_database_url(DATABASE_URL))
+for _warning in database_warnings(DATABASE_URL):
+    logger.warning(_warning)
 
 # ---- Session Factory ----------------------------------------
 # Each request gets its own session (opened/closed in dependency).
