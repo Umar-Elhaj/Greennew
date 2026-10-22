@@ -39,7 +39,7 @@ const API_BASE_URL = '';
  *   Always resolves (never throws), returns either data or an error message.
  */
 async function request(endpoint, method = 'GET', body = null, auth = false, isForm = false) {
-  const headers = {};
+  const headers = { 'Accept-Language': (window.I18n && I18n.lang) || 'fr' };
 
   // Add auth token if required
   if (auth) {
@@ -82,24 +82,40 @@ async function request(endpoint, method = 'GET', body = null, auth = false, isFo
     const responseData = isJson ? await response.json() : await response.text();
 
     if (!response.ok) {
-      // Extract the error detail from FastAPI's default error format
-      const errorMessage = isJson
-        ? (responseData.detail || responseData.message || 'Something went wrong.')
-        : responseData;
-      return { data: null, error: errorMessage, status: response.status };
+      if (response.status === 401 && auth) {
+        // Expired or revoked token: back to the login page
+        Auth.clear();
+        window.location.replace('/?expired=1');
+      }
+      return { data: null, error: errorText(responseData, isJson), status: response.status };
     }
 
     return { data: responseData, error: null, status: response.status };
 
   } catch (networkError) {
     // Network failure (server offline, CORS, etc.)
-    console.error('[GREEN API] Network error:', networkError);
-    return {
-      data: null,
-      error: 'Unable to connect to the server. Please check your connection.',
-      status: 0
-    };
+    console.warn('[GREEN API] Network error:', networkError);
+    return { data: null, error: I18n.t('common.errors.network'), status: 0 };
   }
+}
+
+/**
+ * Human-readable error from a FastAPI error body (already translated by the
+ * server according to Accept-Language). 422 bodies carry a list of
+ * {loc, msg}: they are flattened into one sentence.
+ */
+function errorText(body, isJson) {
+  if (!isJson) return I18n.t('common.errors.generic');
+  const detail = body && (body.detail !== undefined ? body.detail : body.message);
+  if (Array.isArray(detail)) {
+    const parts = detail.map(d => {
+      const field = Array.isArray(d.loc) ? d.loc.filter(x => x !== 'body').join('.') : '';
+      return field ? `${field} — ${d.msg}` : d.msg;
+    });
+    return I18n.t('common.errors.validation', { details: parts.join(' ; ') });
+  }
+  if (typeof detail === 'string' && detail) return detail;
+  return I18n.t('common.errors.generic');
 }
 
 

@@ -48,7 +48,7 @@ def _require_key():
     if not WEATHER_API_KEY:
         raise HTTPException(
             status_code=503,
-            detail="Service météo non configuré. Définissez WEATHER_API_KEY dans .env"
+            detail="The weather service is not configured on this server.",
         )
 
 
@@ -218,12 +218,12 @@ async def get_current_weather(
         async with httpx.AsyncClient(timeout=8.0) as client:
             r = await client.get(f"{OPENWEATHER_BASE_URL}/weather", params=params)
             if r.status_code == 404:
-                raise HTTPException(status_code=404, detail=f"Ville introuvable : {city}")
+                raise HTTPException(status_code=404, detail=f"City not found: {city}")
             r.raise_for_status()
             return _format_current(r.json(), resolved["label"])
     except httpx.HTTPError as exc:
         logger.error(f"[Weather] OpenWeather error: {exc}")
-        raise HTTPException(status_code=502, detail="Service météo indisponible.")
+        raise HTTPException(status_code=502, detail="The weather service is unavailable.")
 
 
 @router.get("/forecast", summary="Prévisions sur 5 jours (résumé journalier)")
@@ -249,7 +249,7 @@ async def get_forecast(
         async with httpx.AsyncClient(timeout=10.0) as client:
             r = await client.get(f"{OPENWEATHER_BASE_URL}/forecast", params=params)
             if r.status_code == 404:
-                raise HTTPException(status_code=404, detail=f"Ville introuvable : {city}")
+                raise HTTPException(status_code=404, detail=f"City not found: {city}")
             r.raise_for_status()
             return {
                 "city":     resolved["label"],
@@ -257,4 +257,4 @@ async def get_forecast(
             }
     except httpx.HTTPError as exc:
         logger.error(f"[Weather] OpenWeather forecast error: {exc}")
-        raise HTTPException(status_code=502, detail="Service météo indisponible.")
+        raise HTTPException(status_code=502, detail="The weather service is unavailable.")

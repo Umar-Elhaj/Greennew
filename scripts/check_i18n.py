@@ -9,9 +9,10 @@ Fails (exit 1) when:
      attribute) is not carried by a data-i18n* attribute, unless it is in
      the explicit exception list (scripts/i18n_exceptions.txt) or contains
      no letters at all (numbers, symbols, units like "ha");
-  4. a key used in HTML (data-i18n*) or JS (i18n.t('…') / t('…')) does not
+  4. a key used in HTML (data-i18n*) or JS (I18n.t('…') / t('…')) does not
      exist in the dictionary. A key `x` used with plural forms is satisfied
-     by `x_one` + `x_other`.
+     by `x_one` + `x_other`;
+  5. frontend/js/translations.js is not up to date with frontend/i18n/*.json.
 
 Usage:
   python scripts/check_i18n.py            # check, exit 1 on failure
@@ -19,7 +20,6 @@ Usage:
 """
 
 import argparse
-import json
 import re
 import sys
 from html.parser import HTMLParser
@@ -27,7 +27,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FRONTEND = ROOT / "frontend"
-DICT_PATH = FRONTEND / "js" / "translations.json"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import build_i18n  # noqa: E402
 EXCEPTIONS_PATH = Path(__file__).resolve().parent / "i18n_exceptions.txt"
 
 LANGS = ("en", "fr")
@@ -42,7 +43,7 @@ TEXT_ATTRS = {
 }
 KEY_ATTRS = ("data-i18n", "data-i18n-html", *TEXT_ATTRS.values())
 HAS_LETTER = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ]")
-JS_KEY_RE = re.compile(r"""(?<![\w$])(?:i18n\.)?t\(\s*['"]([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)['"]""")
+JS_KEY_RE = re.compile(r"""(?<![\w$])(?:[Ii]18n\.)?t\(\s*['"]([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)['"]""")
 
 
 def flatten(obj, prefix=""):
@@ -146,7 +147,10 @@ def main() -> int:
     args = ap.parse_args()
 
     errors = []
-    data = json.loads(DICT_PATH.read_text(encoding="utf-8"))
+    current = build_i18n.OUT.read_text(encoding="utf-8") if build_i18n.OUT.exists() else ""
+    if build_i18n.render() != current:
+        errors.append("[build] frontend/js/translations.js is out of date: run scripts/build_i18n.py")
+    data = build_i18n.merged()
     flat = {lang: dict(flatten(data.get(lang, {}))) for lang in LANGS}
 
     # 1. same key sets
@@ -181,7 +185,7 @@ def main() -> int:
             errors.append(f"[unknown-key] {rel}:{ln}: {k}")
 
     # 4. JS files
-    for js in sorted((FRONTEND / "js").glob("*.js")):
+    for js in sorted(p for p in (FRONTEND / "js").glob("*.js") if p.name != "translations.js"):
         rel = js.relative_to(ROOT)
         missing = [(ln, k) for ln, k in js_keys(js.read_text(encoding="utf-8")) if not key_exists(k, known)]
         per_file[str(rel)] = (0, len(missing))

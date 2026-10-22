@@ -53,9 +53,8 @@ function flatten(obj: any, prefix = '', out: Record<string, string> = {}) {
   return out;
 }
 
-const DICT = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '..', 'frontend', 'js', 'translations.json'), 'utf8'),
-);
+const DICT_JS = fs.readFileSync(path.join(__dirname, '..', 'frontend', 'js', 'translations.js'), 'utf8');
+const DICT = JSON.parse(DICT_JS.slice(DICT_JS.indexOf('{'), DICT_JS.lastIndexOf('}') + 1));
 const EN = flatten(DICT.en || {});
 const FR = flatten(DICT.fr || {});
 // English-only values: present in `en`, different from their `fr` translation.
@@ -65,6 +64,15 @@ const ENGLISH_ONLY = new Set(
     .map((k) => EN[k].trim())
     .filter((v) => /[A-Za-z]{3,}/.test(v) && !v.includes('{{')),
 );
+
+// Words that betray a string left in the other language (hard-coded in JS
+// templates, server messages…). Whole words, case-insensitive.
+const WRONG_LANG_WORDS: Record<string, RegExp> = {
+  fr: /\b(the|your|you|with|from|please|loading|click|select|upload|history|settings|dashboard|no data|field|fields|disease detected|healthy|unknown|view|save|cancel|delete|search)\b/i,
+  en: /\b(les|des|du|vos|votre|avec|pour|aucune?|chargement|parcelles?|maladies?|enregistrer|annuler|supprimer|rechercher|semaine|résultats?)\b/i,
+};
+// Visible strings allowed to match WRONG_LANG_WORDS (proper nouns, scientific names…).
+const WRONG_LANG_ALLOW: RegExp[] = [/^GREEN( Map| Data)?$/, /^GreenBot$/, /Esri|OpenStreetMap|Leaflet|Chart\.js/];
 
 let session: { token: string; user: any } | null = null;
 
@@ -85,7 +93,6 @@ async function prime(page: Page, lang: string, auth: boolean, s: { token: string
     ([lang, token, user, auth]) => {
       try {
         localStorage.setItem('green_lang', lang as string);
-        localStorage.setItem('green_language', lang as string); // legacy key, removed in lot 3
         if (auth) {
           localStorage.setItem('green_token', token as string);
           localStorage.setItem('green_user', JSON.stringify(user));
@@ -159,10 +166,16 @@ for (const lang of LANGS) {
           fs.mkdirSync(dir, { recursive: true });
           await page.screenshot({ path: path.join(dir, `${p.id}.png`), fullPage: true });
 
+          const texts = await visibleTexts(page);
           if (lang === 'fr') {
-            const leaked = [...new Set((await visibleTexts(page)).filter((t) => ENGLISH_ONLY.has(t)))];
+            const leaked = [...new Set(texts.filter((t) => ENGLISH_ONLY.has(t)))];
             for (const t of leaked) problems.push(`english text in fr: "${t}"`);
           }
+          const suspicious = [...new Set(texts.filter(
+            (t) => WRONG_LANG_WORDS[lang].test(t) && !WRONG_LANG_ALLOW.some((re) => re.test(t)),
+          ))];
+          for (const t of suspicious) problems.push(`wrong-language text in ${lang}: "${t.slice(0, 80)}"`);
+          expect(await page.evaluate(() => document.documentElement.lang)).toBe(lang);
 
           // No horizontal page scroll at phone width.
           if (vpName === 'mobile') {

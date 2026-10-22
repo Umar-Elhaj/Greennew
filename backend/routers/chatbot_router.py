@@ -110,11 +110,7 @@ def _get_client():
     if not api_key:
         raise HTTPException(
             status_code=503,
-            detail=(
-                "GreenBot non configuré. "
-                "Veuillez définir GEMINI_API_KEY dans le fichier .env. "
-                "Obtenez une clé gratuite sur aistudio.google.com/apikey"
-            )
+            detail="GreenBot is not configured on this server.",
         )
     if _gemini_client is None or _gemini_client_key != api_key:
         try:
@@ -123,10 +119,8 @@ def _get_client():
             _gemini_client_key = api_key
             logger.info("[GreenBot] Gemini client initialised.")
         except ImportError:
-            raise HTTPException(
-                status_code=503,
-                detail="Package google-genai non installé. Lancez : pip install google-genai"
-            )
+            logger.error("[GreenBot] google-genai is not installed")
+            raise HTTPException(status_code=503, detail="GreenBot is not configured on this server.")
     return _gemini_client
 
 
@@ -197,31 +191,18 @@ def _call_llm(messages: list, context_rag: str = "", analysis_context: str = "")
         return response.text
 
     except Exception as e:
+        # Details go to the log only: provider errors may contain keys or internals.
         err_str = str(e)
         logger.error(f"[GreenBot] Gemini API error: {err_str}")
 
         if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "quota" in err_str.lower():
             raise HTTPException(
                 status_code=429,
-                detail=(
-                    "Quota Gemini épuisé. Le tier gratuit est limité à 15 requêtes/minute "
-                    "et 1 million de tokens/jour. Attendez quelques minutes puis réessayez."
-                )
+                detail="GreenBot is busy (usage quota reached). Please try again in a few minutes.",
             )
-        if "403" in err_str or "PERMISSION_DENIED" in err_str:
-            raise HTTPException(
-                status_code=403,
-                detail=(
-                    "Clé API Gemini invalide ou permissions insuffisantes. "
-                    "Vérifiez votre clé dans le fichier .env et régénérez-la sur aistudio.google.com/apikey"
-                )
-            )
-        if "400" in err_str or "INVALID_ARGUMENT" in err_str:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Requête Gemini invalide : {err_str}"
-            )
-        raise HTTPException(status_code=502, detail=f"GreenBot erreur : {err_str}")
+        if "403" in err_str or "PERMISSION_DENIED" in err_str or "API key" in err_str:
+            raise HTTPException(status_code=503, detail="GreenBot is not configured on this server.")
+        raise HTTPException(status_code=502, detail="GreenBot is temporarily unavailable. Please try again later.")
 
 
 # =============================================================
@@ -342,10 +323,7 @@ async def create_session(
     except Exception as e:
         db.rollback()
         logger.error(f"[GreenBot] Failed to create session for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Could not create session: {str(e)}. Try restarting the server — the database tables may need to be recreated."
-        )
+        raise HTTPException(status_code=500, detail="Could not create the conversation. Please try again.")
 
 
 @router.get("/sessions")
@@ -384,7 +362,7 @@ async def get_session(
         ChatSession.user_id == current_user.id,
     ).first()
     if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
+        raise HTTPException(status_code=404, detail="Session not found.")
 
     # Explicit query — bypasses ORM relationship cache so we always
     # get the latest committed messages even right after a write.
@@ -429,7 +407,7 @@ async def send_message(
         ChatSession.user_id == current_user.id,
     ).first()
     if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
+        raise HTTPException(status_code=404, detail="Session not found.")
 
     from models import utcnow
 
@@ -505,6 +483,6 @@ async def delete_session(
         ChatSession.user_id == current_user.id,
     ).first()
     if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
+        raise HTTPException(status_code=404, detail="Session not found.")
     db.delete(session)
     db.commit()

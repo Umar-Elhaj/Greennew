@@ -5,96 +5,106 @@
  * and user info display from the saved session.
  *
  * Usage on each protected page:
- *   Layout.init({ page: 'dashboard', title: 'Dashboard', subtitle: '...' });
+ *   Layout.init({ page: 'dashboard', titleKey: 'nav.dashboard', subtitleKey: 'dashboard.subtitle' });
+ * Texts are re-rendered when the language changes (event `languageChanged`).
  */
 
 /* ============================================================
    NAVIGATION DEFINITION
    Single source of truth — add/remove pages here only.
+   `section`, `label` and `badge` are i18n keys; `roles` restricts an
+   entry to some user roles (the server enforces it too).
    ============================================================ */
 const NAV_ITEMS = [
   {
-    section: 'MAIN',
+    section: 'nav.sections.main',
     items: [
       {
         id: 'dashboard',
-        label: 'Dashboard',
+        label: 'nav.dashboard',
         href: '/dashboard',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`
       },
       {
         id: 'map',
-        label: 'GREEN Map',
+        label: 'nav.map',
         href: '/map',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`
       },
       {
         id: 'camera',
-        label: 'Drone Analysis',
+        label: 'nav.camera',
         href: '/camera',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`
       },
       {
         id: 'chatbot',
-        label: 'GreenBot',
+        label: 'nav.chatbot',
         href: '/chatbot',
-        badge: 'AI',
+        badge: 'nav.ai_badge',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/></svg>`
       },
     ]
   },
   {
-    section: 'ANALYTICS',
+    section: 'nav.sections.analytics',
     items: [
       {
         id: 'diseases',
-        label: 'Disease Database',
+        label: 'nav.diseases',
         href: '/diseases',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`
       },
       {
         id: 'calendar',
-        label: 'Ag. Calendar',
+        label: 'nav.calendar',
         href: '/calendar',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`
       },
       {
         id: 'economics',
-        label: 'Economic Scenarios',
+        label: 'nav.economics',
         href: '/economics',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`
       },
       {
         id: 'benchmark',
-        label: 'Local Benchmark',
+        label: 'nav.benchmark',
         href: '/benchmark',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`
       },
     ]
   },
   {
-    section: 'OPERATIONS',
+    section: 'nav.sections.operations',
     items: [
       {
         id: 'marketplace',
-        label: 'Marketplace',
+        label: 'nav.marketplace',
         href: '/marketplace',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`
       },
       {
+        id: 'green-data',
+        label: 'nav.green_data',
+        href: '/green-data',
+        roles: ['partner', 'admin'],
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`
+      },
+      {
         id: 'history',
-        label: 'Analysis History',
+        label: 'nav.history',
         href: '/history',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`
       },
     ]
   },
   {
-    section: 'ACCOUNT',
+    section: 'nav.sections.account',
     items: [
       {
         id: 'settings',
-        label: 'Settings',
+        label: 'nav.settings',
         href: '/settings',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`
       },
@@ -111,24 +121,31 @@ const Layout = {
   /** Currently active page id (set by init()) */
   currentPage: null,
 
+  /** Title/subtitle i18n keys of the current page (set by init()) */
+  titleKey: null,
+  subtitleKey: null,
+
   /**
    * Initialise the full app shell: sidebar + header.
    * Call this at the top of every protected page's script.
    *
    * @param {object} config
-   *   @param {string} config.page      - Page id matching NAV_ITEMS (e.g. 'dashboard')
-   *   @param {string} config.title     - Header title (e.g. 'Dashboard')
-   *   @param {string} [config.subtitle]- Optional header subtitle / breadcrumb
+   *   @param {string} config.page          - Page id matching NAV_ITEMS (e.g. 'dashboard')
+   *   @param {string} config.titleKey      - i18n key of the header title
+   *   @param {string} [config.subtitleKey] - i18n key of the header subtitle
    */
-  init({ page, title, subtitle = 'GREEN Enterprise Platform' }) {
+  init({ page, titleKey, subtitleKey = 'common.tagline' }) {
+    if (this.currentPage) return;  // idempotent
     this.currentPage = page;
+    this.titleKey = titleKey || `nav.${page}`;
+    this.subtitleKey = subtitleKey;
 
     // Inject CSS dependency guard
     this._ensureCSSLoaded();
 
     // Build and inject the shell elements
     this._injectSidebar();
-    this._injectHeader(title, subtitle);
+    this._injectHeader();
     this._injectMobileOverlay();
 
     // Update user info from saved session
@@ -139,49 +156,70 @@ const Layout = {
 
     // Mark current nav item as active
     this._setActiveNav(page);
+
+    window.addEventListener('languageChanged', () => this._retranslate());
+  },
+
+  /** Re-render the translated parts of the shell after a language switch. */
+  _retranslate() {
+    const nav = document.getElementById('sidebarNav');
+    if (nav) nav.innerHTML = this._navHTML();
+    this._setActiveNav(this.currentPage);
+    this._updateHeaderTitle();
+    this._updateLangSwitch();
+    this._updateUserDisplay();
+    I18n.apply(document.getElementById('appSidebar') || document);
+    I18n.apply(document.getElementById('appHeader') || document);
   },
 
   /* ----------------------------------------------------------
      SIDEBAR HTML
      ---------------------------------------------------------- */
-  _injectSidebar() {
-    // Build all navigation sections HTML
+  _navHTML() {
+    const role = ((typeof Auth !== 'undefined' && Auth.getUser()) || {}).role || 'farmer';
     let navHTML = '';
     NAV_ITEMS.forEach(section => {
+      const items = section.items.filter(item => !item.roles || item.roles.includes(role));
+      if (!items.length) return;
       navHTML += `
         <div class="nav-section">
-          <span class="nav-section-label">${section.section}</span>
+          <span class="nav-section-label">${I18n.t(section.section)}</span>
         </div>`;
 
-      section.items.forEach(item => {
+      items.forEach(item => {
+        const label = I18n.t(item.label);
         const badge = item.badge
-          ? `<span class="nav-badge">${item.badge}</span>`
+          ? `<span class="nav-badge">${I18n.t(item.badge)}</span>`
           : '';
         navHTML += `
         <a href="${item.href}"
            class="nav-item"
            data-page="${item.id}"
-           data-label="${item.label}">
+           data-label="${label}">
           <span class="nav-icon">${item.icon}</span>
-          <span class="nav-item-label">${item.label}</span>
+          <span class="nav-item-label">${label}</span>
           ${badge}
         </a>`;
       });
     });
+    return navHTML + '<div class="nav-divider"></div>';
+  },
+
+  _injectSidebar() {
+    const navHTML = this._navHTML();
 
     const sidebarHTML = `
-      <aside class="sidebar" id="appSidebar" role="navigation" aria-label="Main navigation">
+      <aside class="sidebar" id="appSidebar" role="navigation" data-i18n-aria-label="nav.main_navigation">
 
         <!-- Logo -->
-        <a href="/dashboard" class="sidebar-logo" aria-label="GREEN Home">
-          <img src="/assets/logo.png" alt="GREEN Logo" />
+        <a href="/dashboard" class="sidebar-logo" data-i18n-aria-label="nav.home">
+          <img src="/assets/logo.png" alt="GREEN" />
           <span class="sidebar-logo-name">GREEN</span>
         </a>
 
         <!-- Navigation -->
         <nav class="sidebar-nav" id="sidebarNav">
           ${navHTML}
-          <div class="nav-divider"></div>
         </nav>
 
         <!-- User card at bottom -->
@@ -189,8 +227,8 @@ const Layout = {
           <a href="/profile" class="sidebar-user-inner" id="sidebarUserCard">
             <div class="user-avatar" id="sidebarUserAvatar">--</div>
             <div class="sidebar-user-info">
-              <div class="sidebar-user-name" id="sidebarUserName">Loading...</div>
-              <div class="sidebar-user-company" id="sidebarUserCompany">GREEN Platform</div>
+              <div class="sidebar-user-name" id="sidebarUserName"></div>
+              <div class="sidebar-user-company" id="sidebarUserCompany"></div>
             </div>
             <!-- Chevron right icon -->
             <svg class="sidebar-user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -211,14 +249,14 @@ const Layout = {
   /* ----------------------------------------------------------
      HEADER HTML
      ---------------------------------------------------------- */
-  _injectHeader(title, subtitle) {
+  _injectHeader() {
     const headerHTML = `
       <header class="app-header" id="appHeader">
 
         <!-- Left: hamburger + title -->
         <div class="header-left">
           <!-- Mobile hamburger -->
-          <button class="header-menu-toggle" id="headerMenuToggle" aria-label="Toggle sidebar">
+          <button class="header-menu-toggle" id="headerMenuToggle" data-i18n-aria-label="nav.toggle_sidebar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="3" y1="12" x2="21" y2="12"/>
               <line x1="3" y1="6" x2="21" y2="6"/>
@@ -228,29 +266,22 @@ const Layout = {
 
           <!-- Page title -->
           <div class="header-title-area">
-            <div class="header-page-title">${title}</div>
-            <div class="header-breadcrumb">${subtitle}</div>
+            <div class="header-page-title" id="headerPageTitle"></div>
+            <div class="header-breadcrumb" id="headerPageSubtitle"></div>
           </div>
         </div>
 
-        <!-- Right: notifications + user -->
+        <!-- Right: language + user -->
         <div class="header-right">
 
-          <!-- Notification bell -->
-          <button class="header-icon-btn" id="headerNotifBtn" aria-label="Notifications" title="Notifications">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
-            <span class="notif-badge" id="headerNotifBadge" style="display:none;"></span>
-          </button>
+          ${Layout.langSwitchHTML()}
 
           <div class="header-divider"></div>
 
           <!-- User avatar + name (links to profile) -->
-          <a href="/profile" class="header-user-btn" id="headerUserBtn" aria-label="Go to profile">
+          <a href="/profile" class="header-user-btn" id="headerUserBtn" data-i18n-aria-label="nav.go_to_profile">
             <div class="user-avatar" id="headerUserAvatar" style="width:32px;height:32px;font-size:0.75rem;">--</div>
-            <span class="header-user-name" id="headerUserName">...</span>
+            <span class="header-user-name" id="headerUserName"></span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
@@ -263,7 +294,49 @@ const Layout = {
     const main = document.getElementById('appMain');
     if (main) {
       main.insertAdjacentHTML('afterbegin', headerHTML);
+      I18n.apply(document.getElementById('appHeader'));
+      this._updateHeaderTitle();
+      Layout.bindLangSwitch(document.getElementById('appHeader'));
     }
+  },
+
+  _updateHeaderTitle() {
+    const title = document.getElementById('headerPageTitle');
+    const sub = document.getElementById('headerPageSubtitle');
+    if (title && this.titleKey) title.textContent = I18n.t(this.titleKey);
+    if (sub && this.subtitleKey) sub.textContent = I18n.t(this.subtitleKey);
+    if (this.titleKey) document.title = `GREEN — ${I18n.t(this.titleKey)}`;
+  },
+
+  /* ----------------------------------------------------------
+     LANGUAGE SWITCH — FR | EN, no reload (also used by the
+     login / register pages)
+     ---------------------------------------------------------- */
+  langSwitchHTML() {
+    return `
+      <div class="lang-switch" role="group" data-i18n-aria-label="common.lang_switch_aria">
+        <button type="button" class="lang-switch-btn" data-lang="fr" lang="fr" title="Français">FR</button>
+        <button type="button" class="lang-switch-btn" data-lang="en" lang="en" title="English">EN</button>
+      </div>`;
+  },
+
+  bindLangSwitch(root) {
+    (root || document).querySelectorAll('.lang-switch-btn').forEach(btn => {
+      btn.addEventListener('click', () => I18n.setLanguage(btn.dataset.lang));
+    });
+    this._updateLangSwitch();
+    if (!this._langListener) {
+      this._langListener = () => this._updateLangSwitch();
+      window.addEventListener('languageChanged', this._langListener);
+    }
+  },
+
+  _updateLangSwitch() {
+    document.querySelectorAll('.lang-switch-btn').forEach(btn => {
+      const active = btn.dataset.lang === I18n.lang;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
   },
 
   /* ----------------------------------------------------------
@@ -368,7 +441,7 @@ const Layout = {
       : ((user.first_name || '')[0] + (user.last_name || '')[0]).toUpperCase();
 
     const fullName    = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-    const companyName = user.company_name || user.region || 'GREEN Platform';
+    const companyName = user.company_name || user.region || I18n.t('nav.platform');
 
     // Sidebar user card
     const sidebarAvatar  = document.getElementById('sidebarUserAvatar');
@@ -406,14 +479,12 @@ const Layout = {
    */
   refreshUser() {
     this._updateUserDisplay();
-  },
-
-  /**
-   * Set the notification badge visible/hidden.
-   * @param {boolean} visible
-   */
-  setNotificationBadge(visible) {
-    const badge = document.getElementById('headerNotifBadge');
-    if (badge) badge.style.display = visible ? 'block' : 'none';
+    // The role may have changed (GREEN Data entry)
+    const nav = document.getElementById('sidebarNav');
+    if (nav) {
+      nav.innerHTML = this._navHTML();
+      this._setActiveNav(this.currentPage);
+    }
   }
+
 };

@@ -27,6 +27,9 @@ const App = {
    * 2. Optionally refresh user data from the server.
    */
   async boot() {
+    if (this._booted) return;  // pages may call it again after app.js did
+    this._booted = true;
+
     // ---- Auth guard: redirect to login if no token ----
     if (!Auth.isLoggedIn()) {
       window.location.replace('/');
@@ -45,13 +48,13 @@ const App = {
    */
   async _refreshUser() {
     try {
-      const { data, error } = await API.auth.me();
+      const { data, error, status } = await API.auth.me();
       if (data && !error) {
         Auth.updateUser(data);
         if (typeof Layout !== 'undefined') {
           Layout.refreshUser();
         }
-      } else if (error && (error.includes('401') || error.includes('Invalid'))) {
+      } else if (status === 401) {
         // Token expired → force logout
         this.logout();
       }
@@ -134,10 +137,13 @@ const App = {
       animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
       font-family: var(--font-sans, Inter, sans-serif);
     `;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
     toast.innerHTML = `
       <span style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${c.icon}</span>
-      <span style="flex:1;">${message}</span>
+      <span style="flex:1;"></span>
     `;
+    // Text only: messages may contain server or user data
+    toast.lastElementChild.textContent = message;
     container.appendChild(toast);
 
     // Auto-dismiss

@@ -95,7 +95,7 @@ async def grab_frame(ip: str, port: int = None) -> bytes:
             status_code=502,
             detail=(
                 f"Could not grab a frame from the stream at {url}. "
-                "Ensure the drone is connected and the IP/port are correct."
+                "Check the rover Wi-Fi and the IP/port."
             ),
         )
     raise HTTPException(status_code=502, detail="No JPEG frame found in stream.")

@@ -57,33 +57,7 @@ const ThemeManager = {
 ThemeManager.init();
 
 
-/* ============================================================
-   LANGUAGE MANAGEMENT
-   Stores user's preferred language. Used by i18n system.
-   Language switching is done in Settings page only.
-   ============================================================ */
-const LangManager = {
-  STORAGE_KEY: 'green_lang',
-  SUPPORTED: ['en', 'fr'],
-
-  init() {
-    const saved = localStorage.getItem(this.STORAGE_KEY);
-    if (!saved || !this.SUPPORTED.includes(saved)) {
-      localStorage.setItem(this.STORAGE_KEY, 'en');
-    }
-  },
-
-  get() {
-    return localStorage.getItem(this.STORAGE_KEY) || 'en';
-  },
-
-  set(lang) {
-    if (this.SUPPORTED.includes(lang)) {
-      localStorage.setItem(this.STORAGE_KEY, lang);
-    }
-  }
-};
-LangManager.init();
+/* Language: see i18n.js (I18n.lang, I18n.setLanguage). */
 
 
 /* ============================================================
@@ -281,7 +255,7 @@ function updatePasswordStrength(password, barContainerId, labelId) {
   if (/[A-Z]/.test(password) && /[0-9!@#$%^&*]/.test(password)) score++;
 
   const classes = ['', 'weak', 'medium', 'strong'];
-  const labels  = ['', 'Weak', 'Moderate', 'Strong'];
+  const labels  = ['', 'weak', 'medium', 'strong'].map(k => k && I18n.t(`common.password.${k}`));
 
   bars.forEach((bar, i) => {
     bar.className = 'strength-bar';
@@ -291,7 +265,7 @@ function updatePasswordStrength(password, barContainerId, labelId) {
   });
 
   if (label) {
-    label.textContent = password.length > 0 ? `Strength: ${labels[score]}` : '';
+    label.textContent = password.length > 0 ? I18n.t('common.password.strength', { level: labels[score] }) : '';
     label.style.color = score === 1 ? 'var(--color-error)'
                       : score === 2 ? 'var(--color-warning)'
                       : score === 3 ? 'var(--color-success)'
@@ -317,15 +291,27 @@ function getInitials(firstName, lastName) {
 }
 
 /**
- * Format a date string for display (e.g. "April 10, 2026").
+ * Format a date for display in the current language (e.g. "10 avril 2026").
  * @param {string|Date} dateInput
  * @returns {string}
  */
 function formatDate(dateInput) {
-  const date = new Date(dateInput);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric', month: 'long', day: 'numeric'
-  });
+  return I18n.date(dateInput);
+}
+
+/**
+ * Escape text before inserting it into HTML (innerHTML templates).
+ * Every value coming from the server or the user must go through it.
+ * @param {*} value
+ * @returns {string}
+ */
+function escapeHtml(value) {
+  return String(value === null || value === undefined ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /**

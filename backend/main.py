@@ -105,6 +105,10 @@ app = FastAPI(
     redoc_url="/redoc" if DEBUG else None,
 )
 
+# ---- Translated error messages (Accept-Language / ?lang=) ---
+import i18n  # noqa: E402
+i18n.install(app)
+
 # ---- CORS Middleware ----------------------------------------
 # Only needed when the frontend is hosted on another origin (e.g. Vercel).
 if CORS_ORIGINS:

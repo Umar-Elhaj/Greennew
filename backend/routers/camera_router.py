@@ -39,8 +39,8 @@ async def connect_camera(
         raise HTTPException(
             status_code=502,
             detail=(
-                f"Could not reach camera stream at {stream_url(ip, port)}. "
-                "Check that the drone WiFi is connected and the IP/port are correct."
+                f"Could not reach the camera stream at {stream_url(ip, port)}. "
+                "Check the rover Wi-Fi and the IP/port."
             ),
         )
 

@@ -1,0 +1,174 @@
+{
+  "en": {
+    "app_name": "GREEN",
+    "tagline": "Agricultural intelligence platform",
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "none": "None",
+    "unknown": "Unknown",
+    "not_available": "Not available",
+    "yes": "Yes",
+    "no": "No",
+    "or": "or",
+    "optional": "optional",
+    "required": "required",
+    "close": "Close",
+    "language": "Language",
+    "lang_fr": "Français",
+    "lang_en": "English",
+    "lang_switch_aria": "Change language",
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "confirm": "Confirm",
+      "retry": "Try again",
+      "back": "Back",
+      "next": "Next",
+      "previous": "Previous",
+      "search": "Search",
+      "filter": "Filter",
+      "reset": "Reset",
+      "view": "View",
+      "view_all": "View all",
+      "download": "Download",
+      "export_csv": "Export CSV",
+      "export_geojson": "Export GeoJSON",
+      "sign_out": "Sign out",
+      "send": "Send",
+      "upload": "Upload",
+      "refresh": "Refresh",
+      "add": "Add",
+      "apply": "Apply"
+    },
+    "states": {
+      "empty": "Nothing to show yet.",
+      "error": "Something went wrong. Please try again.",
+      "offline": "You are offline.",
+      "online": "Back online."
+    },
+    "errors": {
+      "network": "Unable to reach the server. Check your connection.",
+      "session_expired": "Your session has expired. Please sign in again.",
+      "generic": "Something went wrong. Please try again.",
+      "validation": "Please check the form: {{details}}",
+      "not_found": "Not found."
+    },
+    "confirm": {
+      "delete": "Delete this item? This cannot be undone."
+    },
+    "ai": {
+      "probable_disease": "Probable disease",
+      "disclaimer": "AI prediction, not a diagnosis. Confirm with an agronomist before treating.",
+      "confidence": "Model confidence",
+      "low_confidence": "Low confidence: the image may be unclear or outside what the model knows."
+    },
+    "severity": {
+      "none": "None",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "units": {
+      "ha": "ha",
+      "m": "m",
+      "km": "km",
+      "min": "min"
+    },
+    "password": {
+      "strength": "Strength: {{level}}",
+      "weak": "weak",
+      "medium": "moderate",
+      "strong": "strong"
+    },
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items"
+  },
+  "fr": {
+    "app_name": "GREEN",
+    "tagline": "Plateforme d'intelligence agricole",
+    "loading": "Chargement…",
+    "saving": "Enregistrement…",
+    "none": "Aucun",
+    "unknown": "Inconnu",
+    "not_available": "Non disponible",
+    "yes": "Oui",
+    "no": "Non",
+    "or": "ou",
+    "optional": "facultatif",
+    "required": "obligatoire",
+    "close": "Fermer",
+    "language": "Langue",
+    "lang_fr": "Français",
+    "lang_en": "English",
+    "lang_switch_aria": "Changer de langue",
+    "actions": {
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "confirm": "Confirmer",
+      "retry": "Réessayer",
+      "back": "Retour",
+      "next": "Suivant",
+      "previous": "Précédent",
+      "search": "Rechercher",
+      "filter": "Filtrer",
+      "reset": "Réinitialiser",
+      "view": "Voir",
+      "view_all": "Tout voir",
+      "download": "Télécharger",
+      "export_csv": "Exporter en CSV",
+      "export_geojson": "Exporter en GeoJSON",
+      "sign_out": "Se déconnecter",
+      "send": "Envoyer",
+      "upload": "Importer",
+      "refresh": "Actualiser",
+      "add": "Ajouter",
+      "apply": "Appliquer"
+    },
+    "states": {
+      "empty": "Rien à afficher pour le moment.",
+      "error": "Une erreur s'est produite. Veuillez réessayer.",
+      "offline": "Vous êtes hors ligne.",
+      "online": "Connexion rétablie."
+    },
+    "errors": {
+      "network": "Impossible de joindre le serveur. Vérifiez votre connexion.",
+      "session_expired": "Votre session a expiré. Veuillez vous reconnecter.",
+      "generic": "Une erreur s'est produite. Veuillez réessayer.",
+      "validation": "Veuillez vérifier le formulaire : {{details}}",
+      "not_found": "Introuvable."
+    },
+    "confirm": {
+      "delete": "Supprimer cet élément ? Cette action est irréversible."
+    },
+    "ai": {
+      "probable_disease": "Maladie probable",
+      "disclaimer": "Prédiction de l'IA, pas un diagnostic. Faites-la confirmer par un agronome avant tout traitement.",
+      "confidence": "Confiance du modèle",
+      "low_confidence": "Confiance faible : l'image est peut-être floue ou hors du domaine connu du modèle."
+    },
+    "severity": {
+      "none": "Aucune",
+      "low": "Faible",
+      "medium": "Moyenne",
+      "high": "Élevée"
+    },
+    "units": {
+      "ha": "ha",
+      "m": "m",
+      "km": "km",
+      "min": "min"
+    },
+    "password": {
+      "strength": "Robustesse : {{level}}",
+      "weak": "faible",
+      "medium": "moyenne",
+      "strong": "élevée"
+    },
+    "items_one": "{{count}} élément",
+    "items_other": "{{count}} éléments"
+  }
+}
