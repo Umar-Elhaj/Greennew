@@ -15,14 +15,17 @@ import os
 import logging
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from database import get_db
 from models import ChatSession, ChatMessage, DiseaseAnalysis, User
 from auth import get_current_user
 from config import GEMINI_API_KEY, GEMINI_MODEL, RAG_CHUNKS_PATH
+from i18n import request_lang
+from knowledge import class_code, class_name, fiche_for_analysis, plant_name
+from models import Parcel
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/chat", tags=["GreenBot"])
@@ -124,30 +127,31 @@ def _get_client():
     return _gemini_client
 
 
-SYSTEM_PROMPT = """Tu es Green Bot, le partenaire et guide expert agronome de l'application GREEN.
+SYSTEM_PROMPT = """You are GreenBot, the agronomic assistant of GREEN, an agricultural intelligence platform for farms in Cameroon and Central Africa. GREEN detects probable plant diseases (cassava, maize, tomato) from photos with an EfficientNet-B0 model, maps parcels and tracks analyses over time.
 
-GREEN est une plateforme d'intelligence agricole destinée aux grandes entreprises agro-industrielles camerounaises et africaines. Elle permet la détection de maladies des plantes via un modèle IA EfficientNet-B0, l'analyse d'images de rover/drone, et le suivi des parcelles agricoles.
+You help farmers, farm managers and field agronomists with:
+- plant diseases and pests of Cameroonian crops, their symptoms and integrated management;
+- treatments suited to the local context (availability of products, approved products, costs);
+- sustainable practices, crop calendars and farm management;
+- interpreting GREEN's analysis results.
 
-Ton rôle est d'assister les gestionnaires d'exploitation, les agronomes de terrain et les directeurs agricoles en leur fournissant :
-- Des conseils agronomiques précis sur les maladies des plantes (manioc, maïs, tomate et autres cultures camerounaises)
-- Des conseils sur les traitements phytosanitaires adaptés au contexte africain
-- Des informations sur les pratiques agricoles durables et la gestion intégrée des cultures
-- Une interprétation des résultats d'analyse IA (maladies détectées, niveaux de sévérité)
-- Des conseils économiques et de gestion des coûts agricoles
-
-Contexte géographique : Cameroun et Afrique centrale. Adapte toujours tes réponses aux réalités locales (disponibilité des produits, saisons, pratiques paysannes).
-
-Règles de réponse :
-- Réponds en anglais par défaut (ou en français  si l'utilisateur écrit en français)
-- Sois précis, pratique et actionnable — privilégie les listes et les étapes claires
-- Si une analyse IA est fournie dans le contexte, interprète-la en premier
-- Si tu utilises des données de la base de connaissance agronomique, indique-le brièvement
-- Ne fais pas de diagnostics médicaux humains
-- Si tu n'es pas sûr, dis-le clairement et recommande une consultation avec un agronome terrain
+Rules:
+- {language_rule}
+- Be precise, practical and actionable: short paragraphs, lists and clear steps.
+- A GREEN result is a PROBABLE disease predicted by an AI model, never a certain diagnosis. Say so when you discuss it, and recommend confirming in the field (or with an agronomist) before any treatment, especially when the confidence is low.
+- If an analysis is provided in the context, interpret it first. If you use the agronomic knowledge base excerpts, say so briefly.
+- Recommend only pesticides approved for the crop, with protective equipment and the label's dose; prefer preventive and non-chemical measures first.
+- Never give human medical diagnoses. If you are not sure, say so clearly.
 """
 
+LANGUAGE_RULES = {
+    "fr": "Answer in French (use 'vous'), the language of the user's interface, unless the user clearly writes in another language.",
+    "en": "Answer in English, the language of the user's interface, unless the user clearly writes in another language.",
+}
 
-def _call_llm(messages: list, context_rag: str = "", analysis_context: str = "") -> str:
+
+def _call_llm(messages: list, context_rag: str = "", analysis_context: str = "", lang: str = "en",
+              user_context: str = "") -> str:
     """
     Call Google Gemini API with full conversation history.
 
@@ -157,13 +161,15 @@ def _call_llm(messages: list, context_rag: str = "", analysis_context: str = "")
     client = _get_client()
 
     # Build the system instruction with optional RAG and analysis context
-    system = SYSTEM_PROMPT
+    system = SYSTEM_PROMPT.format(language_rule=LANGUAGE_RULES.get(lang, LANGUAGE_RULES["en"]))
+    if user_context:
+        system += f"\n\n--- USER CONTEXT ---\n{user_context}\n--- END USER CONTEXT ---"
     if analysis_context:
-        system += f"\n\n--- ANALYSE IA EN COURS ---\n{analysis_context}\n--- FIN ANALYSE ---"
+        system += f"\n\n--- GREEN ANALYSIS BEING DISCUSSED ---\n{analysis_context}\n--- END ANALYSIS ---"
     if context_rag:
         system += (
-            "\n\n--- BASE DE CONNAISSANCE AGRONOMIQUE (extraits pertinents) ---\n"
-            f"{context_rag}\n--- FIN BASE DE CONNAISSANCE ---"
+            "\n\n--- AGRONOMIC KNOWLEDGE BASE (relevant excerpts) ---\n"
+            f"{context_rag}\n--- END KNOWLEDGE BASE ---"
         )
 
     # Convert message history to Gemini format
@@ -213,7 +219,7 @@ class SessionCreate(BaseModel):
 
 
 class MessageCreate(BaseModel):
-    content: str
+    content: str = Field(min_length=1, max_length=4000)
     analysis_id: Optional[int] = None
 
 
@@ -257,31 +263,48 @@ def _fmt(dt) -> str:
     return dt.isoformat() if dt else ""
 
 
-def _analysis_context(analysis_id: Optional[int], db: Session) -> str:
-    """Build a structured analysis context string for Gemini."""
+def _owned_analysis(analysis_id: Optional[int], user: User, db: Session) -> Optional[DiseaseAnalysis]:
+    """The analysis only if it belongs to the user (an id alone grants nothing)."""
     if not analysis_id:
+        return None
+    a = db.query(DiseaseAnalysis).filter(
+        DiseaseAnalysis.id == analysis_id, DiseaseAnalysis.user_id == user.id,
+    ).first()
+    if a is None:
+        raise HTTPException(status_code=404, detail="Analysis not found.")
+    return a
+
+
+def _analysis_context(a: Optional[DiseaseAnalysis], lang: str) -> str:
+    """Structured context of one analysis for the LLM (always English labels; facts only)."""
+    if a is None:
         return ""
-    a = db.query(DiseaseAnalysis).filter(DiseaseAnalysis.id == analysis_id).first()
-    if not a:
-        return ""
+    fiche = fiche_for_analysis(a, lang)
+    code = class_code(a.detected_disease, a.plant_type)
+    lines = [
+        f"Analysis #{a.id} (source: {a.source}, date: {a.created_at:%Y-%m-%d})",
+        f"Plant: {plant_name(a.plant_type, 'en')}",
+        f"Model result: {class_name(code, 'en')} — "
+        + ("healthy" if fiche['winner']['type'] == 'healthy' else "PROBABLE disease (AI prediction, not a diagnosis)"),
+        f"Model confidence: {fiche['confidence']}%" + (" (LOW: result uncertain)" if fiche["low_confidence"] else ""),
+    ]
+    if len(fiche["top3"]) > 1:
+        others = ", ".join(f"{class_name(t['code'], 'en')} {t['confidence']}%" for t in fiche["top3"][1:])
+        lines.append(f"Other candidates: {others}")
+    if fiche["symptoms"]:
+        lines.append(f"Reference symptoms: {'; '.join(fiche['symptoms'][:4])}")
+    if fiche["recommendations"]:
+        lines.append(f"Reference actions: {'; '.join(fiche['recommendations'][:4])}")
+    return "\n".join(lines)
 
-    lines = [f"Analyse #{a.id} — Source: {a.source}"]
-    if a.plant_type:
-        lines.append(f"Plante: {a.plant_type}")
-    if a.disease_name:
-        conf = f"{a.confidence * 100:.1f}%" if a.confidence else "—"
-        lines.append(f"Maladie détectée: {a.disease_name} (confiance: {conf}, sévérité: {a.severity or '—'})")
-    elif a.detected_disease == "healthy":
-        lines.append("Maladie: Aucune (plante saine)")
 
-    fiche = a.fiche_terrain or {}
-    symptoms = fiche.get("symptoms") or (fiche.get("disease") or {}).get("symptoms") or []
-    if symptoms:
-        lines.append(f"Symptômes observés: {', '.join(symptoms[:3])}")
-    recos = fiche.get("recommendations") or (fiche.get("disease") or {}).get("recommendations") or []
-    if recos:
-        lines.append(f"Recommandations initiales: {', '.join(recos[:2])}")
-
+def _user_context(user: User, db: Session) -> str:
+    """Region and parcels of the user: lets GreenBot adapt advice to the farm."""
+    parcels = db.query(Parcel).filter(Parcel.user_id == user.id, Parcel.is_active == True).limit(10).all()  # noqa: E712
+    lines = [f"Region of Cameroon: {user.region or 'unknown'}"]
+    if parcels:
+        lines.append("Parcels: " + "; ".join(
+            f"{p.name} ({p.crop_type or 'crop not set'}{f', {p.area_ha:.2f} ha' if p.area_ha else ''})" for p in parcels))
     return "\n".join(lines)
 
 
@@ -395,12 +418,14 @@ async def get_session(
 async def send_message(
     session_id: int,
     payload: MessageCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
     Send a user message and receive GreenBot's reply.
-    Performs RAG retrieval and calls Gemini 2.0 Flash.
+    Performs RAG retrieval and calls the Gemini model (GEMINI_MODEL), answering
+    in the request language.
     """
     session = db.query(ChatSession).filter(
         ChatSession.id == session_id,
@@ -410,6 +435,8 @@ async def send_message(
         raise HTTPException(status_code=404, detail="Session not found.")
 
     from models import utcnow
+
+    analysis = _owned_analysis(payload.analysis_id, current_user, db)
 
     # Load prior messages via explicit query (bypasses ORM cache)
     prior_msgs = (
@@ -444,11 +471,12 @@ async def send_message(
     # RAG: retrieve relevant agricultural knowledge
     rag_context = _retrieve_context(payload.content, top_k=5)
 
-    # Optional: enrich with linked analysis context
-    analysis_ctx = _analysis_context(payload.analysis_id, db)
+    # Optional: enrich with the linked analysis (owned by the user) and the farm
+    analysis_ctx = _analysis_context(analysis, request_lang(request))
 
     # ── Call Gemini (may raise HTTPException — user msg already saved) ────
-    reply_text = _call_llm(history, rag_context, analysis_ctx)
+    reply_text = _call_llm(history, rag_context, analysis_ctx, request_lang(request),
+                           _user_context(current_user, db))
 
     # ── Commit assistant reply ────────────────────────────────────────────
     assistant_msg = ChatMessage(

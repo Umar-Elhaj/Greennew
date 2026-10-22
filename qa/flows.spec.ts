@@ -186,3 +186,17 @@ test('camera: an invalid file is rejected and listed, then deletable', async ({ 
   await page.locator('.queue-item button').click();
   await expect(page.locator('.queue-item')).toHaveCount(0);
 });
+
+test('GreenBot: explains when disabled, opens a conversation linked to an analysis', async ({ page, request }) => {
+  const s = await newUser(request);
+  const up = await upload(request, s.token, '#c04030');
+  await signIn(page, s);
+  await page.goto(`/chatbot?analysis_id=${up.analysis_id}`);
+  await expect(page.locator('#notConfigured')).toBeVisible();   // no GEMINI_API_KEY in e2e
+  await expect(page.locator('#ctxBar')).toBeVisible();
+  await expect(page.locator('#ctxLabel')).toContainText('Brûlure des feuilles de la tomate');
+  await expect(page.locator('#chatInput')).toBeDisabled();
+  await page.locator('#appHeader .lang-switch-btn[data-lang="en"]').click();
+  await expect(page.locator('#ctxLabel')).toContainText('Tomato leaf blight');
+  await expect(page.locator('#notConfigured')).toContainText('not enabled');
+});

@@ -60,7 +60,9 @@ MAX_UPLOAD_MB: int = int(os.getenv("MAX_UPLOAD_MB", "8"))
 
 # ---- Gemini AI (GreenBot chatbot + camera disease research) --
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL: str = "gemini-3.1-flash-lite"   # Stable, budget-friendly; 2.5-flash-lite is restricted for new API keys
+# Stable model listed on ai.google.dev/gemini-api/docs/models (checked 2026-10-22);
+# Google recommends gemini-3.5-flash-lite for new projects: override here.
+GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "").strip() or "gemini-3.1-flash-lite"
 
 # ---- Weather API (OpenWeatherMap) --------------------------
 WEATHER_API_KEY: str = os.getenv("WEATHER_API_KEY", "")
