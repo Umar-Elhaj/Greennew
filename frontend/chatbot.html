@@ -8,7 +8,7 @@
   <script src="/js/i18n.js"></script>
   <title data-i18n="titles.chatbot">GREEN</title>
   <link rel="icon" type="image/png" href="/assets/logo.png" />
-  <script>(function(){var t=localStorage.getItem('green_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+  <script src="/js/theme-init.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -75,7 +75,7 @@
     }
     .session-item:hover { background: var(--bg-subtle); }
     .session-item.active { background: rgba(46,204,113,.09); }
-    .session-item.active .session-title { color: var(--brand-primary); font-weight: var(--weight-semibold); }
+    .session-item.active .session-title { color: var(--brand-text); font-weight: var(--weight-semibold); }
     .session-ico {
       width: 30px; height: 30px;
       border-radius: var(--radius-sm);
@@ -85,7 +85,7 @@
       color: var(--text-muted);
       font-size: 14px;
     }
-    .session-item.active .session-ico { background: rgba(46,204,113,.15); color: var(--brand-primary); }
+    .session-item.active .session-ico { background: rgba(46,204,113,.15); color: var(--brand-text); }
     .session-info { flex: 1; min-width: 0; }
     .session-title {
       font-size: var(--text-sm);
@@ -115,7 +115,7 @@
       transition: opacity var(--dur-base), color var(--dur-base);
     }
     .session-item:hover .session-del { opacity: 1; }
-    .session-del:hover { color: var(--color-error); }
+    .session-del:hover { color: var(--color-error-text); }
 
     .sessions-empty {
       padding: var(--sp-8) var(--sp-4);
@@ -183,7 +183,7 @@
       cursor: pointer;
       transition: border-color var(--dur-base), color var(--dur-base), background-color var(--dur-base);
     }
-    .chip:hover { border-color: var(--brand-primary); color: var(--brand-primary); background: rgba(46,204,113,.05); }
+    .chip:hover { border-color: var(--brand-primary); color: var(--brand-text); background: rgba(46,204,113,.05); }
 
     /* Messages area */
     .chat-messages {
@@ -348,7 +348,7 @@
       color: var(--text-secondary);
       flex-shrink: 0;
     }
-    .analysis-ctx-bar span { font-weight: var(--weight-semibold); color: var(--brand-primary); }
+    .analysis-ctx-bar span { font-weight: var(--weight-semibold); color: var(--brand-text); }
     .ctx-clear-btn {
       margin-left: auto;
       background: none;
@@ -358,7 +358,7 @@
       cursor: pointer;
       text-decoration: underline;
     }
-    .ctx-clear-btn:hover { color: var(--color-error); }
+    .ctx-clear-btn:hover { color: var(--color-error-text); }
 
     /* RAG badge on bot messages */
     .rag-badge {

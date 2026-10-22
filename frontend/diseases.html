@@ -8,7 +8,7 @@
   <script src="/js/i18n.js"></script>
   <title data-i18n="titles.diseases">GREEN</title>
   <link rel="icon" type="image/png" href="/assets/logo.png" />
-  <script>(function(){var t=localStorage.getItem('green_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+  <script src="/js/theme-init.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -69,8 +69,8 @@
       cursor: pointer;
       transition: all var(--dur-base) var(--ease-out);
     }
-    .plant-chip:hover   { border-color: var(--brand-primary); color: var(--brand-primary); }
-    .plant-chip.active  { background: var(--brand-primary); border-color: var(--brand-primary); color: #fff; }
+    .plant-chip:hover   { border-color: var(--brand-primary); color: var(--brand-text); }
+    .plant-chip.active  { background: var(--brand-fill-strong); border-color: var(--brand-fill-strong); color: #fff; }
     .result-count {
       font-size: var(--text-xs);
       color: var(--text-muted);
@@ -142,7 +142,7 @@
       padding: 2px 7px;
       border-radius: var(--radius-full);
       background: rgba(46,204,113,0.10);
-      color: var(--brand-primary);
+      color: var(--brand-text);
       border: 1px solid rgba(46,204,113,0.2);
     }
 
@@ -196,7 +196,7 @@
       display: flex; align-items: flex-start; gap: var(--sp-2);
       line-height: 1.5;
     }
-    .detail-section ul li::before { content: '•'; color: var(--brand-primary); flex-shrink: 0; margin-top: 2px; }
+    .detail-section ul li::before { content: '•'; color: var(--brand-text); flex-shrink: 0; margin-top: 2px; }
     .alias-list {
       display: flex; flex-wrap: wrap; gap: var(--sp-2);
     }

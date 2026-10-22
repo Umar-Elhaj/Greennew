@@ -11,6 +11,7 @@
 import { test, expect, Page, APIRequestContext } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import { setRole } from './helpers';
 
 const PAGES = [
   { id: 'index', path: '/', auth: false },
@@ -43,6 +44,13 @@ const EXPECTED_HTTP_ERRORS: Array<{ url: RegExp; status: number }> = [
 ];
 
 // ---------------------------------------------------------------- helpers
+/** Fonts and map tiles come from third parties; scripts are vendored and must load. */
+function isThirdParty(url: string): boolean {
+  try {
+    return /(^|\.)(fonts\.googleapis\.com|fonts\.gstatic\.com|tile\.openstreetmap\.org|arcgisonline\.com)$/
+      .test(new URL(url).hostname);
+  } catch { return false; }
+}
 function flatten(obj: any, prefix = '', out: Record<string, string> = {}) {
   for (const [k, v] of Object.entries(obj)) {
     if (v && typeof v === 'object') flatten(v, `${prefix}${k}.`, out);
@@ -74,12 +82,6 @@ const WRONG_LANG_ALLOW: RegExp[] = [/^GREEN( Map| Data)?$/, /^GreenBot$/, /Esri|
 
 let session: { token: string; user: any } | null = null;
 
-export function setRole(phone: string, role: string) {
-  const { execFileSync } = require('child_process');
-  execFileSync(path.join(process.env.E2E_ROOT!, '.venv', 'bin', 'python'),
-    [path.join(process.env.E2E_ROOT!, 'scripts', 'set_role.py'), '--phone', phone, '--role', role],
-    { env: { ...process.env, DATABASE_URL: process.env.E2E_DATABASE_URL } });
-}
 
 /** 16×16 PNG of one colour, built without dependencies. */
 function solidPng(hex: string): Buffer {
@@ -198,9 +200,11 @@ for (const lang of LANGS) {
           const problems: string[] = [];
           page.on('console', (msg) => {
             if (msg.type() !== 'error') return;
-            // The browser logs every failed fetch; expected ones are not problems.
+            // The browser logs every failed fetch; expected ones are not problems,
+            // nor third-party resources (fonts, map tiles) whose failure changes nothing.
             const src = msg.location()?.url || '';
-            if (/Failed to load resource/.test(msg.text()) && EXPECTED_HTTP_ERRORS.some((e) => e.url.test(src))) return;
+            if (/Failed to load resource/.test(msg.text())
+                && (EXPECTED_HTTP_ERRORS.some((e) => e.url.test(src)) || isThirdParty(src))) return;
             problems.push(`console.error: ${msg.text()}`);
           });
           page.on('pageerror', (err) => problems.push(`pageerror: ${err.message}`));
@@ -208,6 +212,7 @@ for (const lang of LANGS) {
             const status = res.status();
             if (status < 400) return;
             const url = res.url();
+            if (isThirdParty(url)) return;
             if (EXPECTED_HTTP_ERRORS.some((e) => e.status === status && e.url.test(url))) return;
             problems.push(`HTTP ${status} ${url}`);
           });

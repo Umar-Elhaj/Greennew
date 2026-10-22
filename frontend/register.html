@@ -26,15 +26,7 @@
   <link rel="stylesheet" href="css/main.css" />
   <link rel="stylesheet" href="css/auth.css" />
 
-  <!-- Prevent theme flash -->
-  <script>
-    (function () {
-      const saved = localStorage.getItem('green_theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = saved || (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-    })();
-  </script>
+  <script src="/js/theme-init.js"></script>
 
   <style>
     /* Register page specific: right panel scrolls, not full-height centered */
@@ -65,7 +57,7 @@
       display: flex;
       align-items: center;
       gap: var(--sp-2);
-      opacity: 0.5;
+      opacity: 0.85;   /* inactive step stays readable (AA) */
       transition: opacity var(--dur-base) var(--ease-out);
     }
     .step-indicator-item.active,
@@ -307,7 +299,7 @@
           <!-- Phone (required) -->
           <div class="form-group">
             <label class="form-label" for="phone">
-              <span data-i18n="auth.register.phone"></span> <span style="color: var(--color-error);">*</span>
+              <span data-i18n="auth.register.phone"></span> <span style="color: var(--color-error-text);">*</span>
             </label>
             <div class="input-wrapper">
               <span class="input-icon">
@@ -417,7 +409,7 @@
           <!-- Password -->
           <div class="form-group">
             <label class="form-label" for="password">
-              <span data-i18n="auth.register.password"></span> <span style="color: var(--color-error);">*</span>
+              <span data-i18n="auth.register.password"></span> <span style="color: var(--color-error-text);">*</span>
             </label>
             <div class="input-wrapper">
               <span class="input-icon">
@@ -464,7 +456,7 @@
           <!-- Confirm Password -->
           <div class="form-group">
             <label class="form-label" for="confirm_password">
-              <span data-i18n="auth.register.confirm_password"></span> <span style="color: var(--color-error);">*</span>
+              <span data-i18n="auth.register.confirm_password"></span> <span style="color: var(--color-error-text);">*</span>
             </label>
             <div class="input-wrapper">
               <span class="input-icon">

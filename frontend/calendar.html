@@ -8,7 +8,7 @@
   <script src="/js/i18n.js"></script>
   <title data-i18n="titles.calendar">GREEN</title>
   <link rel="icon" type="image/png" href="/assets/logo.png" />
-  <script>(function(){var t=localStorage.getItem('green_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+  <script src="/js/theme-init.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -38,7 +38,7 @@
     }
     .month-hdr.current-month {
       background: rgba(46,204,113,0.10);
-      color: var(--brand-primary);
+      color: var(--brand-text);
     }
     .month-hdr:first-child {
       font-size: var(--text-xs);
@@ -148,11 +148,11 @@
       line-height: var(--leading-relaxed);
     }
     .tip-card.warning { border-color: rgba(239,68,68,0.3); }
-    .tip-card.warning .tip-month { color: #ef4444; }
+    .tip-card.warning .tip-month { color: var(--color-error-text); }
     .tip-card.caution { border-color: rgba(245,158,11,0.3); }
-    .tip-card.caution .tip-month { color: #d97706; }
+    .tip-card.caution .tip-month { color: var(--color-warning-text); }
     .tip-card.ok      { border-color: rgba(46,204,113,0.3); }
-    .tip-card.ok      .tip-month { color: var(--brand-primary); }
+    .tip-card.ok      .tip-month { color: var(--brand-text); }
 
     /* Highlighted today month */
     .today-badge {
@@ -160,7 +160,7 @@
       align-items: center;
       gap: var(--sp-2);
       background: rgba(46,204,113,0.12);
-      color: var(--brand-primary);
+      color: var(--brand-text);
       border: 1px solid rgba(46,204,113,0.2);
       border-radius: var(--radius-full);
       padding: 3px 12px;

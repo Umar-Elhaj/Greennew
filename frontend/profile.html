@@ -8,7 +8,7 @@
   <script src="/js/i18n.js"></script>
   <title data-i18n="titles.profile">GREEN</title>
   <link rel="icon" type="image/png" href="/assets/logo.png" />
-  <script>(function(){var t=localStorage.getItem('green_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+  <script src="/js/theme-init.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -41,7 +41,7 @@
       border-bottom: 1px solid var(--border-subtle);
     }
     .p-card-hdr h3 { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--text-primary); margin: 0; }
-    .p-card-hdr svg { color: var(--brand-primary); flex-shrink: 0; }
+    .p-card-hdr svg { color: var(--brand-text); flex-shrink: 0; }
     .p-card-body { padding: var(--sp-6); }
 
     /* ---- Avatar section (gradient top of left card) -------- */
@@ -80,7 +80,7 @@
     /* ---- Info list ----------------------------------------- */
     .info-list { display: flex; flex-direction: column; gap: var(--sp-4); }
     .info-item { display: flex; align-items: flex-start; gap: var(--sp-3); }
-    .info-icon { color: var(--brand-primary); flex-shrink: 0; margin-top: 1px; }
+    .info-icon { color: var(--brand-text); flex-shrink: 0; margin-top: 1px; }
     .info-label { font-size: 11px; font-weight: var(--weight-semibold); color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
     .info-value { font-size: var(--text-sm); color: var(--text-primary); font-weight: var(--weight-medium); margin-top: 1px; }
 
@@ -96,7 +96,7 @@
       border-right: 1px solid var(--border-subtle);
     }
     .stat-cell:last-child { border-right: none; }
-    .stat-val { font-size: var(--text-2xl); font-weight: var(--weight-extrabold); color: var(--brand-primary); line-height: 1; }
+    .stat-val { font-size: var(--text-2xl); font-weight: var(--weight-extrabold); color: var(--brand-text); line-height: 1; }
     .stat-lbl { font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--sp-1); }
 
     /* ---- Form ------------------------------------------------ */
@@ -128,7 +128,7 @@
       border-radius: var(--radius-lg);
       padding: var(--sp-6);
     }
-    .danger-zone h4 { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-error); margin: 0 0 var(--sp-2); }
+    .danger-zone h4 { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-error-text); margin: 0 0 var(--sp-2); }
     .danger-zone p  { font-size: var(--text-sm); color: var(--text-muted); margin: 0 0 var(--sp-4); }
   </style>
 </head>
@@ -279,7 +279,7 @@
             <h4 data-i18n="profile.danger_title"></h4>
             <p data-i18n="profile.danger_text"></p>
             <button class="btn" onclick="deactivateAccount()"
-                    style="border-color:rgba(239,68,68,.35);color:var(--color-error);background:rgba(239,68,68,.05);" data-i18n="profile.deactivate"></button>
+                    style="border-color:rgba(239,68,68,.35);color:var(--color-error-text);background:rgba(239,68,68,.05);" data-i18n="profile.deactivate"></button>
           </div>
 
         </div><!-- /right -->

@@ -234,7 +234,7 @@
 .auth-stat-value {
   font-size: var(--text-2xl);
   font-weight: var(--weight-extrabold);
-  color: var(--brand-primary);
+  color: var(--brand-text);
   line-height: 1;
   margin-bottom: 4px;
 }
@@ -370,7 +370,7 @@
   margin-top: -var(--sp-3);
   transition: color var(--dur-base);
 }
-.forgot-password:hover { color: var(--brand-primary); }
+.forgot-password:hover { color: var(--brand-text); }
 
 /* ---- Auth Footer (sign up / sign in redirect) ------------ */
 .auth-footer {
@@ -380,7 +380,7 @@
   color: var(--text-muted);
 }
 .auth-footer a {
-  color: var(--brand-primary);
+  color: var(--brand-text);
   font-weight: var(--weight-semibold);
 }
 .auth-footer a:hover { text-decoration: underline; }

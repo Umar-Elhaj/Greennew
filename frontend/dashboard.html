@@ -27,17 +27,10 @@
   <link rel="stylesheet" href="/css/app.css" />
   <link rel="stylesheet" href="/css/mobile.css" />
 
-  <!-- Prevent theme flash -->
-  <script>
-    (function () {
-      const saved = localStorage.getItem('green_theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
-    })();
-  </script>
+  <script src="/js/theme-init.js"></script>
 
-  <!-- Chart.js 4.4.0 (exact version, CDN) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+  <!-- Chart.js 4.4.0, vendored: see /vendor/README.md -->
+  <script src="/vendor/chart.js-4.4.0/chart.umd.min.js" defer></script>
 
   <style>
     /* ---- Dashboard-specific styles ------------------------- */
@@ -234,12 +227,12 @@
       font-size: 11px;
       font-weight: var(--weight-semibold);
     }
-    .pill-high    { background: rgba(239,68,68,0.12);  color: var(--color-error); }
-    .pill-medium  { background: rgba(245,158,11,0.12); color: var(--color-warning); }
+    .pill-high    { background: rgba(239,68,68,0.12);  color: var(--color-error-text); }
+    .pill-medium  { background: rgba(245,158,11,0.12); color: var(--color-warning-text); }
     .pill-low     { background: rgba(59,130,246,0.12); color: var(--color-info); }
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .chart-empty  { height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text-muted); font-size: var(--text-sm); padding: var(--sp-4); }
-    .pill-healthy { background: rgba(46,204,113,0.12); color: var(--brand-primary); }
+    .pill-healthy { background: rgba(46,204,113,0.12); color: var(--brand-text); }
 
     /* Weather widget */
     .weather-widget {
@@ -517,7 +510,7 @@
         <div class="section-title">
           <span data-i18n="dashboard.recent.title"></span>
           <div class="section-title-line"></div>
-          <a href="/history" style="font-size:var(--text-sm); color:var(--brand-primary); font-weight:500; white-space:nowrap; margin-left: auto;">
+          <a href="/history" style="font-size:var(--text-sm); color:var(--brand-text); font-weight:500; white-space:nowrap; margin-left: auto;">
             <span data-i18n="common.actions.view_all"></span> &rarr;
           </a>
         </div>
@@ -767,7 +760,7 @@
                 <td><span class="pill pill-${lvl === 'none' ? 'healthy' : lvl}">${escapeHtml(alertLabel(lvl, true))}</span></td>
                 <td>${a.confidence != null ? escapeHtml(I18n.percent(a.confidence)) : '—'}</td>
                 <td style="white-space:nowrap;">${escapeHtml(I18n.date(a.created_at, { day: 'numeric', month: 'short' }))}</td>
-                <td><a href="/history?id=${encodeURIComponent(a.id)}" style="color:var(--brand-primary);font-size:var(--text-sm);">${escapeHtml(I18n.t('common.actions.view'))}</a></td>
+                <td><a href="/history?id=${encodeURIComponent(a.id)}" style="color:var(--brand-text);font-size:var(--text-sm);">${escapeHtml(I18n.t('common.actions.view'))}</a></td>
               </tr>`;
             }).join('')}
           </tbody>

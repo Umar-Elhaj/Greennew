@@ -42,7 +42,11 @@
   --text-muted:      #6B7280;
   --text-disabled:   #9CA3AF;
   --text-inverse:    #FFFFFF;
-  --text-brand:      #16A34A;
+  --text-brand:      #15803D;   /* green text on light surfaces: 5:1 (AA) */
+  --brand-text:      #15803D;   /* use for text/links; --brand-primary stays for fills */
+  --brand-fill-strong: #15803D; /* fill behind white text (5:1) */
+  --color-error-text:   #B91C1C;   /* red text on light surfaces (6.5:1) */
+  --color-warning-text: #B45309;   /* amber text on light surfaces (5:1) */
 
   --border-subtle:   #E5E7EB;
   --border-default:  #D1D5DB;
@@ -70,7 +74,7 @@
 
   --dark-text-primary:   #E6EDF3;
   --dark-text-secondary: #8B949E;
-  --dark-text-muted:     #6E7681;
+  --dark-text-muted:     #8B949E;   /* 6:1 on the dark base (AA) */
   --dark-text-disabled:  #484F58;
 
   --dark-border-subtle:  #21262D;
@@ -210,6 +214,11 @@
   --text-secondary:  var(--dark-text-secondary);
   --text-muted:      var(--dark-text-muted);
   --text-disabled:   var(--dark-text-disabled);
+  --text-brand:      #2ECC71;
+  --brand-text:      #2ECC71;
+  --brand-fill-strong: #15803D;
+  --color-error-text:   #F87171;
+  --color-warning-text: #FBBF24;
 
   --border-subtle:   var(--dark-border-subtle);
   --border-default:  var(--dark-border-default);

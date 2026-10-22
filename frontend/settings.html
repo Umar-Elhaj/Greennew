@@ -8,7 +8,7 @@
   <script src="/js/i18n.js"></script>
   <title data-i18n="titles.settings">GREEN</title>
   <link rel="icon" type="image/png" href="/assets/logo.png" />
-  <script>(function(){var t=localStorage.getItem('green_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+  <script src="/js/theme-init.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -44,7 +44,7 @@
       color: var(--text-primary);
       margin: 0;
     }
-    .s-card-hdr svg { color: var(--brand-primary); flex-shrink: 0; }
+    .s-card-hdr svg { color: var(--brand-text); flex-shrink: 0; }
 
     /* ---- Setting row --------------------------------------- */
     .s-row {
@@ -145,7 +145,7 @@
     .lang-btn.active {
       border-color: var(--brand-primary);
       background: rgba(46,204,113,.1);
-      color: var(--brand-primary);
+      color: var(--brand-text);
     }
 
     /* ---- Version tag --------------------------------------- */
@@ -166,8 +166,8 @@
       padding: 3px 10px;
       border-radius: var(--radius-full);
     }
-    .model-chip.online  { background: rgba(46,204,113,.12); color: var(--brand-primary); }
-    .model-chip.offline { background: rgba(239,68,68,.12);  color: var(--color-error); }
+    .model-chip.online  { background: rgba(46,204,113,.12); color: var(--brand-text); }
+    .model-chip.offline { background: rgba(239,68,68,.12);  color: var(--color-error-text); }
   </style>
 </head>
 <body>

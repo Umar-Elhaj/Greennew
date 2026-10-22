@@ -14,7 +14,7 @@
   <script src="/js/i18n.js"></script>
   <title data-i18n="titles.map">GREEN</title>
   <link rel="icon" type="image/png" href="/assets/logo.png" />
-  <script>(function(){var t=localStorage.getItem('green_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+  <script src="/js/theme-init.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -22,10 +22,10 @@
   <link rel="stylesheet" href="/css/main.css" />
   <link rel="stylesheet" href="/css/app.css" />
   <link rel="stylesheet" href="/css/mobile.css" />
-  <!-- Leaflet 1.9.4 (map) and Turf 7.1.0 (offline geometry checks), exact versions -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/@turf/turf@7.1.0/turf.min.js"></script>
+  <!-- Leaflet 1.9.4 (map) and Turf 7.1.0 (offline geometry checks), vendored: see /vendor/README.md -->
+  <link rel="stylesheet" href="/vendor/leaflet-1.9.4/leaflet.css" />
+  <script src="/vendor/leaflet-1.9.4/leaflet.js"></script>
+  <script src="/vendor/turf-7.1.0/turf.min.js"></script>
   <style>
     .app-content.map-content { padding: 0; display: flex; overflow: hidden; }
     .map-page { display: flex; flex: 1; min-height: calc(100vh - 64px); min-width: 0; }
@@ -37,13 +37,13 @@
     .side-view[hidden] { display: none; }
     .side-hdr { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
     .side-hdr h2 { font-size: var(--text-lg); margin: 0; color: var(--text-primary); }
-    .link-btn { background: none; border: none; padding: 0; color: var(--brand-primary); font: 600 var(--text-sm) var(--font-sans); cursor: pointer; text-align: left; }
+    .link-btn { background: none; border: none; padding: 0; color: var(--brand-text); font: 600 var(--text-sm) var(--font-sans); cursor: pointer; text-align: left; }
     .note { font-size: var(--text-xs); color: var(--text-muted); line-height: 1.5; }
     .banner-warn { font-size: var(--text-xs); line-height: 1.5; padding: var(--sp-3); border-radius: var(--radius-md);
                    background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); color: #92400E; }
     [data-theme="dark"] .banner-warn { color: #FCD34D; }
     .banner-err { font-size: var(--text-xs); line-height: 1.5; padding: var(--sp-3); border-radius: var(--radius-md);
-                  background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); color: var(--color-error); }
+                  background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); color: var(--color-error-text); }
     .parcel-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
     .parcel-item { width: 100%; text-align: left; background: var(--surface-2); border: 1px solid var(--border-subtle);
                    border-radius: var(--radius-md); padding: var(--sp-3); cursor: pointer; font: inherit; color: inherit; }
@@ -52,9 +52,9 @@
     .parcel-item .pi-name { font-weight: 600; color: var(--text-primary); }
     .parcel-item .pi-meta { font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px; }
     .sync-badge { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
-    .sync-synced   { background: rgba(46,204,113,.12); color: var(--brand-primary); }
+    .sync-synced   { background: rgba(46,204,113,.12); color: var(--brand-text); }
     .sync-pending  { background: rgba(245,158,11,.14); color: #b45309; }
-    .sync-conflict, .sync-error { background: rgba(239,68,68,.12); color: var(--color-error); }
+    .sync-conflict, .sync-error { background: rgba(239,68,68,.12); color: var(--color-error-text); }
     .stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2) var(--sp-4); font-size: var(--text-sm); }
     .stats dt { font-size: var(--text-xs); color: var(--text-muted); }
     .stats dd { margin: 0; color: var(--text-primary); font-weight: 600; }
@@ -188,7 +188,7 @@
             </div>
             <div class="row" id="formEditActions">
               <button type="button" class="btn" id="redrawBtn" data-i18n="map.form.redraw"></button>
-              <button type="button" class="btn" id="deleteParcelBtn" style="color:var(--color-error);" data-i18n="map.form.delete"></button>
+              <button type="button" class="btn" id="deleteParcelBtn" style="color:var(--color-error-text);" data-i18n="map.form.delete"></button>
             </div>
           </section>
 
@@ -262,7 +262,7 @@
             <button type="button" class="btn" id="heatApplyBtn" data-i18n="map.heat.apply"></button>
             <p class="note" data-i18n="map.heat.note"></p>
             <div id="cellDetail" class="cell-detail"></div>
-            <button type="button" class="link-btn" id="deleteMissionBtn" style="color:var(--color-error);" data-i18n="map.mission.delete"></button>
+            <button type="button" class="link-btn" id="deleteMissionBtn" style="color:var(--color-error-text);" data-i18n="map.mission.delete"></button>
           </section>
         </aside>
 

@@ -33,7 +33,7 @@ body {
 
 /* ---- Links ------------------------------------------------- */
 a {
-  color: var(--brand-primary);
+  color: var(--brand-text);
   text-decoration: none;
   transition: color var(--dur-base) var(--ease-out),
               opacity var(--dur-base) var(--ease-out);
@@ -83,10 +83,10 @@ button { cursor: pointer; }
 .text-primary   { color: var(--text-primary); }
 .text-secondary { color: var(--text-secondary); }
 .text-muted     { color: var(--text-muted); }
-.text-brand     { color: var(--brand-primary); }
+.text-brand     { color: var(--brand-text); }
 .text-success   { color: var(--color-success); }
-.text-error     { color: var(--color-error); }
-.text-warning   { color: var(--color-warning); }
+.text-error     { color: var(--color-error-text); }
+.text-warning   { color: var(--color-warning-text); }
 
 .font-regular   { font-weight: var(--weight-regular); }
 .font-medium    { font-weight: var(--weight-medium); }
@@ -174,7 +174,7 @@ button { cursor: pointer; }
 /* Secondary — outlined */
 .btn-secondary {
   background: transparent;
-  color: var(--brand-primary);
+  color: var(--brand-text);
   border: 1.5px solid var(--brand-primary);
 }
 .btn-secondary:hover:not(:disabled) {
@@ -258,7 +258,7 @@ button { cursor: pointer; }
   box-shadow: 0 0 0 3px var(--input-ring);
 }
 .form-input:focus + .input-icon,
-.input-wrapper:focus-within .input-icon { color: var(--brand-primary); }
+.input-wrapper:focus-within .input-icon { color: var(--brand-text); }
 
 /* Input with action button on the right (e.g., password show/hide) */
 .form-input.has-action { padding-right: 48px; }
@@ -283,7 +283,7 @@ button { cursor: pointer; }
 .form-input.error:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.18); }
 .field-error {
   font-size: var(--text-xs);
-  color: var(--color-error);
+  color: var(--color-error-text);
   margin-top: 2px;
   display: none;  /* Shown via JS when there's an error */
 }
