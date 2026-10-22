@@ -1,80 +1,38 @@
 # ============================================================
 # GREEN App — Disease Database Router
 #
-# Serves the diseases.json reference database via REST API.
+# Serves the bilingual diseases.json reference database.
 # No authentication required — public agronomic reference data.
+# Entries are returned in the request language (?lang= / Accept-Language);
+# search matches both languages, aliases and former ids.
 #
-#   GET /api/diseases        — list all (optional ?q= search)
-#   GET /api/diseases/{id}   — single disease by ID
+#   GET /api/diseases        — list (optional ?q=, ?plant=, ?category=)
+#   GET /api/diseases/{id}   — one entry by id or alias
 # ============================================================
 
-import json
-import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 
-from config import DISEASES_DB_PATH
+from i18n import request_lang
+from knowledge import get_entry, localize, search
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/diseases", tags=["Disease Database"])
 
-# In-memory cache — loaded once on first request
-_cache: list = []
 
-
-def _load() -> list:
-    global _cache
-    if _cache:
-        return _cache
-    try:
-        with open(DISEASES_DB_PATH, encoding="utf-8") as f:
-            _cache = json.load(f)
-        logger.info(f"[DiseaseDB] Loaded {len(_cache)} entries from diseases.json")
-    except FileNotFoundError:
-        logger.warning(f"[DiseaseDB] diseases.json not found at {DISEASES_DB_PATH}")
-        _cache = []
-    except Exception as exc:
-        logger.error(f"[DiseaseDB] Failed to load diseases.json: {exc}")
-        _cache = []
-    return _cache
-
-
-@router.get("", summary="List all diseases from the reference database")
+@router.get("", summary="List the reference diseases and pests")
 def list_diseases(
-    q:     Optional[str] = Query(None, description="Search by name, alias, or plant"),
-    plant: Optional[str] = Query(None, description="Filter by affected plant"),
+    request: Request,
+    q:        Optional[str] = Query(None, description="Search by name (FR or EN), alias, scientific name or plant"),
+    plant:    Optional[str] = Query(None, description="Filter by affected plant (FR or EN)"),
+    category: Optional[str] = Query(None, pattern="^(disease|pest|healthy)$"),
 ):
-    """
-    Returns the full disease reference list.
-    Optional full-text search via ?q= and plant filter via ?plant=
-    """
-    diseases = _load()
-
-    if plant:
-        plant_lower = plant.lower()
-        diseases = [
-            d for d in diseases
-            if any(plant_lower in p.lower() for p in d.get("affectedPlants", []))
-        ]
-
-    if q:
-        q_lower = q.lower()
-        diseases = [
-            d for d in diseases
-            if q_lower in d.get("name", "").lower()
-            or any(q_lower in a.lower() for a in d.get("aliases", []))
-            or any(q_lower in p.lower() for p in d.get("affectedPlants", []))
-            or q_lower in d.get("scientificName", "").lower()
-        ]
-
-    return diseases
+    return search(q=q, plant=plant, category=category, lang=request_lang(request))
 
 
-@router.get("/{disease_id}", summary="Get a specific disease by ID")
-def get_disease(disease_id: str):
-    """Returns a single disease entry by its ID field."""
-    for d in _load():
-        if d["id"] == disease_id:
-            return d
-    raise HTTPException(status_code=404, detail=f"Disease '{disease_id}' not found.")
+@router.get("/{disease_id}", summary="Get one entry by id or alias")
+def get_disease(disease_id: str, request: Request):
+    entry = get_entry(disease_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail=f"Disease '{disease_id}' not found.")
+    return localize(entry, request_lang(request))

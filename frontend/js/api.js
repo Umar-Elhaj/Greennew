@@ -360,14 +360,21 @@ const API = {
      DISEASES DATABASE
      ---------------------------------------------------------- */
   diseases: {
-    /** Get the full disease database list. */
-    list() {
-      return request('/api/diseases', 'GET');
+    /**
+     * Reference entries in the current language. The server searches both
+     * languages, so "tomato" also finds entries while the UI is in French.
+     * @param {{q?: string, plant?: string, category?: string}} filters
+     */
+    list(filters = {}) {
+      const params = new URLSearchParams();
+      for (const [k, v] of Object.entries(filters)) if (v) params.set(k, v);
+      const qs = params.toString();
+      return request(`/api/diseases${qs ? '?' + qs : ''}`, 'GET');
     },
 
-    /** Get a specific disease by ID. */
+    /** One entry by id or alias. */
     get(id) {
-      return request(`/api/diseases/${id}`, 'GET');
+      return request(`/api/diseases/${encodeURIComponent(id)}`, 'GET');
     }
   }
 };

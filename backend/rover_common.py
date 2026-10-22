@@ -4,10 +4,8 @@
 # ============================================================
 
 import asyncio
-import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 from typing import Optional, Tuple
 
 import httpx
@@ -15,34 +13,15 @@ from fastapi import HTTPException
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
-from config import (
-    DEFAULT_DRONE_IP, DEFAULT_DRONE_STREAM_PORT, DISEASES_DB_PATH, MODEL_VERSION,
-)
-from inference import CLASS_FR_NAMES, predict
+from config import DEFAULT_DRONE_IP, DEFAULT_DRONE_STREAM_PORT, MODEL_VERSION
+from inference import predict
+from knowledge import build_fiche, class_code, fiche_for_analysis
 from media import ProcessedImage, media_url, process_image, save_image
 from models import DiseaseAnalysis, Parcel, User
 
 logger = logging.getLogger(__name__)
 
 _executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="rover_inf")
-
-# Map EfficientNet class labels → diseases.json entry ids
-CLASS_TO_DISEASE_ID = {
-    "Cassava_Mosaic":     "cassava-mosaic",
-    "Corn_Brown_Spots":   "leaf-spot-fungi",
-    "Corn_Healthy":       "healthy",
-    "Corn_Leaf_Blight":   "blight-disease",
-    "Corn_Mildew":        "powdery-mildew",
-    "Corn_Streak":        "maize-streak",
-    "Corn_Stripe":        "maize-streak-virus",
-    "Corn_Yellowing":     "leaf-spot-fungi",
-    "Tomato_Brown_Spots": "early-blight",
-    "Tomato_Blight_Leaf": "early-blight",
-    "Tomato_Healthy":     "healthy",
-}
-
-UNCERTAIN_CONFIDENCE_PCT = 70.0
-
 
 def parse_ip_port(payload: dict) -> Tuple[str, int]:
     ip = (payload.get("ip") or DEFAULT_DRONE_IP).strip()
@@ -106,90 +85,6 @@ async def run_disease_model(image_bytes: bytes) -> dict:
     return await loop.run_in_executor(_executor, predict, image_bytes)
 
 
-def load_diseases_db() -> dict:
-    try:
-        with open(DISEASES_DB_PATH, encoding="utf-8") as f:
-            return {d["id"]: d for d in json.load(f)}
-    except Exception:
-        return {}
-
-
-def build_winner(disease: dict, diseases_db: dict) -> dict:
-    """Build the fiche.winner object expected by camera.html."""
-    class_raw = disease.get("class_raw") or ""
-    detected = disease.get("detected_disease") or "healthy"
-    confidence_pct = round((disease.get("confidence") or 0) * 100, 1)
-
-    # low_confidence = True quand sous le seuil ; le nom est quand même retourné.
-    low_confidence = confidence_pct < UNCERTAIN_CONFIDENCE_PCT
-
-    disease_id = CLASS_TO_DISEASE_ID.get(class_raw, detected.lower().replace("_", "-"))
-    info = diseases_db.get(disease_id, {})
-    fr_name = CLASS_FR_NAMES.get(class_raw) or info.get("name") or disease.get("disease_name")
-
-    if detected == "healthy":
-        return {
-            "type":            "healthy",
-            "name":            disease.get("disease_name"),
-            "fr_name":         fr_name,
-            "plant_type":      disease.get("plant_type"),
-            "confidence":      confidence_pct,
-            "severity":        disease.get("severity") or "none",
-            "recommendations": info.get("actions", []),
-            "low_confidence":  low_confidence,
-        }
-
-    return {
-        "type":            "disease",
-        "name":            disease.get("disease_name"),
-        "fr_name":         fr_name,
-        "scientific_name": info.get("scientificName"),
-        "plant_type":      disease.get("plant_type"),
-        "confidence":      confidence_pct,
-        "severity":        disease.get("severity"),
-        "symptoms":        info.get("symptoms", []),
-        "recommendations": info.get("actions", []),
-        "affected_plants": info.get("affectedPlants", []),
-        "characteristics": info.get("description", ""),
-        "low_confidence":  low_confidence,
-    }
-
-
-def build_fiche(
-    disease: dict,
-    source: str,
-    parcel_id: Optional[int],
-    latitude: Optional[float],
-    longitude: Optional[float],
-) -> dict:
-    diseases_db = load_diseases_db()
-    winner = build_winner(disease, diseases_db)
-    disease_id = CLASS_TO_DISEASE_ID.get(
-        disease.get("class_raw", ""),
-        (disease.get("detected_disease") or "healthy").lower().replace("_", "-"),
-    )
-    info = diseases_db.get(disease_id, {})
-
-    return {
-        "winner":         winner,
-        "disease_id":     disease.get("detected_disease"),
-        "disease_name":   disease.get("disease_name"),
-        "scientific_name": info.get("scientificName"),
-        "plant_type":     disease.get("plant_type"),
-        "confidence":     round((disease.get("confidence") or 0) * 100, 1),
-        "severity":       disease.get("severity"),
-        "top3":           disease.get("top3", []),
-        "symptoms":       info.get("symptoms", []),
-        "recommendations": info.get("actions", []),
-        "affected_plants": info.get("affectedPlants", []),
-        "source":         source,
-        "latitude":       latitude,
-        "longitude":      longitude,
-        "parcel_id":      parcel_id,
-        "generated_at":   datetime.utcnow().isoformat(),
-    }
-
-
 def save_analysis(
     db: Session,
     current_user: User,
@@ -200,8 +95,14 @@ def save_analysis(
     parcel_id: Optional[int],
     latitude: Optional[float],
     longitude: Optional[float],
+    lang: str = "en",
 ) -> DiseaseAnalysis:
-    fiche = build_fiche(disease, source, parcel_id, latitude, longitude)
+    # Snapshot of the sheet at analysis time; responses rebuild it in the reader's language
+    fiche = build_fiche(
+        detected_disease=disease["detected_disease"], plant_type=disease["plant_type"],
+        confidence=disease["confidence"], severity=disease["severity"], top3=disease.get("top3"),
+        source=source, parcel_id=parcel_id, latitude=latitude, longitude=longitude, lang=lang,
+    )
 
     analysis = DiseaseAnalysis(
         user_id          = current_user.id,
@@ -230,7 +131,7 @@ def save_analysis(
     return analysis
 
 
-def analysis_response(analysis: DiseaseAnalysis, disease: dict, duplicate: bool = False) -> dict:
+def analysis_response(analysis: DiseaseAnalysis, disease: dict, lang: str, duplicate: bool = False) -> dict:
     return {
         "success":       True,
         "analysis_id":   analysis.id,
@@ -238,14 +139,14 @@ def analysis_response(analysis: DiseaseAnalysis, disease: dict, duplicate: bool 
         "image_path":    media_url(analysis.image_path, analysis.user_id),
         "thumb_path":    media_url(analysis.image_path, analysis.user_id, thumb=True),
         "disease":       disease,
-        "fiche_terrain": analysis.fiche_terrain,
+        "fiche_terrain": fiche_for_analysis(analysis, lang),
     }
 
 
 def _stored_disease(a: DiseaseAnalysis) -> dict:
     """The `disease` block of a previous analysis (duplicate upload)."""
     return {
-        "class_raw":        (a.fiche_terrain or {}).get("disease_id") or a.detected_disease,
+        "class_raw":        class_code(a.detected_disease, a.plant_type),
         "detected_disease": a.detected_disease,
         "disease_name":     a.disease_name,
         "plant_type":       a.plant_type,
@@ -264,6 +165,7 @@ async def analyze_image_bytes(
     latitude: Optional[float] = None,
     longitude: Optional[float] = None,
     save_image_file: bool = True,
+    lang: str = "en",
 ) -> dict:
     if parcel_id is not None:
         owned = db.query(Parcel.id).filter(Parcel.id == parcel_id, Parcel.user_id == current_user.id).first()
@@ -281,7 +183,7 @@ async def analyze_image_bytes(
           .first()
     )
     if previous is not None:
-        return analysis_response(previous, _stored_disease(previous), duplicate=True)
+        return analysis_response(previous, _stored_disease(previous), lang, duplicate=True)
 
     # Position typed or sent by the browser wins; otherwise the photo's own
     # EXIF GPS, kept only if the user agreed to it.
@@ -293,6 +195,6 @@ async def analyze_image_bytes(
     image_path = save_image(image) if save_image_file else None
     analysis = save_analysis(
         db, current_user, disease, image, image_path, source,
-        parcel_id, latitude, longitude,
+        parcel_id, latitude, longitude, lang,
     )
-    return analysis_response(analysis, disease)
+    return analysis_response(analysis, disease, lang)

@@ -9,12 +9,13 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
 
 from auth import get_current_user
 from database import get_db
 from models import User
+from i18n import request_lang
 from media import read_upload
 from rover_common import (
     analyze_image_bytes,
@@ -56,6 +57,7 @@ async def connect_camera(
 @router.post("/capture", summary="Capture a frame from MJPEG stream and analyse")
 async def capture_from_stream(
     payload: dict,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -68,11 +70,13 @@ async def capture_from_stream(
     return await analyze_image_bytes(
         image_bytes, db, current_user, source="camera",
         parcel_id=parcel_id, latitude=latitude, longitude=longitude,
+        lang=request_lang(request),
     )
 
 
 @router.post("/analyze-frame", summary="Analyse a browser-captured JPEG frame")
 async def analyze_frame(
+    request: Request,
     file: UploadFile = File(...),
     parcel_id: Optional[int]   = Form(None),
     latitude:  Optional[float] = Form(None),
@@ -84,11 +88,13 @@ async def analyze_frame(
     return await analyze_image_bytes(
         image_bytes, db, current_user, source="camera",
         parcel_id=parcel_id, latitude=latitude, longitude=longitude,
+        lang=request_lang(request),
     )
 
 
 @router.post("/upload", summary="Upload an image file for disease analysis")
 async def upload_and_analyze(
+    request: Request,
     file: UploadFile = File(...),
     parcel_id: Optional[int]   = Form(None),
     latitude:  Optional[float] = Form(None),
@@ -100,4 +106,5 @@ async def upload_and_analyze(
     return await analyze_image_bytes(
         image_bytes, db, current_user, source="upload",
         parcel_id=parcel_id, latitude=latitude, longitude=longitude,
+        lang=request_lang(request),
     )

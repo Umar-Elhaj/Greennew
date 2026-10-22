@@ -88,3 +88,17 @@ test('profile: clearing an optional field and a translated server error', async 
   await page.click('#pwdBtn');
   await expect(page.locator('#pwdAlert')).toHaveText('Le mot de passe actuel est incorrect.');
 });
+
+test('disease library: English search in a French UI, detail re-rendered on language switch', async ({ page, request }) => {
+  const s = await newUser(request);
+  await signIn(page, s);
+  await page.goto('/diseases');
+  await page.fill('#searchInput', 'tomato');
+  await expect(page.locator('.disease-card[data-id="early-blight"]')).toBeVisible();
+  await page.click('.disease-card[data-id="early-blight"]');
+  await expect(page.locator('.detail-hdr-name')).toHaveText('Alternariose');
+  await expect(page.locator('#detailPanel')).toContainText('Actions recommandées');
+  await page.locator('#appHeader .lang-switch-btn[data-lang="en"]').click();
+  await expect(page.locator('.detail-hdr-name')).toHaveText('Early blight');
+  await expect(page.locator('#detailPanel')).toContainText('Recommended actions');
+});
