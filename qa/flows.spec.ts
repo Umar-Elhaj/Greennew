@@ -200,3 +200,14 @@ test('GreenBot: explains when disabled, opens a conversation linked to an analys
   await expect(page.locator('#ctxLabel')).toContainText('Tomato leaf blight');
   await expect(page.locator('#notConfigured')).toContainText('not enabled');
 });
+
+test('economics: net ROI = (losses avoided - cost) / cost', async ({ page, request }) => {
+  const s = await newUser(request);
+  await signIn(page, s);
+  await page.goto('/economics');
+  // maize defaults: 2 ha, 2.5 t/ha, 175 XAF/kg, 25 % loss, 20 000 XAF/ha, 75 % effective
+  await expect(page.locator('#roiValue')).toHaveText(/^310\s?%$/);
+  await expect(page.locator('#kpiGross')).toContainText('875');
+  await page.locator('#appHeader .lang-switch-btn[data-lang="en"]').click();
+  await expect(page.locator('#scenarioRows')).toContainText('Epidemic, treated late');
+});

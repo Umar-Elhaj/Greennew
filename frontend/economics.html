@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -241,6 +241,9 @@
       gap: var(--sp-3);
     }
     .section-title-line { flex:1; height:1px; background: var(--border-subtle); }
+      .eco-note { font-size: var(--text-xs); color: var(--text-muted); line-height: 1.6; margin: var(--sp-2) 0 var(--sp-4); }
+    .field-help { font-size: 11px; color: var(--text-muted); margin-top: var(--sp-1); }
+    .roi-block.negative .roi-number { color: var(--color-error); }
   </style>
 </head>
 <body>
@@ -249,180 +252,141 @@
     <main class="app-content" id="appContent">
 
       <!-- Banner -->
-      <div style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 60%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-6);position:relative;overflow:hidden;">
+      <div class="page-banner" style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 60%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-6);position:relative;overflow:hidden;">
         <div style="position:absolute;width:280px;height:280px;background:rgba(255,255,255,.05);border-radius:50%;right:-50px;top:-80px;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;">
-          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);">Analytics</div>
-          <div style="font-size:var(--text-2xl);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp-2);">Economic Scenarios</div>
-          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.65);">
-            Simulate revenue, disease losses, and treatment ROI for your crops.
-          </div>
+          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);" data-i18n="economics.banner_kicker"></div>
+          <div style="font-size:var(--text-2xl);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp-2);" data-i18n="economics.banner_title"></div>
+          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.75);" data-i18n="economics.banner_text"></div>
         </div>
       </div>
 
-      <!-- Main layout -->
       <div class="eco-layout">
 
-        <!-- LEFT: input panel -->
+        <!-- LEFT: parameters -->
         <div>
           <div class="input-panel">
             <div class="input-panel-hdr">
-              <h3>Simulation Parameters</h3>
-              <p>Adjust values to see real-time revenue projections.</p>
+              <h3 data-i18n="economics.params"></h3>
+              <p data-i18n="economics.params_help"></p>
             </div>
             <div class="input-panel-body">
-
-              <!-- Crop -->
               <div class="form-field">
-                <div class="form-label">Crop type</div>
-                <select class="form-select" id="cropType" onchange="onCropChange()">
-                  <option value="maize">Maïs</option>
-                  <option value="cassava">Manioc</option>
-                  <option value="tomato">Tomate</option>
-                  <option value="groundnut">Arachide</option>
-                  <option value="sorghum">Sorgho</option>
+                <label class="form-label" for="cropType" data-i18n="economics.crop"></label>
+                <select class="form-select" id="cropType">
+                  <option value="maize" data-i18n="economics.crops.maize"></option>
+                  <option value="cassava" data-i18n="economics.crops.cassava"></option>
+                  <option value="tomato" data-i18n="economics.crops.tomato"></option>
+                  <option value="groundnut" data-i18n="economics.crops.groundnut"></option>
+                  <option value="sorghum" data-i18n="economics.crops.sorghum"></option>
                 </select>
               </div>
-
-              <!-- Area -->
               <div class="form-field">
-                <div class="form-label">
-                  Planted area
-                  <span class="form-label-val" id="areaVal">2.0 ha</span>
-                </div>
-                <input type="range" class="form-slider" id="area"
-                       min="0.5" max="20" step="0.5" value="2"
-                       oninput="document.getElementById('areaVal').textContent=this.value+' ha'; simulate()" />
+                <label class="form-label" for="area">
+                  <span data-i18n="economics.area"></span>
+                  <span class="form-label-val" id="areaVal"></span>
+                </label>
+                <input type="range" class="form-slider" id="area" min="0.5" max="20" step="0.5" value="2" />
               </div>
-
-              <!-- Expected yield -->
               <div class="form-field">
-                <div class="form-label">
-                  Expected yield
-                  <span class="form-label-val" id="yieldVal">2.5 t/ha</span>
-                </div>
-                <input type="range" class="form-slider" id="yield"
-                       min="0.5" max="10" step="0.1" value="2.5"
-                       oninput="document.getElementById('yieldVal').textContent=parseFloat(this.value).toFixed(1)+' t/ha'; simulate()" />
+                <label class="form-label" for="yield">
+                  <span data-i18n="economics.yield"></span>
+                  <span class="form-label-val" id="yieldVal"></span>
+                </label>
+                <input type="range" class="form-slider" id="yield" min="0.5" max="10" step="0.1" value="2.5" />
               </div>
-
-              <!-- Market price -->
               <div class="form-field">
-                <div class="form-label">
-                  Market price
-                  <span class="form-label-val" id="priceVal">150 XAF/kg</span>
-                </div>
-                <input type="range" class="form-slider" id="price"
-                       min="50" max="1000" step="10" value="150"
-                       oninput="document.getElementById('priceVal').textContent=this.value+' XAF/kg'; simulate()" />
+                <label class="form-label" for="price">
+                  <span data-i18n="economics.price"></span>
+                  <span class="form-label-val" id="priceVal"></span>
+                </label>
+                <input type="range" class="form-slider" id="price" min="50" max="1000" step="10" value="150" />
               </div>
 
               <div class="divider"></div>
-
-              <!-- Disease severity -->
               <div class="form-field">
-                <div class="form-label">
-                  Disease incidence
-                  <span class="form-label-val" id="diseaseVal" style="background:rgba(239,68,68,.10);color:var(--color-error);">25%</span>
-                </div>
-                <input type="range" class="form-slider" id="disease"
-                       min="0" max="80" step="1" value="25"
-                       oninput="document.getElementById('diseaseVal').textContent=this.value+'%'; simulate()"
-                       style="accent-color:#ef4444;" />
-                <div style="font-size:11px;color:var(--text-muted);margin-top:var(--sp-1);">% of yield lost to detected diseases if untreated</div>
+                <label class="form-label" for="disease">
+                  <span data-i18n="economics.incidence"></span>
+                  <span class="form-label-val" id="diseaseVal" style="background:rgba(239,68,68,.10);color:var(--color-error);"></span>
+                </label>
+                <input type="range" class="form-slider" id="disease" min="0" max="80" step="1" value="25" />
+                <div class="field-help" data-i18n="economics.incidence_help"></div>
               </div>
-
-              <!-- Treatment cost -->
               <div class="form-field">
-                <div class="form-label">
-                  Treatment cost
-                  <span class="form-label-val" id="treatVal">25 000 XAF/ha</span>
-                </div>
-                <input type="range" class="form-slider" id="treatCost"
-                       min="5000" max="150000" step="1000" value="25000"
-                       oninput="document.getElementById('treatVal').textContent=formatXAF(this.value)+' XAF/ha'; simulate()" />
-                <div style="font-size:11px;color:var(--text-muted);margin-top:var(--sp-1);">Fungicide + labour per hectare per season</div>
+                <label class="form-label" for="treatCost">
+                  <span data-i18n="economics.treat_cost"></span>
+                  <span class="form-label-val" id="treatCostVal"></span>
+                </label>
+                <input type="range" class="form-slider" id="treatCost" min="5000" max="150000" step="1000" value="25000" />
+                <div class="field-help" data-i18n="economics.treat_cost_help"></div>
               </div>
-
-              <!-- Treatment effectiveness -->
               <div class="form-field">
-                <div class="form-label">
-                  Treatment effectiveness
-                  <span class="form-label-val" id="effVal">75%</span>
-                </div>
-                <input type="range" class="form-slider" id="effectiveness"
-                       min="20" max="98" step="1" value="75"
-                       oninput="document.getElementById('effVal').textContent=this.value+'%'; simulate()" />
+                <label class="form-label" for="effectiveness">
+                  <span data-i18n="economics.effectiveness"></span>
+                  <span class="form-label-val" id="effectivenessVal"></span>
+                </label>
+                <input type="range" class="form-slider" id="effectiveness" min="20" max="98" step="1" value="75" />
+                <div class="field-help" data-i18n="economics.effectiveness_help"></div>
               </div>
-
-              <button class="btn btn-primary" style="width:100%;margin-top:var(--sp-2);" onclick="simulate()">
-                Recalculate
-              </button>
             </div>
           </div>
         </div>
 
         <!-- RIGHT: results -->
         <div>
-
-          <!-- KPI summary row -->
-          <div class="section-title">Revenue Projections <div class="section-title-line"></div></div>
+          <div class="section-title"><span data-i18n="economics.results"></span> <div class="section-title-line"></div></div>
           <div class="result-kpis">
             <div class="result-kpi highlight">
-              <div class="kpi-label">Gross Revenue (no disease)</div>
+              <div class="kpi-label" data-i18n="economics.kpi_gross"></div>
               <div class="kpi-value green" id="kpiGross">—</div>
               <div class="kpi-sub" id="kpiGrossSub">—</div>
             </div>
             <div class="result-kpi danger">
-              <div class="kpi-label">Loss without treatment</div>
+              <div class="kpi-label" data-i18n="economics.kpi_loss"></div>
               <div class="kpi-value red" id="kpiLoss">—</div>
               <div class="kpi-sub" id="kpiLossSub">—</div>
             </div>
             <div class="result-kpi highlight">
-              <div class="kpi-label">Net revenue with treatment</div>
+              <div class="kpi-label" data-i18n="economics.kpi_after"></div>
               <div class="kpi-value green" id="kpiNet">—</div>
               <div class="kpi-sub" id="kpiNetSub">—</div>
             </div>
           </div>
+          <p class="eco-note" data-i18n="economics.production_note"></p>
 
-          <!-- ROI block -->
           <div class="roi-block" id="roiBlock">
             <div class="roi-number" id="roiValue">—</div>
             <div>
-              <div class="roi-label"><strong>Treatment ROI</strong> — Return on investment of your fungicide treatment</div>
-              <div class="roi-label" id="roiDesc" style="margin-top:4px;">For every 1 000 XAF spent on treatment, you save <strong id="roiPer">—</strong> XAF in losses.</div>
+              <div class="roi-label"><strong data-i18n="economics.roi_title"></strong></div>
+              <div class="roi-label" id="roiDesc" style="margin-top:4px;"></div>
             </div>
           </div>
 
-          <!-- Comparison chart -->
           <div class="chart-card">
-            <div class="chart-card-title">Revenue comparison — 3 scenarios</div>
+            <div class="chart-card-title" data-i18n="economics.chart_title"></div>
             <div class="chart-container">
-              <canvas id="scenarioChart"></canvas>
+              <canvas id="scenarioChart" role="img" data-i18n-aria-label="economics.chart_title"></canvas>
             </div>
           </div>
 
-          <!-- Scenario table -->
-          <div class="section-title">Detailed Scenario Table <div class="section-title-line"></div></div>
-          <div class="scenario-table">
-            <div class="scenario-table-hdr">
-              <div>Scénario</div>
-              <div>Revenu brut</div>
-              <div>Coût traitement</div>
-              <div>Perte maladie</div>
-              <div>Revenu net</div>
+          <div class="section-title"><span data-i18n="economics.table_title"></span> <div class="section-title-line"></div></div>
+          <div class="table-scroll">
+            <div class="scenario-table">
+              <div class="scenario-table-hdr">
+                <div data-i18n="economics.col_scenario"></div>
+                <div data-i18n="economics.col_gross"></div>
+                <div data-i18n="economics.col_treat"></div>
+                <div data-i18n="economics.col_loss"></div>
+                <div data-i18n="economics.col_after"></div>
+              </div>
+              <div id="scenarioRows"></div>
             </div>
-            <div id="scenarioRows"></div>
           </div>
+          <p class="eco-note" data-i18n="economics.epidemic_rule"></p>
 
-          <!-- Market price reference -->
-          <div class="section-title" style="margin-top:var(--sp-6);">Prix de référence — Cameroun <div class="section-title-line"></div></div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:var(--sp-4);line-height:1.6;">
-            Sources : WFP · FEWS NET · MINADER-PAM · combien-coute.net — Données 2025-2026.
-            Les prix varient selon la saison, la région et la qualité du produit.
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--sp-4);" id="priceRef"></div>
-
+          <div class="section-title" style="margin-top:var(--sp-6);"><span data-i18n="economics.prices_title"></span> <div class="section-title-line"></div></div>
+          <p class="eco-note" id="pricesNote"></p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--sp-4);" id="priceRef"></div>
         </div>
       </div>
 
@@ -435,10 +399,14 @@
 <script src="/js/app.js"></script>
 <script src="/js/layout.js"></script>
 <script>
-/* ── Prix marché Cameroun (XAF/kg) — Sources : WFP · FEWS NET · MINADER-PAM · 2025-2026 ─── */
+Layout.init({ page: 'economics', titleKey: 'nav.economics', subtitleKey: 'economics.subtitle' });
+
+/* Indicative Cameroonian prices (XAF/kg) and slider ranges per crop.
+   Sources as declared by the original authors; not verified by GREEN. */
 const CROP_PRICES = {
   maize: {
-    label: 'Maïs (grain)',
+    bg: 'rgba(46,204,113,.10)', color: '#16a34a',
+    svg: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="14" rx="3"/><path d="M9 8H5a2 2 0 0 0 0 4h4"/><path d="M15 6h4a2 2 0 0 1 0 4h-4"/><line x1="12" y1="16" x2="12" y2="22"/></svg>`,
     min: 100, avg: 175, max: 280,
     pmin: 50,  pmax: 500,  pstep: 5,
     ymin: 0.5, ymax: 8,   ystep: 0.1, yield_avg: 2.5,
@@ -446,7 +414,8 @@ const CROP_PRICES = {
     source: 'WFP/FEWS NET 2025',
   },
   cassava: {
-    label: 'Manioc (tubercules)',
+    bg: 'rgba(245,158,11,.10)', color: '#ca8a04',
+    svg: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 19.82A2 2 0 0 0 6 22c5.13 0 9-4.46 9-10V8"/><path d="M12 22s0-8-7-10"/></svg>`,
     min: 80, avg: 200, max: 400,
     pmin: 50,  pmax: 600,  pstep: 10,
     ymin: 1,   ymax: 20,  ystep: 0.5, yield_avg: 8.0,
@@ -454,7 +423,8 @@ const CROP_PRICES = {
     source: 'MINADER-PAM 2025',
   },
   tomato: {
-    label: 'Tomate',
+    bg: 'rgba(239,68,68,.10)', color: '#dc2626',
+    svg: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="14" r="7"/><path d="M12 7V3"/><path d="M9 5c0 0 1 2 3 2s3-2 3-2"/></svg>`,
     min: 200, avg: 600, max: 1200,
     pmin: 100, pmax: 1500, pstep: 10,
     ymin: 1,   ymax: 50,  ystep: 0.5, yield_avg: 15.0,
@@ -462,7 +432,8 @@ const CROP_PRICES = {
     source: 'combien-coute.net 2026',
   },
   groundnut: {
-    label: 'Arachide',
+    bg: 'rgba(180,83,9,.10)', color: '#b45309',
+    svg: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="8" cy="13" rx="4" ry="6" transform="rotate(-20 8 13)"/><ellipse cx="16" cy="11" rx="4" ry="6" transform="rotate(20 16 11)"/><line x1="8" y1="7" x2="16" y2="5"/></svg>`,
     min: 400, avg: 800, max: 1500,
     pmin: 200, pmax: 2000, pstep: 25,
     ymin: 0.3, ymax: 3,   ystep: 0.1, yield_avg: 0.9,
@@ -470,7 +441,8 @@ const CROP_PRICES = {
     source: 'FEWS NET/CBT 2025',
   },
   sorghum: {
-    label: 'Sorgho',
+    bg: 'rgba(124,58,237,.10)', color: '#7c3aed',
+    svg: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="22" x2="12" y2="8"/><circle cx="12" cy="5" r="3"/><line x1="9" y1="13" x2="12" y2="11"/><line x1="15" y1="13" x2="12" y2="11"/><line x1="8" y1="17" x2="12" y2="15"/><line x1="16" y1="17" x2="12" y2="15"/></svg>`,
     min: 100, avg: 150, max: 240,
     pmin: 50,  pmax: 400,  pstep: 5,
     ymin: 0.3, ymax: 4,   ystep: 0.1, yield_avg: 1.0,
@@ -479,196 +451,137 @@ const CROP_PRICES = {
   },
 };
 
-const PRICE_REF = [
-  {
-    name: 'Maïs (grain)', min: 100, avg: 175, max: 280, unit: 'XAF/kg',
-    bg: 'rgba(46,204,113,.10)', color: '#16a34a', source: 'WFP/FEWS NET 2025',
-    svg: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="14" rx="3"/><path d="M9 8H5a2 2 0 0 0 0 4h4"/><path d="M15 6h4a2 2 0 0 1 0 4h-4"/><line x1="12" y1="16" x2="12" y2="22"/></svg>`,
-  },
-  {
-    name: 'Manioc (tubercules)', min: 80, avg: 200, max: 400, unit: 'XAF/kg',
-    bg: 'rgba(245,158,11,.10)', color: '#ca8a04', source: 'MINADER-PAM 2025',
-    svg: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 19.82A2 2 0 0 0 6 22c5.13 0 9-4.46 9-10V8"/><path d="M12 22s0-8-7-10"/></svg>`,
-  },
-  {
-    name: 'Tomate', min: 200, avg: 600, max: 1200, unit: 'XAF/kg',
-    bg: 'rgba(239,68,68,.10)', color: '#dc2626', source: 'combien-coute.net 2026',
-    svg: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="14" r="7"/><path d="M12 7V3"/><path d="M9 5c0 0 1 2 3 2s3-2 3-2"/></svg>`,
-  },
-  {
-    name: 'Arachide', min: 400, avg: 800, max: 1500, unit: 'XAF/kg',
-    bg: 'rgba(180,83,9,.10)', color: '#b45309', source: 'FEWS NET/CBT 2025',
-    svg: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="8" cy="13" rx="4" ry="6" transform="rotate(-20 8 13)"/><ellipse cx="16" cy="11" rx="4" ry="6" transform="rotate(20 16 11)"/><line x1="8" y1="7" x2="16" y2="5"/></svg>`,
-  },
-  {
-    name: 'Sorgho', min: 100, avg: 150, max: 240, unit: 'XAF/kg',
-    bg: 'rgba(124,58,237,.10)', color: '#7c3aed', source: 'FEWS NET 2025',
-    svg: `<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="22" x2="12" y2="8"/><circle cx="12" cy="5" r="3"/><line x1="9" y1="13" x2="12" y2="11"/><line x1="15" y1="13" x2="12" y2="11"/><line x1="8" y1="17" x2="12" y2="15"/><line x1="16" y1="17" x2="12" y2="15"/></svg>`,
-  },
-];
 
 let _chart = null;
+let _scenarios = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-  App.boot();
-  Layout.init({ page: 'economics', title: 'Scénarios Économiques', subtitle: 'Simulation de revenus' });
-  renderPriceRef();
+  document.getElementById('cropType').addEventListener('change', onCropChange);
+  ['area', 'yield', 'price', 'disease', 'treatCost', 'effectiveness'].forEach(id =>
+    document.getElementById(id).addEventListener('input', simulate));
   onCropChange();
 });
 
-function formatXAF(n) {
-  return Math.round(n).toLocaleString('fr-FR');
-}
+window.addEventListener('languageChanged', () => { renderPriceRef(); simulate(); });
 
-/* Met à jour les sliders Rendement, Prix et Coût traitement selon la culture choisie */
+const xaf = n => I18n.money(Math.round(n));
+const num = (id) => parseFloat(document.getElementById(id).value);
+const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
 function onCropChange() {
-  const key = document.getElementById('cropType').value;
-  const c   = CROP_PRICES[key];
-
-  const ySlider = document.getElementById('yield');
-  ySlider.min   = c.ymin;
-  ySlider.max   = c.ymax;
-  ySlider.step  = c.ystep;
-  ySlider.value = c.yield_avg;
-  document.getElementById('yieldVal').textContent = parseFloat(c.yield_avg).toFixed(1) + ' t/ha';
-
-  const pSlider = document.getElementById('price');
-  pSlider.min   = c.pmin;
-  pSlider.max   = c.pmax;
-  pSlider.step  = c.pstep;
-  pSlider.value = c.avg;
-  document.getElementById('priceVal').textContent = c.avg + ' XAF/kg';
-
-  const tSlider = document.getElementById('treatCost');
-  tSlider.value = c.treat_def;
-  document.getElementById('treatVal').textContent = formatXAF(c.treat_def) + ' XAF/ha';
-
+  const c = CROP_PRICES[document.getElementById('cropType').value];
+  const set = (id, min, max, step, value) => Object.assign(document.getElementById(id), { min, max, step, value });
+  set('yield', c.ymin, c.ymax, c.ystep, c.yield_avg);
+  set('price', c.pmin, c.pmax, c.pstep, c.avg);
+  document.getElementById('treatCost').value = c.treat_def;
+  renderPriceRef();
   simulate();
 }
 
 function simulate() {
-  const area       = parseFloat(document.getElementById('area').value);
-  const yieldTha   = parseFloat(document.getElementById('yield').value);
-  const priceKg    = parseFloat(document.getElementById('price').value);
-  const diseasePct = parseFloat(document.getElementById('disease').value) / 100;
-  const treatHa    = parseFloat(document.getElementById('treatCost').value);
-  const eff        = parseFloat(document.getElementById('effectiveness').value) / 100;
+  const area = num('area'), yieldTha = num('yield'), priceKg = num('price');
+  const diseasePct = num('disease') / 100, treatHa = num('treatCost'), eff = num('effectiveness') / 100;
 
-  /* ── Calculs de base ────────────────────────────────────────── */
-  const totalYieldKg    = area * yieldTha * 1000;
-  const grossRevenue    = totalYieldKg * priceKg;
-  const lossNoTreat     = grossRevenue * diseasePct;
-  const totalTreatCost  = area * treatHa;
-  const lossWithTreat   = lossNoTreat * (1 - eff);
-  const netNoTreat      = grossRevenue - lossNoTreat;
-  const netWithTreat    = grossRevenue - lossWithTreat - totalTreatCost;
-  const savedByTreating = lossNoTreat - lossWithTreat;
-  const roi             = totalTreatCost > 0 ? savedByTreating / totalTreatCost : 0;
+  setEl('areaVal', `${I18n.number(area)} ha`);
+  setEl('yieldVal', `${I18n.number(yieldTha, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} t/ha`);
+  setEl('priceVal', `${xaf(priceKg)}/kg`);
+  setEl('diseaseVal', I18n.percent(diseasePct));
+  setEl('treatCostVal', `${xaf(treatHa)}/ha`);
+  setEl('effectivenessVal', I18n.percent(eff));
 
-  /* ── Scénario épidémie — dynamique ──────────────────────────
-     Incidence multipliée par 2,5 (plafond 85 %) pour simuler
-     une propagation rapide. L'efficacité du traitement est
-     réduite de 35 % et le coût majoré de 50 % (urgence).     */
-  const epicDiseasePct   = Math.min(diseasePct * 2.5, 0.85);
-  const epicEff          = Math.max(eff * 0.65, 0.10);
-  const epicTreatCost    = totalTreatCost * 1.5;
-  const epicGrossLoss    = grossRevenue * epicDiseasePct;
-  const epicResidualLoss = epicGrossLoss * (1 - epicEff);
-  const epicNet          = grossRevenue - epicResidualLoss - epicTreatCost;
+  const totalYieldKg   = area * yieldTha * 1000;
+  const grossRevenue   = totalYieldKg * priceKg;
+  const lossNoTreat    = grossRevenue * diseasePct;
+  const totalTreatCost = area * treatHa;
+  const lossWithTreat  = lossNoTreat * (1 - eff);
+  const afterNoTreat   = grossRevenue - lossNoTreat;
+  const afterTreat     = grossRevenue - lossWithTreat - totalTreatCost;
+  const saved          = lossNoTreat - lossWithTreat;
+  // Net return: (losses avoided − cost) / cost
+  const roi            = totalTreatCost > 0 ? (saved - totalTreatCost) / totalTreatCost : 0;
 
-  /* ── KPIs ───────────────────────────────────────────────────── */
-  setEl('kpiGross',    formatXAF(grossRevenue) + ' XAF');
-  setEl('kpiGrossSub', area + ' ha × ' + (yieldTha * 1000).toLocaleString('fr-FR') + ' kg/ha × ' + priceKg + ' XAF');
-  setEl('kpiLoss',     '−' + formatXAF(lossNoTreat) + ' XAF');
-  setEl('kpiLossSub',  (diseasePct * 100).toFixed(0) + '% incidence → −' + formatXAF(lossNoTreat / (totalYieldKg || 1)) + ' XAF/kg');
-  setEl('kpiNet',      formatXAF(netWithTreat) + ' XAF');
-  setEl('kpiNetSub',   'Après traitement (' + formatXAF(totalTreatCost) + ' XAF total)');
+  // Epidemic: assumptions shown on the page (economics.epidemic_rule)
+  const epicPct   = Math.min(diseasePct * 2.5, 0.85);
+  const epicEff   = Math.max(eff * 0.65, 0.10);
+  const epicCost  = totalTreatCost * 1.5;
+  const epicLoss  = grossRevenue * epicPct * (1 - epicEff);
+  const epicAfter = grossRevenue - epicLoss - epicCost;
 
-  /* ── ROI ────────────────────────────────────────────────────── */
-  setEl('roiValue', (roi * 100).toFixed(0) + '%');
-  setEl('roiPer',   formatXAF(roi * 1000));
+  setEl('kpiGross', xaf(grossRevenue));
+  setEl('kpiGrossSub', I18n.t('economics.kpi_gross_sub', { area, yield: I18n.number(yieldTha * 1000), price: xaf(priceKg) }));
+  setEl('kpiLoss', '−' + xaf(lossNoTreat));
+  setEl('kpiLossSub', I18n.t('economics.kpi_loss_sub', { pct: I18n.percent(diseasePct) }));
+  setEl('kpiNet', xaf(afterTreat));
+  setEl('kpiNetSub', I18n.t('economics.kpi_after_sub', { cost: xaf(totalTreatCost) }));
 
-  /* ── Tableau des scénarios ──────────────────────────────────── */
-  const epicLabel = `Pessimiste — Épidémie (×2,5 · ${(epicDiseasePct * 100).toFixed(0)}%)`;
-  const scenarios = [
-    { name: 'Optimiste — Aucune maladie',    gross: grossRevenue, treat: 0,             loss: 0,                  net: grossRevenue, cls: 'best'  },
-    { name: 'Avec traitement (recommandé)',   gross: grossRevenue, treat: totalTreatCost, loss: lossWithTreat,      net: netWithTreat, cls: ''      },
-    { name: 'Sans traitement — référence',   gross: grossRevenue, treat: 0,             loss: lossNoTreat,         net: netNoTreat,   cls: ''      },
-    { name: epicLabel,                        gross: grossRevenue, treat: epicTreatCost, loss: epicResidualLoss,    net: epicNet,      cls: 'worst' },
+  setEl('roiValue', I18n.percent(roi));
+  setEl('roiDesc', roi < 0 ? I18n.t('economics.roi_negative')
+    : I18n.t('economics.roi_text', { spent: xaf(1000), saved: xaf(saved / totalTreatCost * 1000), net: xaf(roi * 1000) }));
+  document.getElementById('roiBlock').classList.toggle('negative', roi < 0);
+
+  _scenarios = [
+    { key: 'sc_none',      gross: grossRevenue, treat: 0,              loss: 0,             after: grossRevenue, cls: 'best' },
+    { key: 'sc_treated',   gross: grossRevenue, treat: totalTreatCost, loss: lossWithTreat, after: afterTreat,   cls: '' },
+    { key: 'sc_untreated', gross: grossRevenue, treat: 0,              loss: lossNoTreat,   after: afterNoTreat, cls: '' },
+    { key: 'sc_epidemic',  gross: grossRevenue, treat: epicCost,       loss: epicLoss,      after: epicAfter,    cls: 'worst' },
   ];
-
-  document.getElementById('scenarioRows').innerHTML = scenarios.map(s => `
-    <div class="scenario-row ${s.cls}">
-      <div class="label">${s.name}</div>
-      <div class="val">${formatXAF(s.gross)} XAF</div>
-      <div class="val" style="color:${s.treat > 0 ? '#d97706' : 'var(--text-muted)'};">
-        ${s.treat > 0 ? formatXAF(s.treat) : '—'} XAF
-      </div>
-      <div class="val" style="color:${s.loss > 0 ? 'var(--color-error)' : 'var(--text-muted)'};">
-        ${s.loss > 0 ? '−' + formatXAF(s.loss) : '—'} XAF
-      </div>
-      <div class="val" style="color:${s.net > 0 ? 'var(--brand-primary)' : 'var(--color-error)'};">
-        ${formatXAF(s.net)} XAF
-      </div>
-    </div>
-  `).join('');
-
-  updateChart(scenarios);
+  document.getElementById('scenarioRows').innerHTML = _scenarios.map(sc => `
+    <div class="scenario-row ${sc.cls}">
+      <div class="label">${escapeHtml(I18n.t(`economics.${sc.key}`))}</div>
+      <div class="val">${escapeHtml(xaf(sc.gross))}</div>
+      <div class="val" style="color:${sc.treat > 0 ? '#d97706' : 'var(--text-muted)'};">${sc.treat > 0 ? escapeHtml(xaf(sc.treat)) : '—'}</div>
+      <div class="val" style="color:${sc.loss > 0 ? 'var(--color-error)' : 'var(--text-muted)'};">${sc.loss > 0 ? '−' + escapeHtml(xaf(sc.loss)) : '—'}</div>
+      <div class="val" style="color:${sc.after > 0 ? 'var(--brand-primary)' : 'var(--color-error)'};">${escapeHtml(xaf(sc.after))}</div>
+    </div>`).join('');
+  updateChart();
 }
 
-function setEl(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
-}
-
-function updateChart(scenarios) {
-  if (typeof Chart === 'undefined') return;
-  const canvas = document.getElementById('scenarioChart');
-  if (!canvas) return;
-
-  const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
+function updateChart() {
+  if (typeof Chart === 'undefined') { window.addEventListener('load', updateChart, { once: true }); return; }
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const gridColor = isDark ? '#21262D' : '#F3F4F6';
-  const tickColor = isDark ? '#6E7681' : '#9CA3AF';
-
-  const labels = scenarios.map(s => s.name);
-  const nets   = scenarios.map(s => Math.max(0, Math.round(s.net / 1000)));
-
-  const colors  = ['rgba(46,204,113,0.7)', 'rgba(46,204,113,0.5)', 'rgba(245,158,11,0.6)', 'rgba(239,68,68,0.6)'];
-  const borders = ['#2ECC71', '#2ECC71', '#f59e0b', '#ef4444'];
-
+  const tickColor = isDark ? '#8B949E' : '#6B7280';
   if (_chart) { _chart.destroy(); _chart = null; }
-
-  _chart = new Chart(canvas.getContext('2d'), {
+  _chart = new Chart(document.getElementById('scenarioChart').getContext('2d'), {
     type: 'bar',
     data: {
-      labels,
-      datasets: [{ label: 'Revenu net (× 1 000 XAF)', data: nets, backgroundColor: colors, borderColor: borders, borderWidth: 1.5, borderRadius: 6 }],
+      labels: _scenarios.map(sc => I18n.t(`economics.${sc.key}`)),
+      datasets: [{
+        label: I18n.t('economics.col_after'),
+        data: _scenarios.map(sc => Math.round(sc.after / 1000)),
+        backgroundColor: ['rgba(46,204,113,0.7)', 'rgba(46,204,113,0.5)', 'rgba(245,158,11,0.6)', 'rgba(239,68,68,0.6)'],
+        borderColor: ['#2ECC71', '#2ECC71', '#f59e0b', '#ef4444'], borderWidth: 1.5, borderRadius: 6,
+      }],
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false, locale: I18n.locale,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString('fr-FR')} 000 XAF` } },
+        tooltip: { callbacks: { label: c => ' ' + xaf(c.parsed.y * 1000) } },
       },
       scales: {
         x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => v.toLocaleString('fr-FR') + 'k' }, beginAtZero: true },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, callback: v => I18n.number(v) },
+             title: { display: true, text: I18n.t('economics.chart_axis'), color: tickColor }, beginAtZero: true },
       },
     },
   });
 }
 
 function renderPriceRef() {
-  document.getElementById('priceRef').innerHTML = PRICE_REF.map(p => `
+  const sources = [...new Set(Object.values(CROP_PRICES).map(c => c.source))].join(' · ');
+  setEl('pricesNote', I18n.t('economics.prices_note', { sources }));
+  const t = k => escapeHtml(I18n.t(`economics.${k}`));
+  document.getElementById('priceRef').innerHTML = Object.entries(CROP_PRICES).map(([key, p]) => `
     <div style="background:var(--surface-1);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:var(--sp-4) var(--sp-5);">
       <div style="width:36px;height:36px;border-radius:var(--radius-md);background:${p.bg};color:${p.color};display:flex;align-items:center;justify-content:center;margin-bottom:var(--sp-3);">${p.svg}</div>
-      <div style="font-size:var(--text-sm);font-weight:var(--weight-semibold);color:var(--text-primary);margin-bottom:var(--sp-2);">${p.name}</div>
+      <div style="font-size:var(--text-sm);font-weight:var(--weight-semibold);color:var(--text-primary);margin-bottom:var(--sp-2);">${t(`crops.${key}`)}</div>
       <div style="display:flex;gap:var(--sp-4);">
-        <div><div style="font-size:10px;color:var(--text-muted);">Min</div><div style="font-size:var(--text-sm);font-weight:600;color:var(--color-error);">${p.min}</div></div>
-        <div><div style="font-size:10px;color:var(--text-muted);">Moy</div><div style="font-size:var(--text-sm);font-weight:700;color:var(--brand-primary);">${p.avg}</div></div>
-        <div><div style="font-size:10px;color:var(--text-muted);">Max</div><div style="font-size:var(--text-sm);font-weight:600;color:var(--color-success);">${p.max}</div></div>
+        <div><div style="font-size:10px;color:var(--text-muted);">${t('min')}</div><div style="font-size:var(--text-sm);font-weight:600;">${escapeHtml(I18n.number(p.min))}</div></div>
+        <div><div style="font-size:10px;color:var(--text-muted);">${t('avg')}</div><div style="font-size:var(--text-sm);font-weight:700;color:var(--brand-primary);">${escapeHtml(I18n.number(p.avg))}</div></div>
+        <div><div style="font-size:10px;color:var(--text-muted);">${t('max')}</div><div style="font-size:var(--text-sm);font-weight:600;">${escapeHtml(I18n.number(p.max))}</div></div>
       </div>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${p.unit} · ${p.source}</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">XAF/kg · ${escapeHtml(p.source)}</div>
     </div>`).join('');
 }
 </script>
