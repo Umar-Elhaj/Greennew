@@ -4,7 +4,7 @@
 # These define what JSON the API accepts and returns.
 # ============================================================
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, field_validator
 from typing import Optional, List, Any
 from datetime import datetime
 import re
@@ -94,7 +94,7 @@ class UserResponse(BaseModel):
 class TokenResponse(BaseModel):
     """Returned after successful login or registration."""
     access_token: str
-    token_type:   str = "bearer"
+    token_type:   str = "bearer"  # noqa: S105 (OAuth2 token type, not a secret)
     user:         UserResponse
 
 

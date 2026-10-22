@@ -15,7 +15,6 @@
 
 import io
 import logging
-from typing import Optional
 
 from PIL import Image
 
@@ -155,7 +154,6 @@ def _build_efficientnet(num_classes: int, state_dict_keys: list):
     └──────────────────────────────────────────────────────────────┘
     """
     has_conv_stem  = any("conv_stem" in k for k in state_dict_keys)
-    has_features   = any("features."  in k for k in state_dict_keys)
     has_cls1       = any("classifier.1" in k for k in state_dict_keys)
 
     import torch  # lazy import

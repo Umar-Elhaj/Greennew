@@ -1,0 +1,27 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]
+markers = [
+    "slow: real model inference (needs Models/ and torch or onnxruntime)",
+    "postgres: needs TEST_POSTGRES_URL pointing at a disposable PostgreSQL",
+]
+addopts = "-m 'not slow and not postgres'"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+extend-exclude = ["sql"]
+
+[tool.ruff.lint]
+# Correctness-focused set; style is left to the existing code.
+select = ["E9", "F", "B", "S", "UP017"]
+ignore = [
+    "E712",   # `== True` in SQLAlchemy filters is intentional
+    "B008",   # FastAPI Depends()/Query() in defaults
+    "S101",   # assert in tests
+    "B904",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "B"]

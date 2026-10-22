@@ -1,0 +1,37 @@
+# Visible strings that are intentionally identical in every language.
+# One exact (whitespace-collapsed) string per line. Keep this list short:
+# anything a user reads as a sentence or a label must be translated.
+
+# Product and feature names
+GREEN
+GreenBot
+GREEN Map
+GREEN Data
+AI
+
+# Units and formats
+ha
+km
+m
+km/h
+°C
+%
+XAF
+FCFA
+kg
+L
+HP
+GPS
+IP
+MJPEG
+JPEG
+PNG
+CSV
+GeoJSON
+JSON
+OSM
+Esri
+ONNX
+EfficientNet-B0
+Leaflet
+OpenStreetMap

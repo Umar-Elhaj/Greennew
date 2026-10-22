@@ -1,0 +1,5 @@
+# Development / CI tooling (not installed on the production server)
+-r requirements.txt
+pytest==9.1.1
+ruff==0.17.1
+onnx==1.23.2

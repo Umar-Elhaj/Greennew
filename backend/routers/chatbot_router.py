@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import ChatSession, ChatMessage, DiseaseAnalysis, User
 from auth import get_current_user
-from config import GEMINI_API_KEY, GEMINI_MODEL, RAG_CHUNKS_PATH, RAG_EMBEDDINGS_PATH
+from config import GEMINI_API_KEY, GEMINI_MODEL, RAG_CHUNKS_PATH
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/chat", tags=["GreenBot"])
@@ -76,7 +76,6 @@ def _retrieve_context(query: str, top_k: int = 5) -> str:
         return ""
 
     try:
-        import numpy as np
         from sklearn.metrics.pairwise import cosine_similarity
 
         q_vec = _vectorizer.transform([query])

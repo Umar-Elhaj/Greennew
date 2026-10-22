@@ -13,11 +13,11 @@ import json
 import os
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import User, DiseaseAnalysis, Parcel
+from models import User, DiseaseAnalysis
 from auth import get_current_user
 from config import DISEASES_DB_PATH
 from rover_common import media_file, media_url

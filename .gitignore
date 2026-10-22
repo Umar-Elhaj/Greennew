@@ -59,3 +59,11 @@ uploads/
 # Green Data images (stored on the server, not in git)
 data/
 frontend/assets/captures/
+
+# QA artefacts (Playwright)
+qa/node_modules/
+qa/report/
+qa/test-results/
+qa/screenshots/
+.pytest_cache/
+.ruff_cache/

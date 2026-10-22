@@ -9,7 +9,6 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
-from typing import List
 
 from database import get_db
 from models import User, Parcel, DiseaseAnalysis, ChatSession
