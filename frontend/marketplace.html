@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -508,6 +508,15 @@
       display: flex; align-items: center; justify-content: center;
       opacity: 0.7;
     }
+      .mkt-notice { font-size: var(--text-sm); color: var(--text-secondary); background: var(--surface-1); border: 1px solid var(--border-subtle);
+                  border-left: 3px solid var(--color-warning); border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-5); line-height: 1.55; }
+    .product-icon { height: 96px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+    .product-crops { display: flex; flex-wrap: wrap; gap: 4px; margin-top: var(--sp-2); }
+    .product-crops span { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--bg-subtle); color: var(--text-secondary); }
+    .product-unit { font-size: var(--text-xs); color: var(--text-muted); }
+    .product-desc { -webkit-line-clamp: unset !important; line-clamp: unset !important; display: block !important; overflow: visible !important; }
+    .mkt-empty { grid-column: 1 / -1; text-align: center; padding: var(--sp-10); color: var(--text-muted); }
+    .mkt-bot { display: inline-flex; margin-top: var(--sp-6); }
   </style>
 </head>
 <body>
@@ -515,198 +524,67 @@
   <div class="app-main" id="appMain">
     <main class="app-content" id="appContent">
 
-      <!-- Hero banner -->
-      <div style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 50%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-6);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-6);">
+      <div class="page-banner" style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 50%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-6);position:relative;overflow:hidden;">
         <div style="position:absolute;width:320px;height:320px;background:rgba(255,255,255,.05);border-radius:50%;right:-60px;top:-100px;pointer-events:none;"></div>
-        <div style="position:absolute;width:180px;height:180px;background:rgba(255,255,255,.03);border-radius:50%;right:120px;bottom:-60px;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;">
-          <div style="display:inline-flex;align-items:center;gap:var(--sp-2);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius-full);padding:3px 14px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.06em;text-transform:uppercase;margin-bottom:var(--sp-3);">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            Marketplace Preview
-          </div>
-          <div style="font-size:var(--text-3xl);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.15;margin-bottom:var(--sp-3);">GREEN Marketplace</div>
-          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.7);max-width:460px;line-height:1.6;">
-            Buy certified seeds, plant protection products, fertilisers, and field equipment
-            directly from verified Cameroonian suppliers. Recommended by your GREEN AI.
-          </div>
-        </div>
-        <div style="position:relative;z-index:1;flex-shrink:0;text-align:center;display:none;" id="heroStats">
-          <div style="font-size:2.5rem;font-weight:800;color:#fff;letter-spacing:-.03em;">120+</div>
-          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:500;">Products at launch</div>
+          <div style="display:inline-flex;align-items:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius-full);padding:3px 14px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.06em;text-transform:uppercase;margin-bottom:var(--sp-3);" data-i18n="marketplace.banner_kicker"></div>
+          <div style="font-size:var(--text-3xl);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.15;margin-bottom:var(--sp-3);" data-i18n="marketplace.banner_title"></div>
+          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.8);max-width:560px;line-height:1.6;" data-i18n="marketplace.banner_text"></div>
         </div>
       </div>
 
-      <!-- Stats row -->
-      <div class="mkt-stats">
-        <div class="mkt-stat">
-          <div class="mkt-stat-val">120+</div>
-          <div class="mkt-stat-label">Products planned</div>
-        </div>
-        <div class="mkt-stat">
-          <div class="mkt-stat-val">18</div>
-          <div class="mkt-stat-label">Verified suppliers</div>
-        </div>
-        <div class="mkt-stat">
-          <div class="mkt-stat-val">6</div>
-          <div class="mkt-stat-label">Regions covered</div>
-        </div>
-        <div class="mkt-stat">
-          <div class="mkt-stat-val">Q3 2026</div>
-          <div class="mkt-stat-label">Expected launch</div>
-        </div>
-      </div>
+      <p class="mkt-notice" data-i18n="marketplace.notice"></p>
 
-      <!-- Category tabs -->
       <div class="cat-tabs" id="catTabs">
-        <button class="cat-tab active" data-cat="all" onclick="setCategory(this,'all')">
-          All <span class="cat-count" id="cnt-all">28</span>
-        </button>
-        <button class="cat-tab" data-cat="seeds" onclick="setCategory(this,'seeds')">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V12"/><path d="M20 6s-4 0-8 6c-4-6-8-6-8-6s0 6 8 8c8-2 8-8 8-8z"/></svg>
-          Seeds <span class="cat-count" id="cnt-seeds">6</span>
-        </button>
-        <button class="cat-tab" data-cat="protection" onclick="setCategory(this,'protection')">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Protection <span class="cat-count" id="cnt-protection">6</span>
-        </button>
-        <button class="cat-tab" data-cat="fertilizer" onclick="setCategory(this,'fertilizer')">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3h6l1 9H8L9 3z"/><path d="M8 12a4 4 0 1 0 8 0"/></svg>
-          Fertilizers <span class="cat-count" id="cnt-fertilizer">5</span>
-        </button>
-        <button class="cat-tab" data-cat="bio" onclick="setCategory(this,'bio')">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 19.82A2 2 0 0 0 6 22c5.13 0 9-4.46 9-10V8"/></svg>
-          Bio-Inputs <span class="cat-count" id="cnt-bio">5</span>
-        </button>
-        <button class="cat-tab" data-cat="equipment" onclick="setCategory(this,'equipment')">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M4.93 4.93a10 10 0 0 0 14.14 14.14"/></svg>
-          Equipment <span class="cat-count" id="cnt-equipment">6</span>
-        </button>
+        <button type="button" class="cat-tab active" data-cat="all"><span data-i18n="marketplace.cats.all"></span> <span class="cat-count" id="cnt-all"></span></button>
+        <button type="button" class="cat-tab" data-cat="seeds"><span data-i18n="marketplace.cats.seeds"></span> <span class="cat-count" id="cnt-seeds"></span></button>
+        <button type="button" class="cat-tab" data-cat="protection"><span data-i18n="marketplace.cats.protection"></span> <span class="cat-count" id="cnt-protection"></span></button>
+        <button type="button" class="cat-tab" data-cat="fertilizer"><span data-i18n="marketplace.cats.fertilizer"></span> <span class="cat-count" id="cnt-fertilizer"></span></button>
+        <button type="button" class="cat-tab" data-cat="bio"><span data-i18n="marketplace.cats.bio"></span> <span class="cat-count" id="cnt-bio"></span></button>
+        <button type="button" class="cat-tab" data-cat="equipment"><span data-i18n="marketplace.cats.equipment"></span> <span class="cat-count" id="cnt-equipment"></span></button>
       </div>
 
-      <!-- Main layout: sidebar + grid -->
       <div class="mkt-layout">
-
-        <!-- Filter sidebar -->
         <div class="filter-sidebar">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-4);">
-            <div class="filter-sidebar-title" style="margin:0;">Filters</div>
-            <button onclick="clearFilters()" style="font-size:11px;color:var(--brand-primary);background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-weight:600;">Clear all</button>
+            <div class="filter-sidebar-title" style="margin:0;" data-i18n="marketplace.filters"></div>
+            <button type="button" id="clearFilters" style="font-size:11px;color:var(--brand-primary);background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-weight:600;" data-i18n="marketplace.clear"></button>
           </div>
-
           <div class="filter-group">
-            <div class="filter-group-title">Crop compatibility</div>
-            <label class="filter-check"><input type="checkbox" id="fCropMaize" onchange="applyFilters()" /> <span>Maize</span></label>
-            <label class="filter-check"><input type="checkbox" id="fCropCassava" onchange="applyFilters()" /> <span>Cassava</span></label>
-            <label class="filter-check"><input type="checkbox" id="fCropTomato" onchange="applyFilters()" /> <span>Tomato</span></label>
-            <label class="filter-check"><input type="checkbox" id="fCropGroundnut" onchange="applyFilters()" /> <span>Groundnut</span></label>
-            <label class="filter-check"><input type="checkbox" id="fCropPlantain" onchange="applyFilters()" /> <span>Plantain</span></label>
+            <div class="filter-group-title" data-i18n="marketplace.crop"></div>
+            <label class="filter-check"><input type="checkbox" class="crop-filter" value="Corn" /> <span data-i18n="model.plants.Corn"></span></label>
+            <label class="filter-check"><input type="checkbox" class="crop-filter" value="Cassava" /> <span data-i18n="model.plants.Cassava"></span></label>
+            <label class="filter-check"><input type="checkbox" class="crop-filter" value="Tomato" /> <span data-i18n="model.plants.Tomato"></span></label>
+            <label class="filter-check"><input type="checkbox" class="crop-filter" value="Groundnut" /> <span data-i18n="marketplace.plants.Groundnut"></span></label>
+            <label class="filter-check"><input type="checkbox" class="crop-filter" value="Plantain" /> <span data-i18n="marketplace.plants.Plantain"></span></label>
           </div>
-
           <div class="filter-group">
-            <div class="filter-group-title">Max price (XAF)</div>
+            <label class="filter-group-title" for="priceRange" data-i18n="marketplace.max_price"></label>
             <div class="price-range">
-              <input type="range" id="priceRange" min="0" max="300000" step="5000" value="300000"
-                     oninput="document.getElementById('priceMax').textContent=formatPrice(this.value);applyFilters()" />
-              <div class="price-range-labels">
-                <span>0</span>
-                <span id="priceMax">300 000</span>
-              </div>
+              <input type="range" id="priceRange" min="0" max="200000" step="5000" value="200000" />
+              <div class="price-range-labels"><span id="priceMin"></span><span id="priceMax"></span></div>
             </div>
-          </div>
-
-          <div class="filter-group">
-            <div class="filter-group-title">Supplier</div>
-            <label class="filter-check"><input type="checkbox" id="fVerified" onchange="applyFilters()" /> <span>Verified only</span></label>
-            <label class="filter-check"><input type="checkbox" id="fRecommended" onchange="applyFilters()" /> <span>GREEN recommended</span></label>
           </div>
         </div>
 
-        <!-- Product grid -->
         <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-4);">
-            <div style="font-size:var(--text-sm);color:var(--text-muted);">
-              Showing <strong id="productCount" style="color:var(--text-primary);">28</strong> products
-            </div>
-            <select id="sortSelect" onchange="applyFilters()"
-                    style="height:36px;padding:0 var(--sp-3);background:var(--input-bg);border:1px solid var(--input-border);border-radius:var(--radius-md);color:var(--text-secondary);font-size:var(--text-sm);font-family:var(--font-sans);outline:none;cursor:pointer;">
-              <option value="popular">Most popular</option>
-              <option value="price-asc">Price: Low to high</option>
-              <option value="price-desc">Price: High to low</option>
-              <option value="rating">Best rated</option>
-              <option value="recommended">GREEN recommended</option>
-            </select>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap;margin-bottom:var(--sp-4);">
+            <div style="font-size:var(--text-sm);color:var(--text-muted);" id="productCount" aria-live="polite"></div>
+            <label style="display:flex;align-items:center;gap:var(--sp-2);font-size:var(--text-sm);color:var(--text-muted);">
+              <span data-i18n="marketplace.sort"></span>
+              <select id="sortSelect" style="height:36px;padding:0 var(--sp-3);background:var(--input-bg);border:1px solid var(--input-border);border-radius:var(--radius-md);color:var(--text-secondary);font-size:var(--text-sm);font-family:var(--font-sans);">
+                <option value="name" data-i18n="marketplace.sort_name"></option>
+                <option value="price-asc" data-i18n="marketplace.sort_price_asc"></option>
+                <option value="price-desc" data-i18n="marketplace.sort_price_desc"></option>
+              </select>
+            </label>
           </div>
-
           <div class="product-grid" id="productGrid"></div>
+          <a href="/chatbot" class="btn btn-primary mkt-bot" data-i18n="marketplace.ask_bot"></a>
         </div>
-
-      </div>
-
-      <!-- Notify bar -->
-      <div class="notify-bar">
-        <div class="notify-bar-text">
-          <h3>Get early access at launch</h3>
-          <p>Register your email and receive a 10% discount code when the marketplace opens.</p>
-        </div>
-        <div class="notify-form">
-          <input type="email" class="notify-input" id="notifyEmail" placeholder="you@company.cm" />
-          <button class="btn btn-primary" onclick="registerNotify()">Notify me</button>
-        </div>
-      </div>
-      <div id="notifyMsg" style="display:none;text-align:center;margin-top:var(--sp-4);font-size:var(--text-sm);color:var(--brand-primary);font-weight:var(--weight-semibold);">
-        You're on the list! We'll notify you at launch.
       </div>
 
     </main>
-  </div>
-</div>
-
-<!-- Floating cart button -->
-<button id="cartFab" onclick="openCart()" title="View cart" style="display:none;">
-  <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-  </svg>
-  <span class="cart-badge" id="cartBadge">0</span>
-</button>
-
-<!-- Cart overlay -->
-<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
-
-<!-- Cart drawer -->
-<div class="cart-drawer" id="cartDrawer">
-  <div class="cart-drawer-hdr">
-    <h2 class="cart-drawer-title">
-      My Cart <span id="cartItemCount" style="font-size:var(--text-sm);color:var(--text-muted);font-weight:400;"></span>
-    </h2>
-    <button class="cart-close-btn" onclick="closeCart()">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-  <div class="cart-body" id="cartBody">
-    <div class="cart-empty">
-      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
-        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-      </svg>
-      <p>Your cart is empty.<br/>Add products to get started.</p>
-    </div>
-  </div>
-  <div class="cart-footer" id="cartFooter" style="display:none;">
-    <div class="cart-total-row">
-      <span class="cart-total-label">Total</span>
-      <span class="cart-total-val" id="cartTotal">0 XAF</span>
-    </div>
-    <button class="btn btn-primary" style="width:100%;" onclick="checkout()">
-      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" style="margin-right:6px;">
-        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-        <line x1="1" y1="10" x2="23" y2="10"/>
-      </svg>
-      Proceed to Checkout
-    </button>
-    <p class="checkout-note">Preview mode — orders are not processed yet. You will be contacted when the marketplace launches.</p>
   </div>
 </div>
 
@@ -715,44 +593,47 @@
 <script src="/js/app.js"></script>
 <script src="/js/layout.js"></script>
 <script>
-/* ---- Product catalogue ------------------------------------ */
+Layout.init({ page: 'marketplace', titleKey: 'nav.marketplace', subtitleKey: 'marketplace.subtitle' });
+
+/* Generic input types; names and descriptions in marketplace.products.<id>.
+   Prices are indicative (XAF), not offers. */
 const PRODUCTS = [
-  // Seeds
-  { id:1,  cat:'seeds',      name:'IITA Maize Hybrid CMS 8704',      supplier:'AgroSem Cameroun',  verified:true,  price:12000,  unit:'5 kg bag',      rating:4.8, reviews:42, badge:'certified',  desc:'High-yield hybrid maize, resistant to streak virus and Cercospora. +30% yield vs local varieties.', bg:'rgba(46,204,113,.08)',  color:'#16a34a', crops:['Maize'] },
-  { id:2,  cat:'seeds',      name:'Cassava Variety TMS 30572',        supplier:'IRAD Yaoundé',      verified:true,  price:8500,   unit:'50 cuttings',   rating:4.9, reviews:87, badge:'popular',     desc:'CMD-resistant cassava, certified by IRAD. Adapted for both rainy seasons in Centre region.', bg:'rgba(245,158,11,.08)',   color:'#ca8a04', crops:['Cassava'] },
-  { id:3,  cat:'seeds',      name:'Tomato Mongal F1 Hybrid',          supplier:'Technisem',         verified:true,  price:15000,  unit:'10 g sachet',   rating:4.6, reviews:31, badge:'new',          desc:'Indeterminate hybrid, excellent blight tolerance. Yield 60–80 t/ha under good management.', bg:'rgba(239,68,68,.08)',    color:'#dc2626', crops:['Tomato'] },
-  { id:4,  cat:'seeds',      name:'Groundnut Fleur 11',               supplier:'AgroSem Cameroun',  verified:true,  price:6500,   unit:'1 kg',          rating:4.4, reviews:19, badge:null,           desc:'Early-maturing, rosette-resistant variety. Suited for Centre and Littoral regions.', bg:'rgba(245,158,11,.08)',   color:'#ca8a04', crops:['Groundnut'] },
-  { id:5,  cat:'seeds',      name:'Maize Open Pollinated EV8728',     supplier:'IRAD',              verified:true,  price:5500,   unit:'3 kg',          rating:4.3, reviews:55, badge:null,           desc:'Adaptable open-pollinated variety. Tolerant to drought and mid-altitude conditions.', bg:'rgba(46,204,113,.08)',  color:'#16a34a', crops:['Maize'] },
-  { id:6,  cat:'seeds',      name:'Plantain Sucker CRBP39',           supplier:'CARBAP Njombé',     verified:true,  price:3500,   unit:'per plant',     rating:4.7, reviews:28, badge:'certified',   desc:'Black Sigatoka tolerant plantain sucker, certified propagation material from CARBAP.', bg:'rgba(252,211,77,.12)',  color:'#b45309', crops:['Plantain'] },
-  // Plant protection
-  { id:7,  cat:'protection', name:'Ridomil Gold MZ 68 WG',           supplier:'Syngenta CM',       verified:true,  price:18500,  unit:'250 g',         rating:4.7, reviews:63, badge:'popular',     desc:'Systemic + contact fungicide for Phytophthora and downy mildew. GREEN recommended.', bg:'rgba(59,130,246,.08)',  color:'#2563eb', crops:['Tomato','Cassava'], recommended:true },
-  { id:8,  cat:'protection', name:'Score 250 EC (Difenoconazole)',    supplier:'Syngenta CM',       verified:true,  price:14000,  unit:'100 ml',        rating:4.5, reviews:44, badge:null,           desc:'Systemic triazole fungicide for Cercospora, Alternaria, and other leaf diseases.', bg:'rgba(59,130,246,.08)',  color:'#2563eb', crops:['Maize','Tomato'] },
-  { id:9,  cat:'protection', name:'Confidor 200 SL (Imidacloprid)',   supplier:'Bayer CM',          verified:true,  price:9500,   unit:'100 ml',        rating:4.6, reviews:38, badge:null,           desc:'Systemic insecticide — controls whiteflies (CMD vector) and leafhoppers (MSV vector).', bg:'rgba(139,92,246,.08)', color:'#7c3aed', crops:['Cassava','Maize'] },
-  { id:10, cat:'protection', name:'Copper Oxychloride 50 WP',         supplier:'Agro-Chimie SA',    verified:false, price:7000,   unit:'500 g',         rating:4.1, reviews:22, badge:null,           desc:'Contact fungicide for Alternariose and blight. Compatible with organic farming.', bg:'rgba(59,130,246,.06)',  color:'#2563eb', crops:['Tomato'] },
-  { id:11, cat:'protection', name:'Lambda-cyhalothrin 2.5 EC',        supplier:'PhytoShield',       verified:true,  price:6500,   unit:'100 ml',        rating:4.4, reviews:17, badge:'new',          desc:'Broad-spectrum pyrethroid for locusts and lepidopteran pests. Quick knockdown.', bg:'rgba(239,68,68,.08)',    color:'#dc2626', crops:['Maize','Cassava'] },
-  { id:12, cat:'protection', name:'Neem Extract Bio-Pesticide',       supplier:'BioPro Cameroun',   verified:true,  price:5000,   unit:'1 L',           rating:4.3, reviews:29, badge:'new',          desc:'Cold-pressed neem oil (3000 ppm azadirachtin). Organic-certified for all crops.', bg:'rgba(46,204,113,.08)',  color:'#16a34a', crops:['Tomato','Maize','Cassava'] },
-  // Fertilizers
-  { id:13, cat:'fertilizer', name:'NPK 20-10-10 Granular',           supplier:'SOCAVER',           verified:true,  price:38000,  unit:'50 kg bag',     rating:4.6, reviews:91, badge:'popular',     desc:'Balanced NPK for maize and cassava. Slow-release formula adapted to Cameroon soils.', bg:'rgba(245,158,11,.08)',  color:'#ca8a04', crops:['Maize','Cassava'], recommended:true },
-  { id:14, cat:'fertilizer', name:'Urea 46% Granular',               supplier:'SOCAVER',           verified:true,  price:27000,  unit:'50 kg bag',     rating:4.4, reviews:68, badge:null,           desc:'High-nitrogen top-dressing for maize. Apply at 3–4 weeks after emergence.', bg:'rgba(59,130,246,.08)',  color:'#2563eb', crops:['Maize'] },
-  { id:15, cat:'fertilizer', name:'Calcium-Magnesium Lime',           supplier:'CarrièresCM',       verified:false, price:15000,  unit:'50 kg bag',     rating:4.0, reviews:12, badge:null,           desc:'Reduces soil acidity and provides Ca/Mg. For acidic ferrallitic soils in forest zone.', bg:'rgba(107,114,128,.07)', color:'#6b7280', crops:['Maize','Tomato','Cassava'] },
-  { id:16, cat:'fertilizer', name:'Foliar Zinc-Boron Mix',            supplier:'MicroNutrients SA', verified:true,  price:12000,  unit:'1 L',           rating:4.5, reviews:24, badge:'certified',   desc:'Corrects micronutrient deficiencies causing Corn Stripe and Yellowing. Spray at V4.', bg:'rgba(139,92,246,.08)', color:'#7c3aed', crops:['Maize'] },
-  { id:17, cat:'fertilizer', name:'Potassium Sulphate 50%',           supplier:'SOCAVER',           verified:true,  price:42000,  unit:'25 kg',         rating:4.3, reviews:15, badge:null,           desc:'Chloride-free potassium for fruit quality in tomato. Reduces blossom-end rot.', bg:'rgba(249,115,22,.08)',  color:'#ea580c', crops:['Tomato'] },
-  // Bio-inputs
-  { id:18, cat:'bio',        name:'Bokashi Compost Enriched',         supplier:'BioPro Cameroun',   verified:true,  price:18000,  unit:'25 kg bag',     rating:4.6, reviews:33, badge:'popular',     desc:'Fermented organic matter with EM (effective microorganisms). Improves soil biology.', bg:'rgba(46,204,113,.08)',  color:'#16a34a', crops:['Maize','Tomato','Cassava'] },
-  { id:19, cat:'bio',        name:'Trichoderma Bio-fungicide',        supplier:'BioPro Cameroun',   verified:true,  price:9500,   unit:'500 g',         rating:4.4, reviews:21, badge:'new',          desc:'Soil-applied biological fungicide suppressing Fusarium and root rot. Safe for pollinators.', bg:'rgba(46,204,113,.08)', color:'#16a34a', crops:['Tomato','Maize'] },
-  { id:20, cat:'bio',        name:'Biochar — Rice Husk',              supplier:'AgroRice CM',       verified:false, price:12000,  unit:'20 kg',         rating:4.1, reviews:8,  badge:null,           desc:'Activated rice husk biochar. Increases water retention in sandy soils.', bg:'rgba(107,114,128,.07)', color:'#6b7280', crops:['Maize','Cassava'] },
-  { id:21, cat:'bio',        name:'Bacillus subtilis WP',             supplier:'BioPro Cameroun',   verified:true,  price:14000,  unit:'500 g',         rating:4.5, reviews:18, badge:'certified',   desc:'Biopesticide for Alternaria and Cercospora. Compatible with integrated pest management.', bg:'rgba(59,130,246,.08)', color:'#2563eb', crops:['Tomato','Maize'] },
-  { id:22, cat:'bio',        name:'Liquid Organic Fertilizer 7-3-6', supplier:'VertBio',           verified:true,  price:11000,  unit:'5 L',           rating:4.3, reviews:14, badge:null,           desc:'Fish emulsion + seaweed extract. For foliar application to boost vegetative growth.', bg:'rgba(6,182,212,.08)',   color:'#0891b2', crops:['Tomato','Maize'] },
-  // Equipment
-  { id:23, cat:'equipment',  name:'IFAS Rover Camera Kit',            supplier:'GREEN Technologies',verified:true,  price:285000, unit:'kit',           rating:5.0, reviews:7,  badge:'new',          desc:'Complete rover camera kit compatible with GREEN platform. MJPEG stream, IP67, 150m WiFi.', bg:'rgba(46,204,113,.12)',  color:'#16a34a', crops:['All'] },
-  { id:24, cat:'equipment',  name:'Knapsack Sprayer 16 L',            supplier:'AgroMatériel CM',   verified:true,  price:35000,  unit:'unit',          rating:4.5, reviews:52, badge:'popular',     desc:'Manual compression sprayer with adjustable nozzle. Ergonomic design for 6–8 hour use.', bg:'rgba(59,130,246,.08)',  color:'#2563eb', crops:['All'] },
-  { id:25, cat:'equipment',  name:'Digital Soil Moisture Sensor',     supplier:'SoilTech Africa',   verified:true,  price:45000,  unit:'unit',          rating:4.6, reviews:19, badge:null,           desc:'Real-time soil moisture, temperature, and EC measurement. Bluetooth-connected.', bg:'rgba(139,92,246,.08)', color:'#7c3aed', crops:['All'] },
-  { id:26, cat:'equipment',  name:'Manual Corn Sheller',              supplier:'AgroMatériel CM',   verified:false, price:22000,  unit:'unit',          rating:4.2, reviews:34, badge:null,           desc:'Manual crank-operated corn sheller, 200 kg/h capacity. No electricity required.', bg:'rgba(245,158,11,.08)',  color:'#ca8a04', crops:['Maize'] },
-  { id:27, cat:'equipment',  name:'pH & NPK Soil Test Kit',           supplier:'SoilTech Africa',   verified:true,  price:28000,  unit:'kit (50 tests)',rating:4.4, reviews:26, badge:'certified',   desc:'Field-portable soil analysis kit. Provides pH, available N, P, K in 10 minutes.', bg:'rgba(46,204,113,.08)',  color:'#16a34a', crops:['All'] },
-  { id:28, cat:'equipment',  name:'Solar Water Pump 0.5 HP',          supplier:'EnergyAfrique',     verified:true,  price:195000, unit:'unit',          rating:4.7, reviews:11, badge:null,           desc:'24V solar-powered submersible pump. Irrigation for up to 2 ha. 6-month warranty.', bg:'rgba(245,158,11,.08)',  color:'#ca8a04', crops:['Tomato','Maize'] },
+  { id: 'maize_hybrid', cat: 'seeds', price: 12000, crops: ["Corn"] },
+  { id: 'cassava_cuttings', cat: 'seeds', price: 8500, crops: ["Cassava"] },
+  { id: 'tomato_seed', cat: 'seeds', price: 15000, crops: ["Tomato"] },
+  { id: 'groundnut_seed', cat: 'seeds', price: 6500, crops: ["Groundnut"] },
+  { id: 'maize_opv', cat: 'seeds', price: 5500, crops: ["Corn"] },
+  { id: 'plantain_suckers', cat: 'seeds', price: 3500, crops: ["Plantain"] },
+  { id: 'fungicide_systemic', cat: 'protection', price: 18500, crops: ["Tomato", "Cassava"] },
+  { id: 'fungicide_triazole', cat: 'protection', price: 14000, crops: ["Corn", "Tomato"] },
+  { id: 'insecticide_systemic', cat: 'protection', price: 9500, crops: ["Cassava", "Corn"] },
+  { id: 'copper', cat: 'protection', price: 7000, crops: ["Tomato"] },
+  { id: 'pyrethroid', cat: 'protection', price: 6500, crops: ["Corn", "Cassava"] },
+  { id: 'neem', cat: 'protection', price: 5000, crops: ["Tomato", "Corn", "Cassava"] },
+  { id: 'npk', cat: 'fertilizer', price: 38000, crops: ["Corn", "Cassava"] },
+  { id: 'urea', cat: 'fertilizer', price: 27000, crops: ["Corn"] },
+  { id: 'lime', cat: 'fertilizer', price: 15000, crops: ["Corn", "Tomato", "Cassava"] },
+  { id: 'zinc_boron', cat: 'fertilizer', price: 12000, crops: ["Corn"] },
+  { id: 'potassium_sulphate', cat: 'fertilizer', price: 42000, crops: ["Tomato"] },
+  { id: 'bokashi', cat: 'bio', price: 18000, crops: ["Corn", "Tomato", "Cassava"] },
+  { id: 'trichoderma', cat: 'bio', price: 9500, crops: ["Tomato", "Corn"] },
+  { id: 'biochar', cat: 'bio', price: 12000, crops: ["Corn", "Cassava"] },
+  { id: 'bacillus', cat: 'bio', price: 14000, crops: ["Tomato", "Corn"] },
+  { id: 'liquid_organic', cat: 'bio', price: 11000, crops: ["Tomato", "Corn"] },
+  { id: 'sprayer', cat: 'equipment', price: 35000, crops: [] },
+  { id: 'moisture_sensor', cat: 'equipment', price: 45000, crops: [] },
+  { id: 'sheller', cat: 'equipment', price: 22000, crops: ["Corn"] },
+  { id: 'soil_kit', cat: 'equipment', price: 28000, crops: [] },
+  { id: 'solar_pump', cat: 'equipment', price: 195000, crops: ["Tomato", "Corn"] }
 ];
 
-/* ---- Category SVG icons ----------------------------------- */
+const CAT_STYLE = {
+  seeds:      { bg: 'rgba(46,204,113,.10)', color: '#16a34a' },
+  protection: { bg: 'rgba(59,130,246,.10)', color: '#2563eb' },
+  fertilizer: { bg: 'rgba(245,158,11,.12)', color: '#ca8a04' },
+  bio:        { bg: 'rgba(46,204,113,.10)', color: '#15803d' },
+  equipment:  { bg: 'rgba(124,58,237,.10)', color: '#7c3aed' },
+};
 const CAT_ICONS = {
   seeds:      `<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M12 22V12"/><path d="M20 6s-4 0-8 6c-4-6-8-6-8-6s0 6 8 8c8-2 8-8 8-8z"/></svg>`,
   protection: `<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
@@ -761,278 +642,69 @@ const CAT_ICONS = {
   equipment:  `<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M4.93 4.93a10 10 0 0 0 14.14 14.14"/></svg>`,
 };
 
-const PRODUCT_IMAGE_MAP = {
-  'IITA Maize Hybrid CMS 8704': 'IITA Maize Hybrid CMS 8704.jpe',
-  'Cassava Variety TMS 30572': 'Cassava Variety TMS 30572.jpe',
-  'Tomato Mongal F1 Hybrid': 'Tomato Mongal F1 Hybrid.jpg',
-  'Groundnut Fleur 11': 'Groundnut Fleur 11.png',
-  'Maize Open Pollinated EV8728': 'Maize Open Pollinated EV8728.jpg',
-  'Plantain Sucker CRBP39': 'Plantain Sucker CRBP39.jpg',
-  'Ridomil Gold MZ 68 WG': 'Ridomil Gold MZ 68 WG.webp',
-  'Score 250 EC (Difenoconazole)': 'Score 250 EC (Difenoconazole).webp',
-  'Confidor 200 SL (Imidacloprid)': 'Confidor 200 SL (Imidacloprid).jpg',
-  'Copper Oxychloride 50 WP': 'Copper Oxychloride 50 WP.webp',
-  'Lambda-cyhalothrin 2.5 EC': 'Lambda-cyhalothrin 2.5 EC.jpe',
-  'Neem Extract Bio-Pesticide': 'Neem Extract Bio-Pesticide.png',
-  'NPK 20-10-10 Granular': 'NPK 20-10-10 Granular.jpe',
-  'Urea 46% Granular': 'Urea-46-Granular.png',
-  'Calcium-Magnesium Lime': 'Calcium-Magnesium Lime.jpe',
-  'Foliar Zinc-Boron Mix': 'Foliar Zinc-Boron Mix.jpg',
-  'Potassium Sulphate 50%': 'Potassium Sulphate 50%.webp',
-  'Bokashi Compost Enriched': 'Bokashi Compost Enriched.jpe',
-  'Trichoderma Bio-fungicide': 'Trichoderma Bio-fungicide.jpg',
-  'Biochar — Rice Husk': 'Biochar — Rice Husk.jpg',
-  'Bacillus subtilis WP': 'Bacillus subtilis WP.webp',
-  'Liquid Organic Fertilizer 7-3-6': 'Liquid Organic Fertilizer 7-3-6.webp',
-  'IFAS Rover Camera Kit': 'Rover Camera Kit.webp',
-  'Knapsack Sprayer 16 L': 'Knapsack Sprayer 16 L.jpg',
-  'Digital Soil Moisture Sensor': 'Digital Soil Moisture Sensor.jpg',
-  'Manual Corn Sheller': 'Manual Corn Sheller.jpg',
-  'pH & NPK Soil Test Kit': 'pH & NPK Soil Test Kit.jpg',
-  'Solar Water Pump 0.5 HP': 'Solar Water Pump 0.5 HP.webp',
-};
+let activeCat = 'all';
+const $ = id => document.getElementById(id);
+const pText = (p, field) => I18n.t(`marketplace.products.${p.id}.${field}`);
+const cropLabel = c => I18n.has(`model.plants.${c}`) ? I18n.t(`model.plants.${c}`) : I18n.t(`marketplace.plants.${c}`);
 
-function getProductImage(product) {
-  const fileName = PRODUCT_IMAGE_MAP[product.name] || null;
-  return fileName ? encodeURI(`/assets/marketplace_img/${fileName}`) : null;
-}
-
-/* ---- State ------------------------------------------------ */
-let _activeCategory = 'all';
-let _cart = JSON.parse(localStorage.getItem('green_cart') || '[]');
-
-/* ---- Init ------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
-  App.boot();
-  Layout.init({ page: 'marketplace', title: 'Marketplace', subtitle: 'Agricultural inputs & equipment' });
-  updateCategoryCounts();
-  applyFilters();
-  updateCartUI();
+  document.querySelectorAll('.cat-tab').forEach(btn => btn.addEventListener('click', () => {
+    activeCat = btn.dataset.cat;
+    document.querySelectorAll('.cat-tab').forEach(b => {
+      b.classList.toggle('active', b === btn);
+      b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+    });
+    render();
+  }));
+  document.querySelectorAll('.crop-filter').forEach(cb => cb.addEventListener('change', render));
+  $('priceRange').addEventListener('input', render);
+  $('sortSelect').addEventListener('change', render);
+  $('clearFilters').addEventListener('click', () => {
+    document.querySelectorAll('.crop-filter').forEach(cb => { cb.checked = false; });
+    $('priceRange').value = $('priceRange').max;
+    render();
+  });
+  render();
 });
+window.addEventListener('languageChanged', render);
 
-/* ---- Category filter -------------------------------------- */
-function setCategory(btn, cat) {
-  _activeCategory = cat;
-  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  applyFilters();
-}
+function render() {
+  const crops = [...document.querySelectorAll('.crop-filter:checked')].map(cb => cb.value);
+  const maxPrice = parseInt($('priceRange').value, 10);
+  $('priceMin').textContent = I18n.money(0);
+  $('priceMax').textContent = I18n.money(maxPrice);
 
-function updateCategoryCounts() {
-  const cats = ['seeds','protection','fertilizer','bio','equipment'];
-  cats.forEach(c => {
-    const el = document.getElementById('cnt-' + c);
-    if (el) el.textContent = PRODUCTS.filter(p => p.cat === c).length;
-  });
-  const allEl = document.getElementById('cnt-all');
-  if (allEl) allEl.textContent = PRODUCTS.length;
-}
-
-/* ---- Filtering + sorting ---------------------------------- */
-function applyFilters() {
-  const sortVal    = document.getElementById('sortSelect')?.value || 'popular';
-  const maxPrice   = parseInt(document.getElementById('priceRange')?.value || 300000);
-  const onlyVerif  = document.getElementById('fVerified')?.checked;
-  const onlyReco   = document.getElementById('fRecommended')?.checked;
-  const cropMap    = {
-    Maize:     document.getElementById('fCropMaize')?.checked,
-    Cassava:   document.getElementById('fCropCassava')?.checked,
-    Tomato:    document.getElementById('fCropTomato')?.checked,
-    Groundnut: document.getElementById('fCropGroundnut')?.checked,
-    Plantain:  document.getElementById('fCropPlantain')?.checked,
-  };
-  const activeCrops = Object.keys(cropMap).filter(k => cropMap[k]);
-
-  let list = PRODUCTS.filter(p => {
-    if (_activeCategory !== 'all' && p.cat !== _activeCategory) return false;
-    if (p.price > maxPrice) return false;
-    if (onlyVerif && !p.verified) return false;
-    if (onlyReco && !p.recommended) return false;
-    if (activeCrops.length) {
-      const hasMatch = activeCrops.some(c => p.crops.includes(c) || p.crops.includes('All'));
-      if (!hasMatch) return false;
-    }
-    return true;
+  const matches = p => p.price <= maxPrice && (!crops.length || p.crops.length === 0 || p.crops.some(c => crops.includes(c)));
+  ['all', 'seeds', 'protection', 'fertilizer', 'bio', 'equipment'].forEach(cat => {
+    $(`cnt-${cat}`).textContent = I18n.number(PRODUCTS.filter(p => matches(p) && (cat === 'all' || p.cat === cat)).length);
   });
 
-  // Sort
-  if (sortVal === 'popular')    list = list.sort((a,b) => b.reviews - a.reviews);
-  if (sortVal === 'price-asc')  list = list.sort((a,b) => a.price - b.price);
-  if (sortVal === 'price-desc') list = list.sort((a,b) => b.price - a.price);
-  if (sortVal === 'rating')     list = list.sort((a,b) => b.rating - a.rating);
-  if (sortVal === 'recommended') list = list.sort((a,b) => (b.recommended ? 1:0) - (a.recommended ? 1:0) || b.rating - a.rating);
+  const sort = $('sortSelect').value;
+  const list = PRODUCTS.filter(p => matches(p) && (activeCat === 'all' || p.cat === activeCat))
+    .sort((a, b) => sort === 'price-asc' ? a.price - b.price
+                  : sort === 'price-desc' ? b.price - a.price
+                  : pText(a, 'name').localeCompare(pText(b, 'name'), I18n.locale));
 
-  document.getElementById('productCount').textContent = list.length;
-  renderProducts(list);
-}
-
-function clearFilters() {
-  ['fCropMaize','fCropCassava','fCropTomato','fCropGroundnut','fCropPlantain',
-   'fVerified','fRecommended'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.checked = false;
-  });
-  const pr = document.getElementById('priceRange');
-  if (pr) { pr.value = pr.max; document.getElementById('priceMax').textContent = formatPrice(pr.max); }
-  applyFilters();
-}
-
-/* ---- Render product grid ---------------------------------- */
-function renderProducts(list) {
-  document.getElementById('productGrid').innerHTML = list.map(p => {
-    const filled = Math.round(p.rating);
-    const starSVG = (f) => `<svg width="12" height="12" viewBox="0 0 24 24" fill="${f?'currentColor':'none'}" stroke="currentColor" stroke-width="1.5" style="color:#f59e0b;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
-    const stars     = Array.from({length:5},(_,i)=>starSVG(i<filled)).join('');
-    const badge     = p.badge ? `<span class="product-badge badge-${p.badge}">${p.badge}</span>` : '';
-    const verifiedIcon = p.verified
-      ? `<svg class="supplier-verified" width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>`
-      : '';
-    const cartItem  = _cart.find(c => c.id === p.id);
-    const cartBtn   = cartItem
-      ? `<button class="btn-cart in-cart" onclick="addToCart(${p.id})">
-           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-           In cart (${cartItem.qty})
-         </button>`
-      : `<button class="btn-cart" onclick="addToCart(${p.id})">
-           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-           Add to cart
-         </button>`;
-    const imageUrl = getProductImage(p);
-    const imgTag = imageUrl ? `<img src="${imageUrl}" alt="${p.name}" loading="lazy"/>` : `<div class="product-img-icon" style="color:${p.color};">${CAT_ICONS[p.cat] || CAT_ICONS.seeds}</div>`;
+  $('productCount').textContent = I18n.t('marketplace.count', { count: list.length });
+  $('productGrid').innerHTML = list.length ? list.map(p => {
+    const st = CAT_STYLE[p.cat];
+    const crops = p.crops.length ? p.crops.map(c => `<span>${escapeHtml(cropLabel(c))}</span>`).join('')
+                                 : `<span>${escapeHtml(I18n.t('marketplace.all_crops'))}</span>`;
     return `
-      <div class="product-card">
-        <div class="product-img">
-          ${badge}
-          ${imgTag}
-        </div>
+      <article class="product-card">
+        <div class="product-icon" style="background:${st.bg};color:${st.color};" aria-hidden="true">${CAT_ICONS[p.cat]}</div>
         <div class="product-body">
-          <div class="product-name">${p.name}</div>
-          <div class="product-supplier">${verifiedIcon}${p.supplier}</div>
-          <div class="product-stars">${stars} <span style="color:var(--text-muted);">${p.rating} (${p.reviews})</span></div>
-          <div class="product-desc">${p.desc}</div>
-        </div>
-        <div class="product-footer">
-          <div class="product-price">
-            ${formatPrice(p.price)} XAF
-            <div class="per-unit">${p.unit}</div>
+          <h3 class="product-name">${escapeHtml(pText(p, 'name'))}</h3>
+          <p class="product-desc">${escapeHtml(pText(p, 'desc'))}</p>
+          <div class="product-crops">${crops}</div>
+          <div class="product-footer">
+            <div class="product-price">${escapeHtml(I18n.t('marketplace.price', { price: I18n.money(p.price) }))}
+              <div class="product-unit">${escapeHtml(I18n.t('marketplace.per', { unit: pText(p, 'unit') }))}</div>
+            </div>
           </div>
-          ${cartBtn}
         </div>
-      </div>`;
-  }).join('') || `<div style="grid-column:1/-1;text-align:center;padding:var(--sp-16);color:var(--text-muted);font-size:var(--text-sm);">No products match your filters.</div>`;
-}
-
-function formatPrice(v) { return Number(v).toLocaleString('fr-FR'); }
-
-/* ---- Cart ------------------------------------------------- */
-function addToCart(id) {
-  const product = PRODUCTS.find(p => p.id === id);
-  if (!product) return;
-  const existing = _cart.find(c => c.id === id);
-  if (existing) {
-    existing.qty++;
-  } else {
-    _cart.push({ id, qty: 1 });
-  }
-  saveCart();
-  applyFilters(); // re-render cards to update button state
-  App.toast(`${product.name} added to cart.`, 'success');
-}
-
-function updateCartQty(id, delta) {
-  const item = _cart.find(c => c.id === id);
-  if (!item) return;
-  item.qty += delta;
-  if (item.qty <= 0) _cart = _cart.filter(c => c.id !== id);
-  saveCart();
-  renderCartDrawer();
-  applyFilters();
-}
-
-function saveCart() {
-  localStorage.setItem('green_cart', JSON.stringify(_cart));
-  updateCartUI();
-}
-
-function updateCartUI() {
-  const total = _cart.reduce((s, c) => s + c.qty, 0);
-  const badge = document.getElementById('cartBadge');
-  const fab   = document.getElementById('cartFab');
-  if (badge) badge.textContent = total;
-  if (fab)   fab.style.display = total > 0 ? 'flex' : 'none';
-}
-
-function openCart() {
-  renderCartDrawer();
-  document.getElementById('cartOverlay').classList.add('open');
-  document.getElementById('cartDrawer').classList.add('open');
-}
-
-function closeCart() {
-  document.getElementById('cartOverlay').classList.remove('open');
-  document.getElementById('cartDrawer').classList.remove('open');
-}
-
-function renderCartDrawer() {
-  const body   = document.getElementById('cartBody');
-  const footer = document.getElementById('cartFooter');
-  const count  = document.getElementById('cartItemCount');
-
-  if (!_cart.length) {
-    body.innerHTML = `<div class="cart-empty">
-      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
-        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-      </svg>
-      <p>Your cart is empty.</p></div>`;
-    footer.style.display = 'none';
-    if (count) count.textContent = '';
-    return;
-  }
-
-  let total = 0;
-  body.innerHTML = _cart.map(c => {
-    const p = PRODUCTS.find(x => x.id === c.id);
-    if (!p) return '';
-    const subtotal = p.price * c.qty;
-    total += subtotal;
-    return `<div class="cart-item">
-      <div class="cart-item-icon" style="background:${p.bg};color:${p.color};">
-        ${CAT_ICONS[p.cat] ? CAT_ICONS[p.cat].replace('width="28" height="28"','width="22" height="22"') : ''}
-      </div>
-      <div class="cart-item-info">
-        <div class="cart-item-name" title="${p.name}">${p.name}</div>
-        <div class="cart-item-sub">${p.supplier} · ${p.unit}</div>
-        <div class="qty-stepper">
-          <button class="qty-btn" onclick="updateCartQty(${p.id},-1)">−</button>
-          <span class="qty-val">${c.qty}</span>
-          <button class="qty-btn" onclick="updateCartQty(${p.id},1)">+</button>
-        </div>
-      </div>
-      <div class="cart-item-price">${formatPrice(subtotal)}<br><span style="font-size:10px;color:var(--text-muted);font-weight:400;">XAF</span></div>
-    </div>`;
-  }).join('');
-
-  document.getElementById('cartTotal').textContent = formatPrice(total) + ' XAF';
-  if (count) count.textContent = `(${_cart.reduce((s,c)=>s+c.qty,0)} items)`;
-  footer.style.display = '';
-}
-
-function checkout() {
-  App.toast('Order request recorded. You will be contacted when the marketplace launches.', 'success');
-}
-
-/* ---- Notify ----------------------------------------------- */
-function registerNotify() {
-  const email = document.getElementById('notifyEmail').value.trim();
-  if (!email || !email.includes('@')) {
-    App.toast('Please enter a valid email address.', 'error');
-    return;
-  }
-  localStorage.setItem('green_mkt_notify', email);
-  document.getElementById('notifyMsg').style.display = 'block';
-  document.getElementById('notifyEmail').value = '';
-  App.toast('You\'re on the list!', 'success');
+      </article>`;
+  }).join('') : `<div class="mkt-empty">${escapeHtml(I18n.t('marketplace.empty'))}</div>`;
 }
 </script>
 </body>

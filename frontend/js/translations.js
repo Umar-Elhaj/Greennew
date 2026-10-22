@@ -621,6 +621,177 @@ window.GREEN_I18N_DICT = {
    "deleted": "Analysis deleted.",
    "fiche_error": "This analysis could not be loaded."
   },
+  "marketplace": {
+   "subtitle": "Agricultural inputs and equipment",
+   "banner_kicker": "Preview",
+   "banner_title": "Inputs catalogue",
+   "banner_text": "Types of inputs and equipment useful for the crops GREEN follows, with indicative prices. No online sale for now: buy from your usual approved suppliers.",
+   "notice": "Indicative prices in XAF, observed on Cameroonian markets and not verified by GREEN: they vary with the region and the season. Plant protection products: use only products approved in Cameroon, at the label dose, with protective equipment.",
+   "cats": {
+    "all": "All",
+    "seeds": "Seeds and plants",
+    "protection": "Plant protection",
+    "fertilizer": "Fertilisers",
+    "bio": "Bio-inputs",
+    "equipment": "Equipment"
+   },
+   "filters": "Filters",
+   "clear": "Clear",
+   "crop": "Crop",
+   "max_price": "Maximum price",
+   "sort": "Sort",
+   "sort_name": "Name",
+   "sort_price_asc": "Price: low to high",
+   "sort_price_desc": "Price: high to low",
+   "count_one": "{{count}} product",
+   "count_other": "{{count}} products",
+   "empty": "No product matches these filters.",
+   "price": "≈ {{price}}",
+   "per": "per {{unit}}",
+   "all_crops": "All crops",
+   "ask_bot": "Ask GreenBot which input fits my problem",
+   "plants": {
+    "Plantain": "Plantain",
+    "Groundnut": "Groundnut"
+   },
+   "products": {
+    "maize_hybrid": {
+     "name": "Hybrid maize seed",
+     "desc": "High-yield hybrid variety tolerant to maize streak. Buy certified seed.",
+     "unit": "5 kg bag"
+    },
+    "cassava_cuttings": {
+     "name": "Mosaic-resistant cassava cuttings",
+     "desc": "Healthy cuttings of varieties resistant to cassava mosaic.",
+     "unit": "50 cuttings"
+    },
+    "tomato_seed": {
+     "name": "Hybrid tomato seed",
+     "desc": "Hybrid tolerant to leaf diseases, for rainy-season growing.",
+     "unit": "10 g sachet"
+    },
+    "groundnut_seed": {
+     "name": "Early groundnut seed",
+     "desc": "Short-cycle variety tolerant to rosette.",
+     "unit": "1 kg"
+    },
+    "maize_opv": {
+     "name": "Open-pollinated maize seed",
+     "desc": "Adaptable variety; part of the harvest can be resown.",
+     "unit": "3 kg"
+    },
+    "plantain_suckers": {
+     "name": "Plantain suckers tolerant to black Sigatoka",
+     "desc": "Healthy planting material tolerant to black Sigatoka.",
+     "unit": "plant"
+    },
+    "fungicide_systemic": {
+     "name": "Systemic fungicide (metalaxyl + mancozeb)",
+     "desc": "Against late blight and Phytophthora diseases. Use an approved product, with protective equipment.",
+     "unit": "250 g"
+    },
+    "fungicide_triazole": {
+     "name": "Triazole fungicide (difenoconazole)",
+     "desc": "Against leaf spots (Cercospora, Alternaria). Follow the dose and pre-harvest interval.",
+     "unit": "100 ml"
+    },
+    "insecticide_systemic": {
+     "name": "Systemic insecticide (whiteflies, leafhoppers)",
+     "desc": "Controls the vectors of cassava mosaic and maize streak. Toxic to bees: do not spray during flowering.",
+     "unit": "100 ml"
+    },
+    "copper": {
+     "name": "Copper oxychloride",
+     "desc": "Preventive contact fungicide against early blight and bacterial diseases.",
+     "unit": "500 g"
+    },
+    "pyrethroid": {
+     "name": "Pyrethroid insecticide",
+     "desc": "Broad-spectrum insecticide against caterpillars. Toxic to beneficial insects: use as a last resort.",
+     "unit": "100 ml"
+    },
+    "neem": {
+     "name": "Neem oil",
+     "desc": "Plant-based insecticide against sap-sucking pests and young caterpillars.",
+     "unit": "1 L"
+    },
+    "npk": {
+     "name": "NPK 20-10-10 fertiliser",
+     "desc": "Complete fertiliser for maize and cassava, applied at sowing.",
+     "unit": "50 kg bag"
+    },
+    "urea": {
+     "name": "Urea 46%",
+     "desc": "Nitrogen top-dressing for maize, 3 to 4 weeks after emergence.",
+     "unit": "50 kg bag"
+    },
+    "lime": {
+     "name": "Dolomitic lime",
+     "desc": "Corrects the acidity of ferrallitic soils and supplies calcium and magnesium.",
+     "unit": "50 kg bag"
+    },
+    "zinc_boron": {
+     "name": "Zinc-boron foliar fertiliser",
+     "desc": "Corrects zinc and boron deficiencies confirmed by a soil or leaf test.",
+     "unit": "1 L"
+    },
+    "potassium_sulphate": {
+     "name": "Potassium sulphate",
+     "desc": "Chloride-free potassium for tomato fruit quality.",
+     "unit": "25 kg"
+    },
+    "bokashi": {
+     "name": "Bokashi compost",
+     "desc": "Fermented organic matter that improves soil life and structure.",
+     "unit": "25 kg bag"
+    },
+    "trichoderma": {
+     "name": "Trichoderma biofungicide",
+     "desc": "Beneficial fungus that limits fusarium wilt and root rots.",
+     "unit": "500 g"
+    },
+    "biochar": {
+     "name": "Rice-husk biochar",
+     "desc": "Improves water retention in sandy soils.",
+     "unit": "20 kg"
+    },
+    "bacillus": {
+     "name": "Bacillus subtilis biopesticide",
+     "desc": "Biological control of early blight and Cercospora leaf spots.",
+     "unit": "500 g"
+    },
+    "liquid_organic": {
+     "name": "Liquid organic fertiliser",
+     "desc": "Fish emulsion and seaweed extract, applied on the leaves.",
+     "unit": "5 L"
+    },
+    "sprayer": {
+     "name": "16 L knapsack sprayer",
+     "desc": "Manual pressure sprayer with an adjustable nozzle.",
+     "unit": "unit"
+    },
+    "moisture_sensor": {
+     "name": "Soil moisture sensor",
+     "desc": "Measures soil moisture and temperature to manage irrigation.",
+     "unit": "unit"
+    },
+    "sheller": {
+     "name": "Manual maize sheller",
+     "desc": "Hand-cranked sheller, no electricity needed.",
+     "unit": "unit"
+    },
+    "soil_kit": {
+     "name": "Soil test kit (pH, NPK)",
+     "desc": "Quick field test of pH and available nitrogen, phosphorus and potassium.",
+     "unit": "kit of 50 tests"
+    },
+    "solar_pump": {
+     "name": "0.5 hp solar pump",
+     "desc": "Solar submersible pump to irrigate up to about 2 ha.",
+     "unit": "unit"
+    }
+   }
+  },
   "model": {
    "plants": {
     "Cassava": "Cassava",
@@ -1403,6 +1574,177 @@ window.GREEN_I18N_DICT = {
    "delete_confirm": "Supprimer définitivement cette analyse et son image ?",
    "deleted": "Analyse supprimée.",
    "fiche_error": "Impossible de charger cette analyse."
+  },
+  "marketplace": {
+   "subtitle": "Intrants et équipements agricoles",
+   "banner_kicker": "Aperçu",
+   "banner_title": "Catalogue d'intrants",
+   "banner_text": "Types d'intrants et d'équipements utiles pour les cultures suivies par GREEN, avec des prix indicatifs. Pas de vente en ligne pour l'instant : achetez auprès de vos fournisseurs agréés habituels.",
+   "notice": "Prix indicatifs en XAF, relevés sur les marchés camerounais et non vérifiés par GREEN : ils varient selon la région et la saison. Produits phytosanitaires : n'utilisez que des produits homologués au Cameroun, à la dose de l'étiquette, avec un équipement de protection.",
+   "cats": {
+    "all": "Tout",
+    "seeds": "Semences et plants",
+    "protection": "Protection des cultures",
+    "fertilizer": "Engrais",
+    "bio": "Bio-intrants",
+    "equipment": "Équipement"
+   },
+   "filters": "Filtres",
+   "clear": "Effacer",
+   "crop": "Culture",
+   "max_price": "Prix maximum",
+   "sort": "Trier",
+   "sort_name": "Nom",
+   "sort_price_asc": "Prix croissant",
+   "sort_price_desc": "Prix décroissant",
+   "count_one": "{{count}} produit",
+   "count_other": "{{count}} produits",
+   "empty": "Aucun produit ne correspond à ces filtres.",
+   "price": "≈ {{price}}",
+   "per": "par {{unit}}",
+   "all_crops": "Toutes cultures",
+   "ask_bot": "Demander à GreenBot quel intrant convient à mon problème",
+   "plants": {
+    "Plantain": "Plantain",
+    "Groundnut": "Arachide"
+   },
+   "products": {
+    "maize_hybrid": {
+     "name": "Semence de maïs hybride",
+     "desc": "Variété hybride à haut rendement, tolérante à la striure du maïs. Achetez des semences certifiées.",
+     "unit": "sac de 5 kg"
+    },
+    "cassava_cuttings": {
+     "name": "Boutures de manioc résistantes à la mosaïque",
+     "desc": "Boutures saines de variétés résistantes à la mosaïque du manioc.",
+     "unit": "50 boutures"
+    },
+    "tomato_seed": {
+     "name": "Semence de tomate hybride",
+     "desc": "Hybride tolérant aux maladies foliaires, pour la culture de saison des pluies.",
+     "unit": "sachet de 10 g"
+    },
+    "groundnut_seed": {
+     "name": "Semence d'arachide précoce",
+     "desc": "Variété à cycle court, tolérante à la rosette.",
+     "unit": "1 kg"
+    },
+    "maize_opv": {
+     "name": "Semence de maïs à pollinisation libre",
+     "desc": "Variété adaptable dont on peut ressemer une partie de la récolte.",
+     "unit": "3 kg"
+    },
+    "plantain_suckers": {
+     "name": "Rejets de plantain tolérants à la cercosporiose",
+     "desc": "Matériel de plantation sain, tolérant à la cercosporiose noire.",
+     "unit": "plant"
+    },
+    "fungicide_systemic": {
+     "name": "Fongicide systémique (métalaxyl + mancozèbe)",
+     "desc": "Contre le mildiou et les maladies à Phytophthora. Utilisez un produit homologué, avec équipement de protection.",
+     "unit": "250 g"
+    },
+    "fungicide_triazole": {
+     "name": "Fongicide triazole (difénoconazole)",
+     "desc": "Contre les taches foliaires (Cercospora, Alternaria). Respectez la dose et le délai avant récolte.",
+     "unit": "100 ml"
+    },
+    "insecticide_systemic": {
+     "name": "Insecticide systémique (mouches blanches, cicadelles)",
+     "desc": "Lutte contre les vecteurs de la mosaïque du manioc et de la striure du maïs. Toxique pour les abeilles : ne pas traiter en floraison.",
+     "unit": "100 ml"
+    },
+    "copper": {
+     "name": "Oxychlorure de cuivre",
+     "desc": "Fongicide de contact préventif contre l'alternariose et les bactérioses.",
+     "unit": "500 g"
+    },
+    "pyrethroid": {
+     "name": "Insecticide pyréthrinoïde",
+     "desc": "Insecticide à large spectre contre les chenilles. Toxique pour les auxiliaires : en dernier recours.",
+     "unit": "100 ml"
+    },
+    "neem": {
+     "name": "Huile de neem",
+     "desc": "Insecticide d'origine végétale contre les ravageurs piqueurs-suceurs et les chenilles jeunes.",
+     "unit": "1 L"
+    },
+    "npk": {
+     "name": "Engrais NPK 20-10-10",
+     "desc": "Engrais complet pour le maïs et le manioc, à apporter au semis.",
+     "unit": "sac de 50 kg"
+    },
+    "urea": {
+     "name": "Urée 46 %",
+     "desc": "Azote de couverture pour le maïs, 3 à 4 semaines après la levée.",
+     "unit": "sac de 50 kg"
+    },
+    "lime": {
+     "name": "Chaux dolomitique",
+     "desc": "Corrige l'acidité des sols ferrallitiques et apporte calcium et magnésium.",
+     "unit": "sac de 50 kg"
+    },
+    "zinc_boron": {
+     "name": "Engrais foliaire zinc-bore",
+     "desc": "Corrige les carences en zinc et en bore, confirmées par une analyse de sol ou de feuilles.",
+     "unit": "1 L"
+    },
+    "potassium_sulphate": {
+     "name": "Sulfate de potassium",
+     "desc": "Potassium sans chlore pour la qualité des fruits de tomate.",
+     "unit": "25 kg"
+    },
+    "bokashi": {
+     "name": "Compost bokashi",
+     "desc": "Matière organique fermentée qui améliore la vie et la structure du sol.",
+     "unit": "sac de 25 kg"
+    },
+    "trichoderma": {
+     "name": "Biofongicide à Trichoderma",
+     "desc": "Champignon utile qui limite la fusariose et les pourritures racinaires.",
+     "unit": "500 g"
+    },
+    "biochar": {
+     "name": "Biochar de balle de riz",
+     "desc": "Améliore la rétention d'eau des sols sableux.",
+     "unit": "20 kg"
+    },
+    "bacillus": {
+     "name": "Biopesticide à Bacillus subtilis",
+     "desc": "Lutte biologique contre l'alternariose et les cercosporioses.",
+     "unit": "500 g"
+    },
+    "liquid_organic": {
+     "name": "Engrais organique liquide",
+     "desc": "Émulsion de poisson et extrait d'algues, en application foliaire.",
+     "unit": "5 L"
+    },
+    "sprayer": {
+     "name": "Pulvérisateur à dos 16 L",
+     "desc": "Pulvérisateur manuel à pression avec buse réglable.",
+     "unit": "unité"
+    },
+    "moisture_sensor": {
+     "name": "Capteur d'humidité du sol",
+     "desc": "Mesure l'humidité et la température du sol pour piloter l'irrigation.",
+     "unit": "unité"
+    },
+    "sheller": {
+     "name": "Égreneuse à maïs manuelle",
+     "desc": "Égreneuse à manivelle, sans électricité.",
+     "unit": "unité"
+    },
+    "soil_kit": {
+     "name": "Kit d'analyse de sol (pH, NPK)",
+     "desc": "Analyse de terrain rapide du pH et de l'azote, du phosphore et du potassium disponibles.",
+     "unit": "kit de 50 tests"
+    },
+    "solar_pump": {
+     "name": "Pompe solaire 0,5 ch",
+     "desc": "Pompe immergée solaire pour irriguer jusqu'à environ 2 ha.",
+     "unit": "unité"
+    }
+   }
   },
   "model": {
    "plants": {
