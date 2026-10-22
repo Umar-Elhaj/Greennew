@@ -5,6 +5,91 @@ Les entrées sont classées de la plus récente à la plus ancienne.
 
 ---
 
+## Modification 2 — Traduction intégrale, GREEN Map, GREEN Data, images privées, Supabase, déploiement o2switch
+
+**Date :** 22/10/2026 · **Branche :** `feat/green-map-data-o2switch` · Suivi détaillé : `PROGRESS.md` (décisions D1 à D32), état des lieux : `AUDIT.md`.
+
+### Contexte et raison
+
+Le chantier suit un plan en 9 lots (0 à 8). Il couvre :
+- la traduction complète français/anglais ;
+- la réparation des fonctionnalités cassées ou trompeuses relevées par l'audit ;
+- la cartographie des parcelles avec quadrillage pour le rover et carte des résultats ;
+- les statistiques pour les partenaires ;
+- la protection des images ;
+- la base Supabase pilotée par la seule variable `DATABASE_URL` ;
+- le déploiement de l'API (inférence comprise) sur un hébergement mutualisé o2switch.
+
+Décisions humaines prises au point de contrôle CP1 :
+- **Rover.** Les images passent par une file d'attente dans le navigateur. L'envoi direct par le Raspberry Pi est seulement documenté.
+- **Hébergement.** Le frontend reste sur Vercel et relaie `/api/*` vers o2switch.
+- **Contenu.** Le contenu inventé est retiré (marché, benchmark), ainsi que la détection YOLO du README.
+
+### Ce qui change pour les utilisateurs
+
+- **Langue.** Toute l'interface est en français ou en anglais (bouton FR | EN dans l'en-tête, sans rechargement) : les messages du serveur, la fiche terrain, la bibliothèque des maladies et les réponses de GreenBot suivent la langue choisie.
+- **Résultats.** Un résultat est présenté comme une **maladie probable**, jamais comme un diagnostic. Une plante saine n'affiche plus un niveau « élevé » en rouge.
+- **Caméra.** Les images sont gardées sur l'appareil puis envoyées dès que la connexion le permet (indicateur « N images en attente »). Elles peuvent être rattachées à une parcelle, à une cellule de mission et à la position GPS.
+- **GREEN Map.**
+  - Tracé des parcelles, y compris hors ligne, avec synchronisation au retour du réseau.
+  - Région détectée correctement.
+  - Quadrillage du rover en serpentin, figé sous forme de mission et exportable.
+  - Carte des résultats par cellule.
+- **GREEN Data** (comptes partenaire et administrateur) : statistiques anonymes, fondées uniquement sur les analyses partagées avec consentement, avec masquage « < 5 ».
+- **Pages corrigées.**
+  - Tableau de bord : analyses récentes, chiffres et météo de la région de l'utilisateur.
+  - Profil : messages et enregistrement.
+  - Scénarios économiques : rentabilité nette, la formule était fausse.
+  - Historique : suppression et filtres.
+  - GreenBot : erreurs affichées, conversation fantôme.
+  - Calendrier : ligne « criquets » renommée.
+- **Contenu retiré.** Le benchmark devient « Ma progression », calculée sur l'historique de l'utilisateur. Le marché devient un catalogue de types d'intrants à prix indicatifs, sans marques, sans notes et sans faux panier.
+- **Inscription et connexion.** Les numéros camerounais sont acceptés avec ou sans +237. Le mot de passe compte au moins 8 caractères. Le consentement au partage des données est facultatif et décoché par défaut.
+
+### Sécurité
+
+- **Images.** Elles ne sont plus publiques : `GET /api/media/…` exige un jeton ou une URL signée temporaire. Leurs métadonnées EXIF sont supprimées.
+- **Analyses d'autrui.** GreenBot ne peut plus lire l'analyse d'un autre utilisateur (faille corrigée), et une analyse ne peut plus être rattachée à la parcelle d'un autre utilisateur.
+- **XSS.** Toutes les données affichées sont échappées.
+- **Configuration.** `SECRET_KEY` est obligatoire hors mode développement, `DEBUG` est désactivé par défaut, et CORS n'est plus ouvert à tous.
+- **Interface.** Ajout d'en-têtes de sécurité, d'un contraste AA et de bibliothèques servies par l'application elle-même (Leaflet, Chart.js, Turf).
+
+### Fichiers ajoutés (principaux)
+
+| Fichier | Rôle |
+|---|---|
+| `backend/media.py`, `backend/routers/media_router.py` | Stockage des images, miniatures, accès authentifié |
+| `backend/knowledge.py` | Base de connaissances bilingue, correspondance classe → fiche, fiche terrain |
+| `backend/geo.py`, `backend/data/cameroon_regions.json` | Géométrie des parcelles, régions, quadrillage et parcours |
+| `backend/routers/mission_router.py`, `backend/routers/green_data_router.py` | Missions et heatmap ; statistiques GREEN Data |
+| `backend/i18n.py`, `frontend/i18n/*.json`, `frontend/js/i18n.js` | Traductions serveur et interface |
+| `backend/migrations/` (0001 à 0004), `backend/schema_check.py`, `backend/db_url.py` | Alembic, contrôle du schéma, URL Supabase |
+| `backend/passenger_wsgi.py`, `backend/requirements-prod.txt` | Déploiement o2switch (ONNX Runtime, sans PyTorch) |
+| `frontend/green-data.html`, `frontend/js/{upload-queue,parcel-store,fiche,charts,theme-init}.js`, `frontend/vendor/` | Nouvelle page, files hors ligne, fiche partagée, palette des graphiques |
+| `scripts/*` | `check_i18n`, `build_i18n`, `db_check`, `media_report`, `seed_demo`, `set_role`, `onnx_parity`, `smoke_prod.sh`, `configure_vercel` |
+| `qa/*` | Tests Playwright : pages, parcours, cohérence, parcours de référence |
+| `docs/*` | Déploiement o2switch, contrat rover, glossaire FR/EN |
+
+### Fichiers supprimés
+
+| Fichier | Raison |
+|---|---|
+| `frontend/drone.html`, `frontend/css/drone.css`, `backend/routers/drone_router.py` | Page morte (`/drone` redirigeait déjà vers `/camera`) |
+| `frontend/js/translations.json` | Remplacé par `frontend/i18n/*.json` → `js/translations.js` |
+| `frontend/assets/marketplace_img/` | Photos de produits de marque, de provenance inconnue |
+| `backend/=1.40.0` | Fichier parasite issu d'un `pip install` sans guillemets |
+
+### À savoir pour la suite
+
+1. **Base de production (CP2).** Exécuter `alembic stamp 0001_baseline`, relire le SQL de `alembic upgrade head --sql`, puis lancer `alembic upgrade head`. Les migrations sont toutes additives. Le détail est dans `docs/DEPLOY_O2SWITCH.md` §2.
+2. **Développement local.** Une base SQLite existante (`green.db`) est mise à niveau automatiquement au démarrage.
+3. **Traductions.** Toute nouvelle chaîne visible passe par `frontend/i18n/*.json`, puis `python scripts/build_i18n.py`. `scripts/check_i18n.py` doit rester à 0 problème.
+4. **Rôles.** Ils s'attribuent avec `scripts/set_role.py`, faute d'interface d'administration.
+5. **À faire valider par un agronome.** La correspondance classes du modèle → fiches, dans `backend/knowledge.py`.
+6. **Vérifications.** 124 tests backend (plus 2 tests lents d'inférence réelle), ruff sans erreur, `check_i18n` à 0 problème, 107 tests Playwright (60 pages × langues × tailles, 30 cohérence, 15 parcours, 2 parcours de référence).
+
+---
+
 ## Modification 1 — Abandon de l'ESP32-CAM au profit du Rover
 
 **Date :** 21/10/2026

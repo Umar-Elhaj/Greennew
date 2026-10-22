@@ -1,683 +1,209 @@
 # GREEN — Agricultural Intelligence Platform
 
-> **GREEN** (Gestion et Reconnaissance des Espèces et Nuisibles) is an end-to-end agricultural AI platform designed for Cameroonian agribusinesses. It combines a ground rover with a live camera, dual deep-learning inference (disease + pest detection), an agronomic RAG chatbot, and a rich web dashboard — all served from a single FastAPI backend.
+GREEN helps farms in Cameroon monitor crop health. Farmers photograph leaves (phone, webcam or the field rover). An EfficientNet-B0 model predicts the **probable** disease, which is an AI prediction and not a diagnosis. Each analysis gets a field sheet. Results are placed on the farm's parcels (GREEN Map), followed over time, discussed with an AI agronomic assistant (GreenBot), and aggregated anonymously for partners (GREEN Data).
+
+The interface is fully bilingual **French / English**.
 
 ---
 
-## Table of Contents
+## Contents
 
-1. [Overview](#1-overview)
-2. [Key Features](#2-key-features)
-3. [System Architecture](#3-system-architecture)
-4. [AI Models](#4-ai-models)
-5. [Tech Stack](#5-tech-stack)
-6. [Project Structure](#6-project-structure)
-7. [Prerequisites](#7-prerequisites)
-8. [Installation](#8-installation)
-9. [Environment Variables](#9-environment-variables)
-10. [Running the Application](#10-running-the-application)
-11. [Application Pages](#11-application-pages)
-12. [REST API Reference](#12-rest-api-reference)
-13. [Database Schema](#13-database-schema)
-14. [ONNX Export](#14-onnx-export)
-15. [Roadmap](#15-roadmap)
+1. [Features](#1-features)
+2. [Architecture](#2-architecture)
+3. [Project structure](#3-project-structure)
+4. [Running locally](#4-running-locally)
+5. [Configuration](#5-configuration)
+6. [Tests and quality checks](#6-tests-and-quality-checks)
+7. [Deployment](#7-deployment)
+8. [API overview](#8-api-overview)
+9. [Data, privacy and roles](#9-data-privacy-and-roles)
+10. [Model](#10-model)
+11. [Known limits and next steps](#11-known-limits-and-next-steps)
 
 ---
 
-## 1. Overview
+## 1. Features
 
-GREEN is built around a **rover equipped with a camera** (streaming MJPEG over Wi-Fi) that patrols agricultural fields. Frames are grabbed by the FastAPI server, run through two AI models in parallel, and the results are stored, visualized, and discussed through the web interface.
-
-The platform targets **Cameroonian field conditions** — crops (maize, cassava, tomato, plantain), regional disease pressures, local market prices in XAF, and Cameroon's dual planting seasons.
-
-### What GREEN does
-
-| Capability | Detail |
+| Page | What it does |
 |---|---|
-| **Disease detection** | EfficientNet-B0 classifying 11 disease/healthy states across 3 crop families |
-| **Pest detection** | YOLOv8 detecting locusts (*Criquet*) and moths (*Papillon de nuit*) in real time |
-| **Live camera feed** | MJPEG stream viewer with single-frame capture and instant AI analysis |
-| **Parcel management** | GPS-tracked field parcels on an interactive Leaflet map |
-| **Agronomic chatbot** | GreenBot — RAG + Google Gemini, answers questions in context of the user's field data |
-| **Economic simulation** | Real-time ROI calculator for treatment decisions |
-| **Agricultural calendar** | Cameroon crop schedule with planting / harvest / risk periods |
-| **Disease reference** | 38-entry searchable knowledge base with symptoms and treatments |
-| **Local benchmark** | User performance vs. regional averages (Cameroon) |
-| **Weather integration** | OpenWeatherMap proxy per parcel location |
+| **Sign in / register** (`/`, `/register`) | Phone (normalised to +237) or email. The dataset consent at registration is optional and unchecked by default. |
+| **Dashboard** (`/dashboard`) | Key figures, results of the last 4 weeks, weather for the user's region, recent analyses. |
+| **Camera analysis** (`/camera`) | Device camera, imported photos or rover stream on the local network. Every image is first kept in an **offline queue (IndexedDB)** with its context (parcel, mission cell, GPS, capture time), then sent when the network is available. |
+| **GREEN Map** (`/map`) | Draw parcels, including offline: draggable points, "add my position" with accuracy, Turf checks for self-crossing, area and overlap. Changes are synced later. Square grid for the rover (1–50 m) with a serpentine path, frozen as a **mission** with JSON/GeoJSON exports. **Heatmap per cell**: share of probable diseases, highest alert level or dominant disease. |
+| **History** (`/history`) | Filters and the field sheet of each analysis (symptoms, actions, other candidates, disclaimer), in the reader's language. |
+| **GreenBot** (`/chatbot`) | Gemini-based assistant with retrieval (TF-IDF) and the context of one of the user's analyses. It answers in the interface language. |
+| **Disease library** (`/diseases`) | 35 bilingual sheets (diseases and pests) with bilingual search. |
+| **Crop calendar**, **Economic scenarios**, **My progress**, **Inputs catalogue** | Reference and planning pages. *My progress* compares the user only with their own history. The catalogue shows generic input types at indicative prices, with no online sale. |
+| **GREEN Data** (`/green-data`, partner/admin only) | Consent-only aggregates: volume, plants, diseases, plant × disease matrix, regions (choropleth), seasonality, confidence, model quality, emerging alerts, dataset maturity, CSV/GeoJSON exports. Every figure based on fewer than 5 analyses is masked. |
+| **Settings / Profile** | Theme, language, consents (dataset, photo GPS), rover address, account. |
 
 ---
 
-## 2. Key Features
+## 2. Architecture
 
-### Dual AI Inference Pipeline
-- Frames from the rover camera are passed **simultaneously** to both models via `asyncio.gather` + a dedicated `ThreadPoolExecutor(max_workers=2)`
-- Wall-clock inference time = `max(T_disease, T_pest)` instead of the sum
-- Both PyTorch and Ultralytics release the GIL during C-level operations, enabling true CPU overlap
+```
+Browser (HTML + vanilla JS, Leaflet, Chart.js, Turf — vendored)
+  │  i18n.js (fr/en, applied before first paint) · IndexedDB queues (images, parcels)
+  │
+  │  /api/*   (same origin: FastAPI serves the pages locally;
+  │            on Vercel, vercel.json rewrites /api/* to the API host)
+  ▼
+FastAPI (backend/main.py) ── Passenger + a2wsgi on o2switch (backend/passenger_wsgi.py)
+  ├─ auth (JWT HS256, bcrypt), roles farmer / agronomist / partner / admin
+  ├─ camera → media.py (Pillow validation, re-encode, thumbnail, EXIF stripped)
+  │          → inference.py (ONNX Runtime by default, PyTorch optional)
+  │          → knowledge.py (bilingual field sheet from diseases.json)
+  ├─ parcels / missions → geo.py (validation, area, region, grid + path)
+  ├─ green-data (SQL aggregates, k-anonymity 5, 10-min cache)
+  ├─ chatbot (TF-IDF retrieval over rag/ + Gemini), weather (OpenWeather proxy)
+  └─ i18n.py (server messages per Accept-Language / ?lang)
+  │
+  ├─ PostgreSQL (Supabase, via the pooler) — schema managed by Alembic
+  └─ MEDIA_DIR on disk (outside the web root) — images served only by
+     GET /api/media/{path} with a Bearer token or a short-lived signed URL
+```
 
-### Authentication & Security
-- JWT tokens (HS256, 7-day expiry) stored in `localStorage`
-- Bcrypt password hashing (direct — no passlib due to bcrypt ≥ 4.x compatibility issues)
-- All analysis and parcel endpoints require a valid Bearer token
-
-### App Shell Architecture
-- Single `layout.js` injects the sidebar and header into every page — no duplication
-- Theme (light/dark) persisted in `localStorage` and applied before first paint to prevent flash
-- `i18n.js` + `translations.json` for French/English switching
-
-### GreenBot RAG Chatbot
-- **Retrieval**: TF-IDF index (scikit-learn, 8 000 features, bigrams) over a `chunks.json` corpus
-- **Generation**: Google Gemini `gemini-2.5-flash-lite` with injected field context (recent analyses, parcels, weather)
-- Chat sessions and messages persisted in SQLite
-
-### Performance Optimisations
-- `torch.inference_mode()` (faster than `no_grad` — disables autograd tape entirely)
-- Models loaded lazily on first request + background warmup thread (1 s delay after ASGI bind)
-- MJPEG chunk size set to 16 384 bytes to reduce `read()` system calls
+The rover is a Raspberry Pi that creates its own Wi-Fi hotspot. A hosted server cannot reach it, so images travel through the browser queue (store-and-forward). The waypoint and upload contract is in [`docs/rover_mission_contract.md`](docs/rover_mission_contract.md).
 
 ---
 
-## 3. System Architecture
+## 3. Project structure
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        GREEN Platform                           │
-│                                                                 │
-│  ┌──────────┐   Wi-Fi / HTTP    ┌───────────────────────────┐  │
-│  │  Rover   │ ─────────────────▶│   FastAPI Backend          │  │
-│  │ Camera   │  MJPEG stream     │   (uvicorn, port 8000)     │  │
-│  │(Arduino  │                   │                            │  │
-│  │  Uno Q)  │                   │  ┌─────────────────────┐  │  │
-│  └──────────┘                   │  │  EfficientNet-B0    │  │  │
-│                                 │  │  (disease, 11 cls)  │  │  │
-│                                 │  ├─────────────────────┤  │  │
-│                                 │  │  YOLOv8             │  │  │
-│                                 │  │  (pest, 2 cls)      │  │  │
-│                                 │  ├─────────────────────┤  │  │
-│                                 │  │  GreenBot RAG       │  │  │
-│                                 │  │  TF-IDF + Gemini    │  │  │
-│                                 │  ├─────────────────────┤  │  │
-│                                 │  │  SQLite (green.db)  │  │  │
-│                                 │  └─────────────────────┘  │  │
-│                                 │                            │  │
-│                                 │   Serves /frontend/*       │  │
-│                                 └──────────────┬────────────┘  │
-│                                                │                │
-│                                 ┌──────────────▼────────────┐  │
-│                                 │   GREEN Web App            │  │
-│                                 │   (Vanilla JS, 12 pages)   │  │
-│                                 │   Chart.js · Leaflet.js    │  │
-│                                 └───────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Request Flow — Camera Analysis
-
-```
-Browser  ──GET /api/camera/stream──▶  camera_router
-                                          │
-                                   MJPEG frame grab
-                                          │
-                              ┌───────────┴───────────┐
-                              │ asyncio.gather         │
-                    ┌─────────▼──────┐   ┌────────────▼──────────┐
-                    │ EfficientNet   │   │ YOLOv8                │
-                    │ Disease class  │   │ Pest bounding boxes    │
-                    └─────────┬──────┘   └────────────┬──────────┘
-                              └───────────┬───────────┘
-                                   Merge results
-                                          │
-                                   Gemini enrichment
-                                   (treatment advice)
-                                          │
-                                   Save → SQLite
-                                          │
-                              JSON response to browser
+backend/
+  main.py                FastAPI app, page routes, security headers, schema check
+  passenger_wsgi.py      Passenger entry point (a2wsgi)
+  config.py              environment (DATABASE_URL, SECRET_KEY, …)
+  db_url.py, database.py DATABASE_URL normalisation, pooler-aware engine
+  models.py              SQLAlchemy models   ·  migrations/ (Alembic)  ·  sql/supabase_schema.sql (reference)
+  auth.py, schemas.py    JWT, roles, validation (phone +237, password ≥ 8)
+  media.py               image storage and signed URLs
+  inference.py           EfficientNet-B0 (ONNX / PyTorch)
+  knowledge.py           bilingual knowledge base, class → sheet mapping, field sheet
+  geo.py                 parcel geometry, regions, grid, serpentine path
+  i18n.py                server-side translations
+  routers/               auth, dashboard, analysis, camera, media, parcels, missions,
+                         green_data, chatbot, weather, diseases
+  data/cameroon_regions.json   region boundaries (geoBoundaries, CC BY 3.0)
+  tests/                 pytest (SQLite; whole suite also on PostgreSQL)
+frontend/
+  *.html                 15 pages        ·  i18n/*.json → js/translations.js (generated)
+  js/                    i18n, api, layout, utils, fiche, charts, upload-queue, parcel-store, theme-init
+  vendor/                Leaflet 1.9.4, Chart.js 4.4.0, Turf 7.1.0 (+ licences, hashes)
+qa/                      Playwright: e2e (pages), flows, consistency (a11y), journey
+scripts/                 check_i18n, build_i18n, db_check, media_report, seed_demo,
+                         set_role, onnx_parity, smoke_prod.sh, configure_vercel
+docs/                    DEPLOY_O2SWITCH.md, rover_mission_contract.md, i18n_glossary.md
+Models/                  best_efficientnet.onnx (production), .pth (development)
+diseases.json            knowledge base (fr/en)   ·  rag/  GreenBot corpus
 ```
 
 ---
 
-## 4. AI Models
+## 4. Running locally
 
-### Model 1 — Disease Detection (EfficientNet-B0)
-
-| Property | Value |
-|---|---|
-| File | `Models/best_efficientnet.pth` |
-| Architecture | `timm` EfficientNet-B0 (1 280-d features) |
-| Input | 224 × 224 RGB |
-| Output | 11 softmax classes |
-| Inference mode | `torch.inference_mode()` |
-
-**Classes (index order must match training folder sort):**
-
-| Index | Class | Crop |
-|---|---|---|
-| 0 | Cassava_Mosaic | Cassava |
-| 1 | Corn_Brown_Spots | Maize |
-| 2 | Corn_Healthy | Maize |
-| 3 | Corn_Leaf_Blight | Maize |
-| 4 | Corn_Mildew | Maize |
-| 5 | Corn_Streak | Maize |
-| 6 | Corn_Stripe | Maize |
-| 7 | Corn_Yellowing | Maize |
-| 8 | Tomato_Brown_Spots | Tomato |
-| 9 | Tomato_Blight_Leaf | Tomato |
-| 10 | Tomato_Healthy | Tomato |
-
-### ONNX Export
-
-Pre-converted models are available in the `Models/` folder (`model.onnx`, `model.tflite`).
-
-An additional conversion script is provided to export `best.pt` to ONNX at 320 × 320 for optimised edge deployment:
+Requirements: Python 3.12, Node 20+ (tests only), Git.
 
 ```bash
-python convert_to_onnx.py
-# Output: best_320.onnx (≈ 11.6 MB, opset 12, FP32, onnxslim simplified)
-# Latency: ~68 ms / image on CPU (Core i3)
+git clone <repo> && cd Greennew
+python3.12 -m venv .venv
+.venv/bin/pip install -r backend/requirements-dev.txt     # includes PyTorch for the parity check
+cp .env.example .env                                     # then set DEBUG=true for local work
+cd backend && ../.venv/bin/uvicorn main:app --reload --port 8000
 ```
+
+Open http://localhost:8000. Without `DATABASE_URL`, a SQLite file (`green.db`) is used and migrated automatically at startup. Useful extras:
+
+```bash
+DEBUG=true .venv/bin/python scripts/seed_demo.py          # demo data for GREEN Data (is_demo, removable)
+.venv/bin/python scripts/set_role.py --phone +2376XXXXXXXX --role partner
+```
+
+**Translations.** Edit `frontend/i18n/<namespace>.json`, then run `python scripts/build_i18n.py`; the result `js/translations.js` is committed. Terms and tone are set in [`docs/i18n_glossary.md`](docs/i18n_glossary.md).
 
 ---
 
-## 5. Tech Stack
+## 5. Configuration
 
-### Backend
-| Layer | Technology |
+Only `DATABASE_URL` and `SECRET_KEY` are required in production. Every other variable enables an optional feature, and the UI says clearly when a feature is disabled. The full commented list is in [`.env.example`](.env.example):
+
+`DATABASE_URL`, `SECRET_KEY`, `DEBUG`, `CORS_ORIGINS`, `MEDIA_DIR`, `MAX_UPLOAD_MB`, `INFERENCE_BACKEND`, `MODEL_PATH`, `MODEL_VERSION`, `WARMUP`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `WEATHER_API_KEY`.
+
+- **Supabase.** Use the **pooler** URL (port 6543 → no app-side pool; port 5432 → small pool). `sslmode=require` is added and the password is masked in logs.
+- **Schema.** It is managed by Alembic: `cd backend && alembic upgrade head`. On a database created before Alembic, first run `alembic stamp 0001_baseline`. Every revision is additive.
+
+---
+
+## 6. Tests and quality checks
+
+```bash
+.venv/bin/pytest backend/tests                         # 124 tests (SQLite)
+.venv/bin/pytest backend/tests -m slow                 # real model: ONNX ⇄ PyTorch parity
+.venv/bin/ruff check --config backend/pyproject.toml backend scripts
+.venv/bin/python scripts/check_i18n.py                 # keys, empty values, untranslated text
+cd qa && npm ci && npx playwright install chromium && npx playwright test
+```
+
+- **PostgreSQL.** Start a disposable server (`docker run -d --rm -p 55432:5432 -e POSTGRES_PASSWORD=test -e POSTGRES_DB=green_test postgres:16-alpine`), then set `TEST_POSTGRES_URL` / `TEST_DATABASE_URL` to `postgresql://postgres:test@localhost:55432/<db>?sslmode=disable`.
+- **Playwright** covers:
+  - every page in French and English at 1366×768 and 390×844 (console errors, HTTP errors, text left in the wrong language, horizontal overflow);
+  - functional flows: offline queue, offline parcel sync, map → mission → heatmap, GREEN Data roles, translated errors;
+  - consistency in light and dark themes (shell, links, axe-core contrast);
+  - the full reference journey in both languages.
+
+---
+
+## 7. Deployment
+
+- **API on o2switch.** Follow [`docs/DEPLOY_O2SWITCH.md`](docs/DEPLOY_O2SWITCH.md): read-only diagnostic, Supabase migration, cPanel Python app, environment, Passenger, rollback. Production installs `backend/requirements-prod.txt` (ONNX Runtime, no PyTorch).
+- **Frontend on Vercel.** Run `python scripts/configure_vercel.py https://<api-domain>` to write the `/api/*` rewrite into `frontend/vercel.json`.
+- **After each deployment.** Run `scripts/smoke_prod.sh <base_url>`.
+
+---
+
+## 8. API overview
+
+All routes are under `/api` and need `Authorization: Bearer <token>`, except authentication, health and the disease library. Errors are `{"detail": "<message in the request language>"}`.
+
+| Area | Routes |
 |---|---|
-| Web framework | FastAPI 0.115 + Uvicorn 0.32 |
-| Database ORM | SQLAlchemy 2.0 (SQLite) |
-| Authentication | `python-jose` JWT + `bcrypt` 4.x |
-| Disease AI | PyTorch 2.5 + `timm` EfficientNet-B0 |
-| Pest AI | Ultralytics YOLOv8 (8.4.38) |
-| Chatbot retrieval | scikit-learn TF-IDF |
-| Chatbot generation | Google Gemini `gemini-2.5-flash-lite` |
-| Weather | OpenWeatherMap REST API |
-| Image processing | Pillow |
-| HTTP client | httpx + requests |
-| Async concurrency | asyncio + ThreadPoolExecutor |
+| Auth | `POST /auth/register`, `POST /auth/login`, `GET/PUT/DELETE /auth/me`, `POST /auth/change-password` |
+| Analyses | `POST /camera/upload`, `POST /camera/analyze-frame` (+ `mission_id`, `cell_index`, `captured_at`, `source=rover`), `GET /analysis/history`, `GET/DELETE /analysis/{id}`, `GET /analysis/fiche/{id}`, `POST /analysis/{id}/verify` (agronomist) |
+| Images | `GET /media/{yyyy}/{mm}/{uuid}[_thumb].jpg` (owner, agronomist or admin) |
+| Parcels | `GET/POST /parcels`, `GET/PUT/DELETE /parcels/{id}`, `GET /parcels/{id}/analyses`, `GET /parcels/geo/analyses` |
+| Missions | `POST /missions/preview`, `POST/GET /missions`, `GET/PATCH/DELETE /missions/{id}`, `GET /missions/{id}/waypoints`, `…/export.geojson`, `…/heatmap` |
+| GREEN Data | `GET /green-data/{meta,overview,plants,diseases,regions,seasonality,confidence,model-quality,alerts,dataset}`, `…/export.csv`, `…/export.geojson` |
+| Other | `GET /dashboard/{stats,disease-trends,recent-activity,progress}`, `GET /weather/{current,forecast}`, `/chat/sessions…`, `GET /diseases`, `GET /health` |
 
-### Frontend
-| Layer | Technology |
-|---|---|
-| Core | Vanilla JavaScript (ES2020, no framework) |
-| Styling | CSS custom properties design system |
-| Charts | Chart.js 4.x |
-| Maps | Leaflet.js 1.9.4 (CartoDB tiles) |
-| Fonts | Inter (Google Fonts) |
-| Icons | Inline SVG |
-| i18n | Custom `i18n.js` + `translations.json` (FR/EN) |
+Interactive documentation is available at `/docs` when `DEBUG=true`.
 
 ---
 
-## 6. Project Structure
+## 9. Data, privacy and roles
 
-```
-APP/
-├── backend/
-│   ├── main.py                  # FastAPI app entry point, lifespan, page routes
-│   ├── config.py                # All env-dependent settings (loaded from .env)
-│   ├── database.py              # SQLAlchemy engine + session factory
-│   ├── models.py                # ORM models (User, DiseaseAnalysis, Parcel, Chat…)
-│   ├── schemas.py               # Pydantic request/response schemas
-│   ├── auth.py                  # JWT creation + get_current_user dependency
-│   ├── inference.py             # EfficientNet-B0 disease inference engine
-│   ├── yolo_inference.py        # YOLOv8 pest detection engine
-│   ├── pest_inference.py        # Legacy pest model (kept for compatibility)
-│   ├── requirements.txt         # pip dependencies
-│   └── routers/
-│       ├── auth_router.py       # POST /api/auth/register, /login, /me
-│       ├── analysis_router.py   # GET/POST /api/analysis/* (history, upload)
-│       ├── camera_router.py     # GET /api/camera/stream, /capture
-│       ├── drone_router.py      # Legacy drone endpoints (redirects to camera)
-│       ├── dashboard_router.py  # GET /api/dashboard/stats, /trends
-│       ├── parcel_router.py     # CRUD /api/parcels/*
-│       ├── chatbot_router.py    # POST/GET /api/chat/sessions/*
-│       ├── weather_router.py    # GET /api/weather/*
-│       └── diseases_router.py   # GET /api/diseases (reference DB)
-│
-├── frontend/
-│   ├── index.html               # Login page
-│   ├── register.html            # Registration page
-│   ├── dashboard.html           # Main KPI dashboard
-│   ├── camera.html              # Live rover stream + AI analysis
-│   ├── history.html             # Analysis history with filters
-│   ├── map.html                 # Interactive parcel map (Leaflet)
-│   ├── calendar.html            # Cameroon agricultural calendar
-│   ├── diseases.html            # Disease reference database (38 entries)
-│   ├── chatbot.html             # GreenBot agronomic assistant
-│   ├── economics.html           # Economic scenario simulator
-│   ├── benchmark.html           # Local benchmark vs. regional averages
-│   ├── marketplace.html         # Input marketplace (coming Q3 2026)
-│   ├── profile.html             # User profile management
-│   ├── settings.html            # App settings (theme, language, camera IP)
-│   ├── drone.html               # Legacy page (redirects to camera)
-│   ├── css/
-│   │   ├── variables.css        # Design system tokens (colors, spacing, radii)
-│   │   ├── main.css             # Base resets + typography
-│   │   ├── app.css              # App shell (sidebar, header, layout)
-│   │   ├── auth.css             # Login / register specific
-│   │   └── camera.css           # Camera page specific
-│   └── js/
-│       ├── api.js               # Centralized API client (all fetch calls)
-│       ├── app.js               # App boot, toast notifications, theme
-│       ├── layout.js            # App shell injector (sidebar + header)
-│       ├── auth.js              # Auth guard + token management
-│       ├── utils.js             # Shared utilities
-│       ├── i18n.js              # Internationalisation engine
-│       └── translations.json    # FR / EN string translations
-│
-├── rag/
-│   ├── chunks.json              # Agronomic knowledge corpus (text chunks)
-│   └── embeddings_f32.bin       # Pre-computed embeddings (float32 binary)
-│
-├── Models/
-│   ├── best_efficientnet.pth    # EfficientNet-B0 disease detection weights
-│   ├── model.onnx               # ONNX version of the disease/pest model
-│   ├── model.tflite             # TFLite version (mobile / edge deployment)
-│   └── green.db                 # SQLite database (users, analyses, parcels…)
-│
-├── diseases.json                # Disease reference database (38 entries)
-├── best.pt                      # YOLOv8 pest detection weights
-├── best_320.onnx                # ONNX export of best.pt at 320 px (generated)
-├── convert_to_onnx.py           # Script: export best.pt → ONNX 320 px
-├── .env                         # Local secrets (NOT committed)
-├── .gitignore
-└── README.md
-```
+- **Images.** They are stored outside the web root, without metadata. A GPS position read from a photo is kept only with the *location consent*.
+- **Sharing with GREEN Data.** Only analyses whose author gave the *dataset consent* are counted. Demo rows are excluded, any figure below 5 analyses is masked, and the finest geography is the region; no names or coordinates are exported.
+- **Roles.** `farmer` is the default. `agronomist` can view images and verify labels. `partner` has access to GREEN Data. `admin` can do everything. Roles are assigned with `scripts/set_role.py`.
+- **Wording.** Every result is presented as a *probable disease*, with the mention "AI prediction, not a diagnosis".
 
 ---
 
-## 7. Prerequisites
+## 10. Model
 
-| Requirement | Minimum version |
-|---|---|
-| Python | 3.10 |
-| pip | 23+ |
-| RAM | 4 GB (8 GB recommended — PyTorch + YOLO) |
-| Storage | ~2 GB (models + dependencies) |
-| Network | Wi-Fi access to rover camera IP |
+EfficientNet-B0 with 224×224 input and 11 classes: Cassava_Mosaic, Corn_Brown_Spots, Corn_Healthy, Corn_Leaf_Blight, Corn_Mildew, Corn_Streak, Corn_Stripe, Corn_Yellowing, Tomato_Brown_Spots, Tomato_Blight_Leaf, Tomato_Healthy.
 
-> **GPU** is optional. All inference runs on CPU by default. For GPU acceleration, install the CUDA build of PyTorch and set `half=True` in `convert_to_onnx.py`.
+- **Production.** `Models/best_efficientnet.onnx` through ONNX Runtime (about 20 ms per image and 180 MB peak on CPU).
+- **Development.** `.pth` with PyTorch (`INFERENCE_BACKEND=torch`).
+- **Parity.** `scripts/onnx_parity.py` checks that both give the same top-1 class on 24 images, with a maximum probability gap of 3e-6.
+
+The "alert level" shown with a disease is derived from the model's confidence. It does not measure the extent of the damage.
 
 ---
 
-## 8. Installation
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/TCHOUANANG-dimitri/app.git
-cd app
-``
-
-### 2. Create a virtual environment
-
-```bash
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-# Linux / macOS
-source venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-### 4. Create the `.env` file
-
-Copy the template below and fill in your actual keys:
-
-```bash
-# At the project root (APP/.env)
-cp .env.example .env   # if the example exists, otherwise create manually
-```
-
-See [Environment Variables](#9-environment-variables) for all options.
-
-### 5. Place the AI model files
-
-The model weights are **not** committed to git (large binary files). The expected layout is:
-
-```
-APP/
-├── best.pt                          ← YOLOv8 pest weights (root)
-└── Models/
-    ├── best_efficientnet.pth        ← EfficientNet-B0 disease weights
-    ├── model.onnx                   ← ONNX model (disease/pest)
-    └── model.tflite                 ← TFLite model (edge/mobile)
-```
-
-> **Important:** `config.py` defaults point to the project root for `best.pt` and `best_efficientnet.pth`.
-> If you keep them in `Models/`, override the paths via `.env`:
->
-> ```dotenv
-> MODEL_PATH=Models/best_efficientnet.pth
-> YOLO_MODEL_PATH=best.pt
-> ```
-
----
-
-## 9. Environment Variables
-
-Create a `.env` file at the **project root** (`APP/.env`):
-
-```dotenv
-# ── Security ────────────────────────────────────────────────
-SECRET_KEY=change-this-to-a-random-64-char-string-in-production
-
-# ── Google Gemini (GreenBot chatbot + disease enrichment) ───
-# Get your key at: https://aistudio.google.com/app/apikey
-GEMINI_API_KEY=your_gemini_api_key_here
-
-# ── OpenWeatherMap (weather widget) ─────────────────────────
-# Get your key at: https://openweathermap.org/api
-WEATHER_API_KEY=your_openweathermap_key_here
-
-# ── Rover Camera ─────────────────────────────────────────────
-# IP of the rover's camera stream (MJPEG over HTTP)
-DEFAULT_CAMERA_IP=192.168.1.100
-DEFAULT_CAMERA_PORT=8080
-
-# ── Optional overrides ────────────────────────────────────────
-# DATABASE_URL=sqlite:///./green.db   # default: project root
-# DEBUG=true                          # enables /docs and /redoc
-# CORS_ORIGINS=*                      # restrict in production
-```
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `SECRET_KEY` | Yes | weak default | JWT signing key — change in production |
-| `GEMINI_API_KEY` | Yes | `""` | Google Gemini API key for GreenBot |
-| `WEATHER_API_KEY` | No | `""` | OpenWeatherMap key (weather widget) |
-| `DEFAULT_CAMERA_IP` | No | `192.168.1.100` | Rover camera IP |
-| `DEFAULT_CAMERA_PORT` | No | `8080` | Rover camera HTTP port |
-| `DATABASE_URL` | No | SQLite at root | Full SQLAlchemy DB URL |
-| `DEBUG` | No | `true` | Enables `/docs` and `/redoc` |
-
----
-
-## 10. Running the Application
-
-### Start the backend server
-
-```bash
-# From the project root
-cd backend
-uvicorn main:app --reload --port 8000
-```
-
-The server will:
-1. Create all SQLite tables on first run
-2. Start background warmup of EfficientNet + YOLO (parallel, ~1 s delay)
-3. Load the RAG TF-IDF index
-4. Serve the frontend at `http://localhost:8000`
-
-### Access the app
-
-| URL | Page |
-|---|---|
-| `http://localhost:8000` | Login |
-| `http://localhost:8000/dashboard` | Dashboard |
-| `http://localhost:8000/camera` | Live camera |
-| `http://localhost:8000/docs` | API docs (DEBUG mode) |
-
-### Health check
-
-```bash
-curl http://localhost:8000/api/health
-```
-
-```json
-{
-  "status": "ok",
-  "app": "GREEN Agricultural Intelligence Platform",
-  "version": "1.0.0",
-  "models": {
-    "efficientnet": "ready",
-    "yolo": "ready",
-    "rag_index": "ready"
-  }
-}
-```
-
----
-
-## 11. Application Pages
-
-### Login & Register (`/`, `/register`)
-User authentication with JWT. Password validation, error handling, redirect to dashboard on success.
-
-### Dashboard (`/dashboard`)
-Main KPI overview:
-- Total analyses, disease rate, parcels, active chat sessions
-- Trend chart (last 30 days)
-- Recent analyses feed
-- Weather widget (current location)
-
-### Camera — Live Rover Feed (`/camera`)
-- MJPEG stream from rover (configurable IP/port in Settings)
-- **Single-frame capture** → dual AI analysis (disease + pest) in parallel
-- Results displayed with confidence bars, treatment recommendations (Gemini)
-- Captured frames saved to `frontend/assets/captures/`
-
-### Analysis History (`/history`)
-- Paginated analysis log with server-side filters:
-  - Source (camera / upload / drone)
-  - Result type (disease / healthy / pest)
-  - Plant type (free text)
-- Each entry shows disease class, confidence, pest detection, severity, GPS coordinates
-
-### Parcel Map (`/map`)
-- Leaflet.js map centered on Yaoundé (default)
-- CartoDB tiles (light / dark based on theme)
-- Add parcels via form + click-on-map coordinate picker
-- Color-coded markers by crop (green = maize, amber = cassava, red = tomato)
-- Disease analysis dots overlaid from history (colored by severity)
-
-### Agricultural Calendar (`/calendar`)
-- Cameroon dual-season crop schedule (Maize S1/S2, Cassava, Tomato S1/S2)
-- Visual activity blocks: Planting, Growing, Harvest, Locust Risk
-- Monthly agronomic tips (ok / caution / warning)
-- Current month highlighted
-
-### Disease Reference (`/diseases`)
-- 38-entry knowledge base searchable by name or plant type
-- Filter chips: All, Maize, Tomato, Cassava
-- Detail panel: scientific name, affected crops, symptoms, recommended actions
-- Covers 45+ plant types including cassava, maize, tomato, banana, cocoa, coffee, citrus
-
-### GreenBot Chatbot (`/chatbot`)
-- Session-based RAG chatbot powered by Google Gemini
-- Context injection: user's recent analyses + parcels + weather
-- Persistent chat sessions stored in SQLite
-- Suggested starter questions
-
-### Economic Simulator (`/economics`)
-- Real-time ROI calculator with interactive sliders:
-  - Crop type, cultivated area, expected yield, market price (XAF/kg)
-  - Disease incidence %, treatment cost/ha, treatment effectiveness %
-- Live output: gross revenue, loss with/without treatment, net profit, ROI %
-- 4-scenario Chart.js bar chart (No Disease / No Treatment / With Treatment / Optimal)
-- Market reference prices (XAF) for major Cameroonian crops
-
-### Local Benchmark (`/benchmark`)
-- Pulls real data from the user's account (scans, parcels, chat sessions)
-- Weighted performance score (0–100):
-  - Scan frequency 30%, chat engagement 20%, parcel coverage 20%, disease vigilance 30%
-- Comparison cards vs. Cameroon regional averages
-- Donut chart (disease / healthy / pest distribution)
-- Grouped bar chart (scan activity by month)
-- Personalised agronomic tips
-
-### Marketplace (`/marketplace`)
-- Coming Q3 2026 — online marketplace for agricultural inputs
-- Preview: 28 mock products across Seeds, Plant Protection, Fertilizers, Bio-inputs, Equipment
-- Category tabs + filter sidebar (crop compatibility, price range, supplier, region)
-- Email notification registration for launch
-
-### Profile & Settings (`/profile`, `/settings`)
-- Update display name, bio, region
-- Change password
-- Theme toggle (light/dark), language switcher (FR/EN)
-- Camera IP/port configuration
-- Notification preferences
-
----
-
-## 12. REST API Reference
-
-> Full interactive docs available at `http://localhost:8000/docs` (when `DEBUG=true`).
-
-### Authentication
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/auth/register` | Create account |
-| `POST` | `/api/auth/login` | Get JWT token |
-| `GET` | `/api/auth/me` | Current user info |
-| `PUT` | `/api/auth/me` | Update profile |
-| `PUT` | `/api/auth/me/password` | Change password |
-
-### Disease Analysis
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/analysis/history` | Paginated history (`?limit&offset&source&result_type&plant_type`) |
-| `POST` | `/api/analysis/upload` | Upload image for analysis |
-| `GET` | `/api/analysis/{id}` | Get single analysis |
-| `DELETE` | `/api/analysis/{id}` | Delete analysis |
-
-### Camera / Rover
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/camera/stream` | MJPEG proxy stream from rover |
-| `POST` | `/api/camera/capture` | Grab frame + dual AI analysis |
-| `GET` | `/api/camera/status` | Rover connectivity check |
-
-### Parcels
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/parcels` | List user's parcels |
-| `POST` | `/api/parcels` | Create parcel |
-| `GET` | `/api/parcels/{id}` | Get parcel |
-| `PUT` | `/api/parcels/{id}` | Update parcel |
-| `DELETE` | `/api/parcels/{id}` | Delete parcel |
-
-### GreenBot
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/chat/sessions` | Create session |
-| `GET` | `/api/chat/sessions` | List sessions |
-| `GET` | `/api/chat/sessions/{id}` | Get session + messages |
-| `POST` | `/api/chat/sessions/{id}/messages` | Send message, get reply |
-| `DELETE` | `/api/chat/sessions/{id}` | Delete session |
-
-### Dashboard & Weather
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/dashboard/stats` | KPI summary |
-| `GET` | `/api/dashboard/trends` | 30-day trend data |
-| `GET` | `/api/weather/current` | Current weather (by coords or city) |
-| `GET` | `/api/diseases` | Disease reference list (`?q=&plant=`) |
-| `GET` | `/api/diseases/{id}` | Single disease entry |
-| `GET` | `/api/health` | Server health + model status |
-
----
-
-## 13. Database Schema
-
-The SQLite database (`green.db`) is managed by SQLAlchemy. Tables are created automatically on first run.
-
-```
-users               — id, email, hashed_password, full_name, region, …
-disease_analyses    — id, user_id, plant_type, detected_disease, confidence,
-                      severity, pest_detected, pest_confidence, pest_severity,
-                      source, latitude, longitude, image_path, created_at
-parcels             — id, user_id, name, crop_type, area_ha, region,
-                      latitude, longitude, description, created_at
-chat_sessions       — id, user_id, title, created_at, updated_at
-chat_messages       — id, session_id, role (user/assistant), content, created_at
-```
-
----
-
-## 14. ONNX Export
-
-To convert the YOLOv8 pest model to ONNX for edge deployment (Raspberry Pi, Jetson Nano, etc.):
-
-```bash
-# From the project root — no need to activate backend venv if ultralytics is installed globally
-python convert_to_onnx.py
-```
-
-**Output:** `best_320.onnx`
-
-| Property | Value |
-|---|---|
-| Resolution | 320 × 320 px |
-| Opset | 12 (broad runtime compatibility) |
-| Precision | FP32 |
-| Size | ~11.6 MB |
-| Simplified | Yes (`onnxslim`) |
-| Input | `images` — shape `(1, 3, 320, 320)` |
-| Output | `output0` — shape `(1, 6, 2100)` |
-| CPU latency | ~68 ms / frame (Intel Core i3) |
-
-To run inference with the ONNX model:
-
-```python
-import onnxruntime as ort
-import numpy as np
-
-sess = ort.InferenceSession("best_320.onnx")
-img  = np.zeros((1, 3, 320, 320), dtype=np.float32)  # replace with real frame
-out  = sess.run(None, {"images": img})
-# out[0].shape → (1, 6, 2100)
-# 6 = [x_center, y_center, width, height, conf_class0, conf_class1]
-```
-
----
-
-## 15. Roadmap
-
-| Feature | Status |
-|---|---|
-| EfficientNet disease detection | Done |
-| YOLOv8 pest detection | Done |
-| Parallel dual-model inference | Done |
-| JWT authentication | Done |
-| Live rover camera stream | Done |
-| Analysis history with filters | Done |
-| Parcel management (CRUD + map) | Done |
-| GreenBot RAG chatbot | Done |
-| Agricultural calendar | Done |
-| Disease reference database | Done |
-| Economic scenario simulator | Done |
-| Local benchmark | Done |
-| ONNX export script | Done |
-| Marketplace backend | Q3 2026 |
-| Mobile app (React Native) | Planned |
-| ONNX runtime integration | Planned |
-| Multi-user farm management | Planned |
-| Offline mode (PWA) | Planned |
-
----
-
-## Author
-
-**TCHOUANANG DIMITRI**
-Agricultural AI Platform — Cameroon
-GitHub: [@TCHOUANANG-dimitri](https://github.com/TCHOUANANG-dimitri)
-
----
-
-*GREEN is built for field conditions — designed to work on low-bandwidth connections, CPU-only hardware, and with crops and diseases specific to Central and West Africa.*
+## 11. Known limits and next steps
+
+- **Class → reference sheet mapping.** It is in `backend/knowledge.py` and must be validated by an agronomist.
+- **Pest detection (YOLO).** A trained model exists (`best.pt`) but is **not wired into the backend**. This is future work.
+- **Rover.** It cannot upload by itself yet: the device-token endpoint is specified in the rover contract but not implemented. Physical rover navigation is out of scope.
+- **GreenBot.** It needs a Gemini key (`GEMINI_API_KEY`). Without one, the page explains that the assistant is not configured.
+- **Change log.** It is kept in [`MODIFICATIONS.md`](MODIFICATIONS.md) (in French).

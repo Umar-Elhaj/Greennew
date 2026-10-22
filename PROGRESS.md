@@ -92,7 +92,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 - [x] 8.1 Parcours de référence Playwright FR + EN — `qa/journey.spec.ts` : 2 passed (deux exécutions) ; a révélé le bug de normalisation du téléphone (corrigé)
 - [x] 8.2 Cohérence (navigation, en-tête, langue, thème, liens, états, 390 px, contraste AA) — `qa/consistency.spec.ts` (30 : 15 pages × clair/sombre, axe-core color-contrast), balayage à 390 px ; Playwright total 105 + 2 parcours
 - [ ] 8.3 Sous-agent relecteur indépendant → corrections → seconde passe
-- [ ] 8.4 `README.md` + entrée datée dans `MODIFICATIONS.md`
+- [x] 8.4 `README.md` + entrée datée dans `MODIFICATIONS.md` — README réécrit (architecture réelle, variables, lancement, tests, déploiement, limites) ; « Modification 2 » datée du 22/10/2026
 
 ---
 
