@@ -137,6 +137,9 @@ create table if not exists public.disease_analyses (
     verified_by      integer references public.users(id) on delete set null,
     verified_at      timestamp,
 
+    -- Données de démonstration (scripts/seed_demo.py), exclues des statistiques par défaut
+    is_demo          boolean not null default false,
+
     created_at       timestamp not null default (now() at time zone 'utc')
 );
 
@@ -145,6 +148,7 @@ create index if not exists ix_disease_analyses_parcel_id  on public.disease_anal
 create index if not exists ix_disease_analyses_created_at on public.disease_analyses(created_at);
 create index if not exists ix_disease_analyses_sha256     on public.disease_analyses(image_sha256);
 create index if not exists ix_disease_analyses_mission_cell on public.disease_analyses(mission_id, cell_index);
+create index if not exists ix_disease_analyses_green_data on public.disease_analyses(consent_dataset, is_demo, created_at);
 -- Export du dataset : images consenties, avec image
 create index if not exists ix_disease_analyses_dataset
     on public.disease_analyses(plant_type, detected_disease)

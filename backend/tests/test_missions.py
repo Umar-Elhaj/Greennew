@@ -2,7 +2,7 @@
 
 import math
 
-from conftest import jpeg_bytes, register
+from conftest import jpeg_bytes
 
 LAT0, LNG0 = 3.85, 11.50
 M_LAT = 1 / 111195.0

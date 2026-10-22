@@ -93,6 +93,7 @@ MESSAGES_FR = {
         "Cette parcelle n'a pas de contour : tracez-la d'abord sur la carte.",
     "The cell is not part of this mission.": "Cette cellule ne fait pas partie de la mission.",
     "The mission does not belong to this parcel.": "La mission n'appartient pas à cette parcelle.",
+    "Unknown class label.": "Libellé de classe inconnu.",
     # generic
     "Internal server error.": "Erreur interne du serveur.",
 }

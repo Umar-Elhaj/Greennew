@@ -110,3 +110,12 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
+
+
+def require_roles(*roles: str):
+    """Dependency: the current user must have one of `roles` (403 otherwise)."""
+    def checker(user=Depends(get_current_user)):
+        if (getattr(user, "role", None) or "farmer") not in roles:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have access to this page.")
+        return user
+    return checker

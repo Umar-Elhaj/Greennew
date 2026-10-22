@@ -109,3 +109,21 @@ def test_reference_sql_matches_models(pg_url):
         diff = compare_metadata(MigrationContext.configure(conn, opts={"compare_type": True}), Base.metadata)
     eng.dispose()
     assert diff == []
+
+
+def test_sqlite_dev_database_from_create_all_is_upgraded(tmp_path):
+    """A green.db made by the old create_all() (no alembic_version) gets the new columns."""
+    from sqlalchemy import inspect
+
+    from schema_check import migrate_sqlite
+
+    url = "sqlite:///" + str(tmp_path / "old.db")
+    command.upgrade(_alembic(url), "0001_baseline")
+    eng = create_engine(url)
+    with eng.begin() as c:
+        c.exec_driver_sql("drop table alembic_version")      # what create_all() used to leave behind
+    migrate_sqlite(eng)
+    cols = {c["name"] for c in inspect(eng).get_columns("disease_analyses")}
+    assert {"mission_id", "cell_index", "is_demo", "image_width"} <= cols
+    eng.dispose()
+    assert _diff(url) == []

@@ -33,6 +33,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 import main  # noqa: E402
 import rover_common  # noqa: E402
+from routers import green_data_router  # noqa: E402
 from database import Base, engine  # noqa: E402
 
 
@@ -56,6 +57,7 @@ def _fresh_db():
     """Every test starts from an empty schema and an empty MEDIA_DIR."""
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    green_data_router.clear_cache()
     shutil.rmtree(os.environ["MEDIA_DIR"], ignore_errors=True)
     os.makedirs(os.environ["MEDIA_DIR"], exist_ok=True)
     yield

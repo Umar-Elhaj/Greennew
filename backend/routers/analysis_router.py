@@ -11,11 +11,12 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from database import get_db
 from models import User, DiseaseAnalysis
-from auth import get_current_user
+from auth import get_current_user, require_roles
 from i18n import request_lang
 from knowledge import fiche_for_analysis
 from media import delete_image, media_url
@@ -186,3 +187,31 @@ def get_fiche(
         raise HTTPException(status_code=404, detail="Analysis not found.")
 
     return fiche_for_analysis(analysis, request_lang(request))
+
+
+# ---- POST /api/analysis/{id}/verify --------------------------
+class VerifyIn(BaseModel):
+    label: str = Field(min_length=1, max_length=255)   # model class code, e.g. "Corn_Streak" or "Corn_Healthy"
+
+
+@router.post("/{analysis_id}/verify", summary="Agronomist label for an analysis (model quality, dataset)")
+def verify_analysis(
+    analysis_id: int,
+    body: VerifyIn,
+    db: Session = Depends(get_db),
+    reviewer: User = Depends(require_roles("agronomist", "admin")),
+):
+    from datetime import datetime as _dt
+
+    from knowledge import CLASS_NAMES_I18N
+
+    if body.label not in CLASS_NAMES_I18N or body.label == "healthy":
+        raise HTTPException(status_code=422, detail="Unknown class label.")
+    analysis = db.get(DiseaseAnalysis, analysis_id)
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Analysis not found.")
+    analysis.verified_label = body.label
+    analysis.verified_by = reviewer.id
+    analysis.verified_at = _dt.utcnow()
+    db.commit()
+    return {"id": analysis.id, "verified_label": analysis.verified_label, "verified_at": analysis.verified_at.isoformat()}

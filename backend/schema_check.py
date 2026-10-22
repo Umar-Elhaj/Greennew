@@ -38,3 +38,25 @@ def warn_if_schema_outdated(engine) -> None:
             "(or `alembic stamp 0001_baseline` first on a pre-Alembic database).",
             current, head,
         )
+
+
+def migrate_sqlite(engine) -> None:
+    """
+    Local development on SQLite: bring the file up to date with Alembic.
+    A database created by the former create_all() (tables but no
+    alembic_version) is first stamped at the baseline, then upgraded, so
+    new columns are added instead of being silently missing.
+    """
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy import inspect
+
+    cfg = Config(ALEMBIC_INI)
+    cfg.attributes["url"] = engine.url.render_as_string(hide_password=False)
+    cfg.attributes["skip_logging"] = True
+    with engine.connect() as conn:
+        has_tables = "users" in inspect(conn).get_table_names()
+        revision = current_revision(conn)
+    if has_tables and revision is None:
+        command.stamp(cfg, "0001_baseline")
+    command.upgrade(cfg, "head")

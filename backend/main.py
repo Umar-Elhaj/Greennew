@@ -18,7 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from config import APP_NAME, APP_VERSION, CORS_ORIGINS, DEBUG
-from database import engine, Base, IS_SQLITE
+from database import engine, IS_SQLITE
 
 # ---- Import routers -----------------------------------------
 from routers import auth_router
@@ -31,16 +31,17 @@ from routers import weather_router     # Phase 6 — OpenWeatherMap proxy
 from routers import diseases_router    # Disease reference database
 from routers import media_router       # Authenticated access to analysed images
 from routers import mission_router     # GREEN Map missions (grid, path, heatmap)
+from routers import green_data_router  # GREEN Data aggregates (partner / admin)
 
 logger = logging.getLogger(__name__)
 
 # ---- Database schema ----------------------------------------
-# SQLite (local development): tables are created directly.
-# PostgreSQL: the schema is managed by Alembic (`alembic upgrade head`
-# is a deployment step); the app only warns when it is behind.
+# SQLite (local development): migrated to the latest revision at startup.
+# PostgreSQL: `alembic upgrade head` is a deployment step; the app only
+# warns when the schema is behind.
 if IS_SQLITE:
-    import models  # noqa: F401  (registers the tables)
-    Base.metadata.create_all(bind=engine)
+    from schema_check import migrate_sqlite
+    migrate_sqlite(engine)
 else:
     from schema_check import warn_if_schema_outdated
     warn_if_schema_outdated(engine)
@@ -127,6 +128,7 @@ app.include_router(dashboard_router.router)
 app.include_router(analysis_router.router)
 app.include_router(media_router.router)
 app.include_router(mission_router.router)
+app.include_router(green_data_router.router)
 app.include_router(camera_router.router)
 app.include_router(parcel_router.router)
 app.include_router(chatbot_router.router)
@@ -210,6 +212,11 @@ async def diseases_page():
 @app.get("/economics", include_in_schema=False)
 async def economics_page():
     return FileResponse(os.path.join(FRONTEND_DIR, "economics.html"))
+
+
+@app.get("/green-data", include_in_schema=False)
+async def green_data_page():
+    return FileResponse(os.path.join(FRONTEND_DIR, "green-data.html"))
 
 
 @app.get("/benchmark", include_in_schema=False)
