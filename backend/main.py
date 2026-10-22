@@ -10,7 +10,6 @@
 
 import logging
 import os
-from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -18,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from config import APP_NAME, APP_VERSION, DEBUG, MEDIA_DIR, MEDIA_URL_PREFIX
+from config import APP_NAME, APP_VERSION, CORS_ORIGINS, DEBUG, MEDIA_DIR, MEDIA_URL_PREFIX
 from database import engine, Base
 
 # ---- Import routers -----------------------------------------
@@ -99,13 +98,15 @@ app = FastAPI(
 )
 
 # ---- CORS Middleware ----------------------------------------
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Only needed when the frontend is hosted on another origin (e.g. Vercel).
+if CORS_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=CORS_ORIGINS,
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "Accept-Language"],
+    )
 
 # ---- Register API Routers -----------------------------------
 app.include_router(auth_router.router)

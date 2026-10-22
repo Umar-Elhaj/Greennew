@@ -7,11 +7,28 @@
 import os
 from dotenv import load_dotenv
 
-# Load .env file from the project root (one level above /backend)
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'), override=True)
+# Load .env file from the project root (one level above /backend).
+# Real environment variables win over .env (cPanel / tests must not be
+# silently overridden by a developer's local file).
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'), override=False)
+
+# ---- App mode -----------------------------------------------
+# Production by default: DEBUG must be enabled explicitly.
+DEBUG: bool = os.getenv("DEBUG", "false").strip().lower() in ("1", "true", "yes")
 
 # ---- Security -----------------------------------------------
-SECRET_KEY: str = os.getenv("SECRET_KEY", "green-secret-key-change-in-production-2026")
+# Mandatory in production. In DEBUG only, a fixed dev key is used so that
+# tokens survive auto-reloads; it must never reach a deployed server.
+_DEV_SECRET_KEY = "dev-only-insecure-secret-key"  # noqa: S105 (DEBUG only)
+SECRET_KEY: str = os.getenv("SECRET_KEY", "").strip()
+if not SECRET_KEY:
+    if not DEBUG:
+        raise RuntimeError(
+            "SECRET_KEY is not set. Define it in the environment "
+            "(e.g. python -c \"import secrets; print(secrets.token_urlsafe(48))\"), "
+            "or set DEBUG=true for local development."
+        )
+    SECRET_KEY = _DEV_SECRET_KEY
 ALGORITHM: str = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
@@ -68,10 +85,12 @@ RAG_EMBEDDINGS_PATH: str = os.path.join(os.path.dirname(__file__), '..', 'rag', 
 DISEASES_DB_PATH: str = os.path.join(os.path.dirname(__file__), '..', 'diseases.json')
 
 # ---- CORS ---------------------------------------------------
-# In development, allow all origins. Restrict in production.
-CORS_ORIGINS: list = os.getenv("CORS_ORIGINS", "*").split(",")
+# Comma-separated list of allowed origins. Empty (default) = same-origin
+# only: the frontend is served by FastAPI itself, so no CORS is needed.
+# The API authenticates with a Bearer header, not cookies, so credentials
+# are never allowed cross-origin; "*" is therefore safe but discouraged.
+CORS_ORIGINS: list = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
 
 # ---- App ----------------------------------------------------
 APP_NAME: str = "GREEN Agricultural Intelligence Platform"
 APP_VERSION: str = "1.0.0"
-DEBUG: bool = os.getenv("DEBUG", "true").lower() == "true"
