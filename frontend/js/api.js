@@ -184,11 +184,6 @@ const API = {
      DISEASE ANALYSIS  (Phase 4 — added later)
      ---------------------------------------------------------- */
   analysis: {
-    /** Upload an image for disease detection. */
-    uploadImage(formData) {
-      return request('/api/analysis/upload', 'POST', formData, true, true);
-    },
-
     /** Get analysis history for the current user with optional server-side filters. */
     history(limit = 20, offset = 0, filters = {}) {
       const p = new URLSearchParams({ limit, offset });

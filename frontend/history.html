@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -131,7 +131,8 @@
       text-transform: uppercase;
       letter-spacing: .05em;
     }
-    .sev-low    { background: rgba(46,204,113,.12); color: var(--brand-primary); }
+    .sev-none   { background: rgba(46,204,113,.12); color: var(--brand-primary); }
+    .sev-low    { background: rgba(59,130,246,.12); color: var(--color-info); }
     .sev-medium { background: rgba(245,158,11,.12); color: #d97706; }
     .sev-high   { background: rgba(239,68,68,.12);  color: #ef4444; }
 
@@ -270,39 +271,46 @@
     <main class="app-content" id="appContent">
 
       <!-- Banner -->
-      <div style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 60%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-8);position:relative;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 60%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-8);position:relative;overflow:hidden;" class="page-banner">
         <div style="position:absolute;width:260px;height:260px;background:rgba(255,255,255,.05);border-radius:50%;right:-40px;top:-80px;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;">
-          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:var(--weight-semibold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);">Operations</div>
-          <div style="font-size:var(--text-2xl);font-weight:var(--weight-extrabold);color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp-2);">Analysis History</div>
-          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.6);">All disease detections from your rover camera and uploads.</div>
+          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:var(--weight-semibold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);" data-i18n="history.banner_kicker"></div>
+          <div style="font-size:var(--text-2xl);font-weight:var(--weight-extrabold);color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp-2);" data-i18n="history.banner_title"></div>
+          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.7);" data-i18n="history.banner_text"></div>
         </div>
       </div>
 
       <!-- Filter bar -->
       <div class="filter-bar">
         <div class="filter-group">
-          <span class="filter-label">Source</span>
-          <select class="filter-select" id="filterSource" onchange="applyFilters()">
-            <option value="">All sources</option>
-            <option value="camera">Camera</option>
-            <option value="upload">Upload</option>
-            <option value="drone">Drone</option>
+          <label class="filter-label" for="filterSource" data-i18n="history.source"></label>
+          <select class="filter-select" id="filterSource">
+            <option value="" data-i18n="history.all_sources"></option>
+            <option value="camera" data-i18n="fiche.sources.camera"></option>
+            <option value="upload" data-i18n="fiche.sources.upload"></option>
+            <option value="rover" data-i18n="fiche.sources.rover"></option>
+            <option value="drone" data-i18n="fiche.sources.drone"></option>
           </select>
         </div>
         <div class="filter-group">
-          <span class="filter-label">Result type</span>
-          <select class="filter-select" id="filterType" onchange="applyFilters()">
-            <option value="">All results</option>
-            <option value="disease">Disease detected</option>
-            <option value="healthy">Healthy</option>
+          <label class="filter-label" for="filterType" data-i18n="history.result"></label>
+          <select class="filter-select" id="filterType">
+            <option value="" data-i18n="history.all_results"></option>
+            <option value="disease" data-i18n="history.diseased"></option>
+            <option value="healthy" data-i18n="history.healthy"></option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label" for="filterPlant" data-i18n="history.plant"></label>
+          <select class="filter-select" id="filterPlant">
+            <option value="" data-i18n="history.all_plants"></option>
+            <option value="Cassava" data-i18n="model.plants.Cassava"></option>
+            <option value="Corn" data-i18n="model.plants.Corn"></option>
+            <option value="Tomato" data-i18n="model.plants.Tomato"></option>
           </select>
         </div>
         <div style="margin-left:auto;display:flex;align-items:flex-end;">
-          <button class="btn" style="height:38px;font-size:var(--text-sm);" onclick="applyFilters()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            Refresh
-          </button>
+          <button type="button" class="btn" style="height:38px;font-size:var(--text-sm);" onclick="loadHistory()" data-i18n="common.actions.refresh"></button>
         </div>
       </div>
 
@@ -313,27 +321,24 @@
         <div>
           <div class="hist-card">
             <div class="hist-card-hdr">
-              <h3>Analyses</h3>
-              <span class="count-badge" id="totalBadge">— total</span>
+              <h3 data-i18n="history.analyses"></h3>
+              <span class="count-badge" id="totalBadge">—</span>
             </div>
 
-            <div id="histTableWrap">
-              <div id="histEmpty" class="empty-state">
-                <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
-                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <p>No analyses found. Run a scan from the Camera page.</p>
+            <div id="histTableWrap" class="table-scroll">
+              <div id="histEmpty" class="empty-state" style="display:none;">
+                <p id="histEmptyText"></p>
+                <a href="/camera" class="btn btn-primary" id="histEmptyCta" style="display:none;" data-i18n="history.go_camera"></a>
               </div>
               <table class="hist-tbl" id="histTbl" style="display:none;">
                 <thead>
                   <tr>
-                    <th>#</th>
-                    <th>Disease</th>
-                    <th>Plant</th>
-                    <th>Conf.</th>
-                    <th>Severity</th>
-                    <th>Source</th>
-                    <th>Date</th>
+                    <th data-i18n="history.col_result"></th>
+                    <th data-i18n="history.col_plant"></th>
+                    <th data-i18n="history.col_confidence"></th>
+                    <th data-i18n="history.col_alert" data-i18n-title="model.alert.help"></th>
+                    <th data-i18n="history.col_source"></th>
+                    <th data-i18n="history.col_date"></th>
                     <th></th>
                   </tr>
                 </thead>
@@ -342,27 +347,21 @@
             </div>
 
             <div class="pagination" id="pagination" style="display:none;">
-              <button class="pg-btn" id="prevBtn" onclick="changePage(-1)">← Prev</button>
-              <span class="pg-info" id="pgInfo">Page 1</span>
-              <button class="pg-btn" id="nextBtn" onclick="changePage(1)">Next →</button>
+              <button type="button" class="pg-btn" id="prevBtn" onclick="changePage(-1)" data-i18n="history.prev"></button>
+              <span class="pg-info" id="pgInfo"></span>
+              <button type="button" class="pg-btn" id="nextBtn" onclick="changePage(1)" data-i18n="history.next"></button>
             </div>
           </div>
         </div>
 
-        <!-- Right: fiche terrain panel -->
+        <!-- Right: field sheet -->
         <div class="fiche-panel" id="fichePanel">
           <div class="fiche-panel-hdr">
-            <h3>Fiche Terrain</h3>
-            <span id="ficheDate" style="font-size:var(--text-xs);color:var(--text-muted);"></span>
+            <h3 data-i18n="fiche.title"></h3>
           </div>
-          <div id="ficheContent">
+          <div id="ficheContent" aria-live="polite">
             <div class="empty-state">
-              <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-              </svg>
-              <p>Select an analysis to view its fiche terrain.</p>
+              <p data-i18n="history.select"></p>
             </div>
           </div>
         </div>
@@ -377,79 +376,104 @@
 <script src="/js/api.js"></script>
 <script src="/js/app.js"></script>
 <script src="/js/layout.js"></script>
+<script src="/js/fiche.js"></script>
 <script>
+Layout.init({ page: 'history', titleKey: 'nav.history', subtitleKey: 'history.subtitle' });
+
 const PAGE_SIZE = 15;
 let currentPage = 0;
 let totalItems  = 0;
+let items       = null;   // null = error
 let selectedId  = null;
+let selected    = null;   // last loaded analysis (for re-render)
 
 document.addEventListener('DOMContentLoaded', () => {
-  App.boot();
-  Layout.init({ page: 'history', title: 'History', subtitle: 'Analysis records' });
+  ['filterSource', 'filterType', 'filterPlant'].forEach(id =>
+    document.getElementById(id).addEventListener('change', () => { currentPage = 0; loadHistory(); }));
+  const wanted = parseInt(new URLSearchParams(window.location.search).get('id'), 10);
+  if (wanted) selectAnalysis(wanted);
   loadHistory();
 });
 
-function applyFilters() { currentPage = 0; loadHistory(); }
+window.addEventListener('languageChanged', () => {
+  renderTable();
+  if (selectedId) selectAnalysis(selectedId);   // sheet texts come from the server
+});
+
 function changePage(dir) { currentPage = Math.max(0, currentPage + dir); loadHistory(); }
 
+function hasFilters() {
+  return ['filterSource', 'filterType', 'filterPlant'].some(id => document.getElementById(id).value);
+}
+
 async function loadHistory() {
-  const offset  = currentPage * PAGE_SIZE;
-  const filters = {
-    source:      document.getElementById('filterSource').value || undefined,
-    result_type: document.getElementById('filterType').value   || undefined,
-  };
-  const { data, error } = await API.analysis.history(PAGE_SIZE, offset, filters);
-  if (error || !data) return;
-
+  const { data, error } = await API.analysis.history(PAGE_SIZE, currentPage * PAGE_SIZE, {
+    source:      document.getElementById('filterSource').value,
+    result_type: document.getElementById('filterType').value,
+    plant_type:  document.getElementById('filterPlant').value,
+  });
+  if (error || !data) { items = null; renderTable(); return; }
   totalItems = data.total || 0;
-  const filtered = data.items || [];
+  items = data.items || [];
+  // Deleting the last row of the last page: go back one page
+  if (!items.length && totalItems > 0 && currentPage > 0) {
+    currentPage = Math.max(0, Math.ceil(totalItems / PAGE_SIZE) - 1);
+    return loadHistory();
+  }
+  renderTable();
+}
 
-  document.getElementById('totalBadge').textContent = totalItems + ' total';
-
+function renderTable() {
   const tbody = document.getElementById('histBody');
   const tbl   = document.getElementById('histTbl');
   const empty = document.getElementById('histEmpty');
+  const pg    = document.getElementById('pagination');
 
-  if (!filtered.length) {
-    tbl.style.display   = 'none';
-    empty.style.display = '';
-    document.getElementById('pagination').style.display = 'none';
+  if (items === null) {
+    tbl.style.display = 'none'; pg.style.display = 'none'; empty.style.display = '';
+    document.getElementById('histEmptyText').textContent = I18n.t('history.error');
+    document.getElementById('histEmptyCta').style.display = 'none';
+    document.getElementById('totalBadge').textContent = '—';
     return;
   }
+  document.getElementById('totalBadge').textContent = I18n.t('history.total', { count: totalItems });
+  if (!items.length) {
+    tbl.style.display = 'none'; pg.style.display = 'none'; empty.style.display = '';
+    document.getElementById('histEmptyText').textContent = I18n.t(hasFilters() ? 'history.empty' : 'history.empty_none');
+    document.getElementById('histEmptyCta').style.display = hasFilters() ? 'none' : '';
+    return;
+  }
+  tbl.style.display = ''; empty.style.display = 'none';
 
-  tbl.style.display   = '';
-  empty.style.display = 'none';
-
-  tbody.innerHTML = filtered.map((a, i) => {
-    const isHealthy = !a.detected_disease || a.detected_disease === 'healthy';
-    const pct       = a.confidence ? (a.confidence * 100).toFixed(0) + '%' : '—';
-    const sev       = a.severity || 'low';
-    const dt        = a.created_at ? new Date(a.created_at).toLocaleDateString() : '—';
-    const sel       = a.id === selectedId ? ' selected' : '';
-    return `<tr class="${sel}" onclick="selectAnalysis(${a.id})">
-      <td style="color:var(--text-muted);font-size:var(--text-xs);">${offset + i + 1}</td>
-      <td class="${isHealthy ? 'td-healthy' : 'td-disease'}">${isHealthy ? 'Healthy' : (a.disease_name || a.detected_disease || '—')}</td>
-      <td style="color:var(--text-secondary);">${a.plant_type || '—'}</td>
-      <td style="color:var(--text-secondary);">${pct}</td>
-      <td><span class="sev-pill sev-${sev}">${sev}</span></td>
-      <td style="font-size:var(--text-xs);color:var(--text-muted);">${a.source || '—'}</td>
-      <td style="font-size:var(--text-xs);white-space:nowrap;color:var(--text-muted);">${dt}</td>
+  tbody.innerHTML = items.map(a => {
+    const healthy = isHealthy(a);
+    const level = alertLevel(a);
+    return `<tr class="${a.id === selectedId ? 'selected' : ''}" data-id="${a.id}" tabindex="0">
+      <td class="${healthy ? 'td-healthy' : 'td-disease'}">${escapeHtml(analysisLabel(a))}</td>
+      <td style="color:var(--text-secondary);">${escapeHtml(plantLabel(a.plant_type))}</td>
+      <td style="color:var(--text-secondary);">${a.confidence != null ? escapeHtml(I18n.percent(a.confidence)) : '—'}</td>
+      <td><span class="sev-pill sev-${level}">${escapeHtml(alertLabel(level, true))}</span></td>
+      <td style="font-size:var(--text-xs);color:var(--text-muted);">${escapeHtml(I18n.t(`fiche.sources.${a.source || 'upload'}`))}</td>
+      <td style="font-size:var(--text-xs);white-space:nowrap;color:var(--text-muted);">${escapeHtml(I18n.date(a.created_at, { day: 'numeric', month: 'short', year: 'numeric' }))}</td>
       <td>
-        <button class="del-btn" onclick="deleteAnalysis(event,${a.id})" title="Delete">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
-            <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-          </svg>
+        <button type="button" class="del-btn" data-del="${a.id}" title="${escapeHtml(I18n.t('history.delete'))}" aria-label="${escapeHtml(I18n.t('history.delete'))}">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
         </button>
       </td>
     </tr>`;
   }).join('');
+  tbody.querySelectorAll('tr').forEach(tr => {
+    const open = () => selectAnalysis(parseInt(tr.dataset.id, 10));
+    tr.addEventListener('click', open);
+    tr.addEventListener('keydown', e => { if (e.key === 'Enter') open(); });
+  });
+  tbody.querySelectorAll('[data-del]').forEach(btn =>
+    btn.addEventListener('click', e => { e.stopPropagation(); deleteAnalysis(parseInt(btn.dataset.del, 10)); }));
 
   const totalPages = Math.ceil(totalItems / PAGE_SIZE);
-  const pg = document.getElementById('pagination');
   if (totalPages > 1) {
     pg.style.display = 'flex';
-    document.getElementById('pgInfo').textContent = `Page ${currentPage + 1} of ${totalPages}`;
+    document.getElementById('pgInfo').textContent = I18n.t('history.page', { page: currentPage + 1, pages: totalPages });
     document.getElementById('prevBtn').disabled = currentPage === 0;
     document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
   } else {
@@ -459,70 +483,29 @@ async function loadHistory() {
 
 async function selectAnalysis(id) {
   selectedId = id;
-  document.querySelectorAll('#histBody tr').forEach(tr => {
-    const hasId = tr.getAttribute('onclick') && tr.getAttribute('onclick').includes('(' + id + ')');
-    tr.classList.toggle('selected', hasId);
-  });
+  document.querySelectorAll('#histBody tr').forEach(tr => tr.classList.toggle('selected', parseInt(tr.dataset.id, 10) === id));
+  const box = document.getElementById('ficheContent');
   const { data, error } = await API.analysis.get(id);
-  if (error || !data) return;
-  renderFiche(data);
-  document.getElementById('ficheDate').textContent =
-    data.created_at ? new Date(data.created_at).toLocaleString() : '';
+  if (selectedId !== id) return;
+  if (error || !data) {
+    box.innerHTML = `<div class="empty-state"><p>${escapeHtml(error || I18n.t('history.fiche_error'))}</p></div>`;
+    return;
+  }
+  selected = data;
+  box.innerHTML = Fiche.html(data);
+  if (window.innerWidth <= 900) document.getElementById('fichePanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function renderFiche(a) {
-  const fiche    = a.fiche_terrain || {};
-  const isHealthy= a.detected_disease === 'healthy' || !a.detected_disease;
-  const dConf    = fiche.confidence != null
-    ? fiche.confidence
-    : (a.confidence ? a.confidence * 100 : 0);
-
-  let html = '';
-  if (a.image_path) {
-    html += `<img class="thumb-img" src="${a.image_path}" alt="frame" />`;
-  }
-
-  html += `
-    <div class="fiche-verdict">
-      <div class="verdict-ico ${isHealthy ? 'healthy' : 'diseased'}">${isHealthy
-        ? `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 19.82A2 2 0 0 0 6 22c5.13 0 9-4.46 9-10V8"/><path d="M12 22s0-8-7-10"/></svg>`
-        : `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`
-      }</div>
-      <div class="verdict-main">
-        <h4>${a.disease_name || (isHealthy ? 'Healthy plant' : '—')}</h4>
-        <div class="verdict-sub">${a.plant_type || 'Unknown plant'}</div>
-        <div class="conf-row">
-          <div class="conf-track"><div class="conf-fill" style="width:${dConf.toFixed(1)}%"></div></div>
-          <span class="conf-pct">${dConf.toFixed(1)}%</span>
-        </div>
-      </div>
-    </div>`;
-
-  const symptoms = fiche.symptoms || (fiche.winner && fiche.winner.symptoms) || [];
-  if (symptoms.length) {
-    html += `<div class="fiche-section"><div class="fiche-section-title">Symptoms</div><ul>${symptoms.map(s=>`<li>${s}</li>`).join('')}</ul></div>`;
-  }
-
-  const recos = fiche.recommendations || (fiche.winner && fiche.winner.recommendations) || [];
-  if (recos.length) {
-    html += `<div class="fiche-section"><div class="fiche-section-title">Recommendations</div><ul>${recos.map(r=>`<li>${r}</li>`).join('')}</ul></div>`;
-  }
-
-  html += `<div class="fiche-meta"><span>Source: ${a.source || '—'}</span><span>ID #${a.id}</span></div>`;
-
-  document.getElementById('ficheContent').innerHTML = `<div class="fiche-body">${html}</div>`;
-}
-
-async function deleteAnalysis(e, id) {
-  e.stopPropagation();
-  if (!confirm('Delete this analysis permanently?')) return;
+async function deleteAnalysis(id) {
+  if (!App.confirm(I18n.t('history.delete_confirm'))) return;
   const { error } = await API.analysis.delete(id);
   if (error) { App.toast(error, 'error'); return; }
   if (selectedId === id) {
-    document.getElementById('ficheContent').innerHTML = `<div class="empty-state"><p>Select an analysis to view its details.</p></div>`;
+    document.getElementById('ficheContent').innerHTML =
+      `<div class="empty-state"><p>${escapeHtml(I18n.t('history.select'))}</p></div>`;
     selectedId = null;
   }
-  App.toast('Analysis deleted.', 'success');
+  App.toast(I18n.t('history.deleted'), 'success');
   loadHistory();
 }
 </script>

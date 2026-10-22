@@ -780,7 +780,7 @@
               <tr>
                 <td><span class="disease-dot" style="background:${color(lvl)}"></span>${escapeHtml(analysisLabel(a))}</td>
                 <td>${escapeHtml(plantLabel(a.plant_type))}</td>
-                <td><span class="pill pill-${lvl === 'none' ? 'healthy' : lvl}">${escapeHtml(alertLabel(lvl))}</span></td>
+                <td><span class="pill pill-${lvl === 'none' ? 'healthy' : lvl}">${escapeHtml(alertLabel(lvl, true))}</span></td>
                 <td>${a.confidence != null ? escapeHtml(I18n.percent(a.confidence)) : '—'}</td>
                 <td style="white-space:nowrap;">${escapeHtml(I18n.date(a.created_at, { day: 'numeric', month: 'short' }))}</td>
                 <td><a href="/history?id=${encodeURIComponent(a.id)}" style="color:var(--brand-primary);font-size:var(--text-sm);">${escapeHtml(I18n.t('common.actions.view'))}</a></td>

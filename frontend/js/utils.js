@@ -398,7 +398,9 @@ function alertLevel(a) {
   return ['low', 'medium', 'high'].includes(a.severity) ? a.severity : 'low';
 }
 
-function alertLabel(level) {
+/** @param {boolean} short  in tables: "Healthy" instead of "None (healthy)" */
+function alertLabel(level, short = false) {
+  if (short && (!level || level === 'none')) return I18n.t('model.result.healthy');
   return I18n.t(`model.alert.${level || 'none'}`);
 }
 

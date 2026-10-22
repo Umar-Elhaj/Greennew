@@ -1,0 +1,26 @@
+{
+  "en": {
+    "title": "Field sheet",
+    "image_alt": "Analysed image",
+    "duplicate": "This image was already analysed: here is the existing result.",
+    "reference": "Reference sheet",
+    "symptoms": "Symptoms to check in the field",
+    "recommendations": "Recommended actions",
+    "alternatives": "Other possibilities considered by the model",
+    "source": "Source",
+    "sources": { "camera": "Camera", "upload": "Imported photo", "rover": "Rover", "drone": "Drone (former)" },
+    "ask_bot": "Ask GreenBot about this result"
+  },
+  "fr": {
+    "title": "Fiche terrain",
+    "image_alt": "Image analysée",
+    "duplicate": "Cette image a déjà été analysée : voici le résultat existant.",
+    "reference": "Fiche de référence",
+    "symptoms": "Symptômes à vérifier sur le terrain",
+    "recommendations": "Actions recommandées",
+    "alternatives": "Autres possibilités envisagées par le modèle",
+    "source": "Source",
+    "sources": { "camera": "Caméra", "upload": "Photo importée", "rover": "Rover", "drone": "Drone (ancien)" },
+    "ask_bot": "Interroger GreenBot sur ce résultat"
+  }
+}
