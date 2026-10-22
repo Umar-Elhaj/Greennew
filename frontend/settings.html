@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -107,6 +107,9 @@
       cursor: pointer;
       transition: border-color var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out);
       min-width: 72px;
+      background: none;
+      font: inherit;
+      color: inherit;
     }
     .theme-opt:hover { border-color: var(--brand-primary); }
     .theme-opt.active {
@@ -173,12 +176,12 @@
     <main class="app-content" id="appContent">
 
       <!-- Banner -->
-      <div style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 60%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-8);position:relative;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 60%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-8);position:relative;overflow:hidden;" class="page-banner">
         <div style="position:absolute;width:220px;height:220px;background:rgba(255,255,255,.05);border-radius:50%;right:-30px;top:-60px;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;">
-          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:var(--weight-semibold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);" data-i18n="common.settings">Settings</div>
-          <div style="font-size:var(--text-2xl);font-weight:var(--weight-extrabold);color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp-2);" data-i18n="settings.title">Settings</div>
-          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.6);" data-i18n="settings.appearance">Appearance</div>
+          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:var(--weight-semibold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);" data-i18n="settings.banner_kicker"></div>
+          <div style="font-size:var(--text-2xl);font-weight:var(--weight-extrabold);color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp-2);" data-i18n="settings.banner_title"></div>
+          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.7);" data-i18n="settings.banner_text"></div>
         </div>
       </div>
 
@@ -187,68 +190,62 @@
         <!-- Appearance -->
         <div class="s-card">
           <div class="s-card-hdr">
-            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-            </svg>
-            <h3 data-i18n="settings.appearance">Appearance</h3>
+            <h3 data-i18n="settings.appearance"></h3>
           </div>
 
           <!-- Theme -->
           <div class="s-row">
             <div class="s-row-info">
-              <h4 data-i18n="common.theme">Theme</h4>
-              <p data-i18n="settings.theme_mode">Switch between light and dark mode.</p>
+              <h4 data-i18n="settings.theme"></h4>
+              <p data-i18n="settings.theme_help"></p>
             </div>
             <div class="theme-options">
-              <div class="theme-opt" id="themeLight" onclick="setTheme('light')">
+              <button type="button" class="theme-opt" id="themeLight" onclick="setTheme('light')">
                 <div class="theme-preview" style="background:#f8fafc;"></div>
-                <span class="theme-label" data-i18n="settings.light_mode">Light</span>
-              </div>
-              <div class="theme-opt" id="themeDark" onclick="setTheme('dark')">
+                <span class="theme-label" data-i18n="settings.light"></span>
+              </button>
+              <button type="button" class="theme-opt" id="themeDark" onclick="setTheme('dark')">
                 <div class="theme-preview" style="background:#0d1117;"></div>
-                <span class="theme-label" data-i18n="settings.dark_mode">Dark</span>
-              </div>
+                <span class="theme-label" data-i18n="settings.dark"></span>
+              </button>
             </div>
           </div>
 
           <!-- Language -->
           <div class="s-row">
             <div class="s-row-info">
-              <h4 data-i18n="common.language">Language</h4>
-              <p data-i18n="settings.language_settings">Choose your preferred interface language.</p>
+              <h4 data-i18n="settings.language"></h4>
+              <p data-i18n="settings.language_help"></p>
             </div>
             <div class="lang-options">
-              <button class="lang-btn" id="langEn" onclick="setLang('en')" data-i18n="settings.english">English</button>
-              <button class="lang-btn" id="langFr" onclick="setLang('fr')" data-i18n="settings.french">Français</button>
+              <button type="button" class="lang-btn" id="langFr" lang="fr" onclick="I18n.setLanguage('fr')">Français</button>
+              <button type="button" class="lang-btn" id="langEn" lang="en" onclick="I18n.setLanguage('en')">English</button>
             </div>
           </div>
         </div>
 
-        <!-- Notifications -->
+        <!-- Data and privacy (stored on the server) -->
         <div class="s-card">
           <div class="s-card-hdr">
-            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
-            <h3>Notifications</h3>
+            <h3 data-i18n="settings.privacy"></h3>
           </div>
           <div class="s-row">
             <div class="s-row-info">
-              <h4>High severity alerts</h4>
-              <p>Show a banner when a high-risk disease is detected.</p>
+              <h4 data-i18n="settings.dataset_consent"></h4>
+              <p data-i18n="settings.dataset_consent_help"></p>
             </div>
             <label class="toggle-wrap">
-              <input type="checkbox" id="toggleAlerts" onchange="savePref('alerts', this.checked)" checked />
+              <input type="checkbox" id="toggleDataset" onchange="saveConsent('dataset_consent', this)" />
               <span class="toggle-track"></span>
             </label>
           </div>
           <div class="s-row">
             <div class="s-row-info">
-              <h4>Analysis completion sound</h4>
-              <p>Play a sound when an AI analysis finishes.</p>
+              <h4 data-i18n="settings.location_consent"></h4>
+              <p data-i18n="settings.location_consent_help"></p>
             </div>
             <label class="toggle-wrap">
-              <input type="checkbox" id="toggleSound" onchange="savePref('sound', this.checked)" />
+              <input type="checkbox" id="toggleLocation" onchange="saveConsent('location_consent', this)" />
               <span class="toggle-track"></span>
             </label>
           </div>
@@ -257,27 +254,24 @@
         <!-- Camera / Rover -->
         <div class="s-card">
           <div class="s-card-hdr">
-            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-            </svg>
-            <h3>Camera / Rover</h3>
+            <h3 data-i18n="settings.rover"></h3>
           </div>
           <div class="s-row">
             <div class="s-row-info">
-              <h4>Default rover IP</h4>
-              <p>Pre-filled in the Rover Analysis page.</p>
+              <h4><label for="defaultIp" data-i18n="settings.rover_ip"></label></h4>
+              <p data-i18n="settings.rover_ip_help"></p>
             </div>
-            <input type="text" id="defaultIp" class="form-input"
+            <input type="text" id="defaultIp" class="form-input" inputmode="decimal"
                    style="width:150px;font-family:var(--font-mono);font-size:var(--text-sm);"
-                   placeholder="192.168.1.100"
+                   placeholder="192.168.10.1"
                    onchange="savePref('default_ip', this.value)" />
           </div>
           <div class="s-row">
             <div class="s-row-info">
-              <h4>Default stream port</h4>
-              <p>MJPEG stream port on the rover.</p>
+              <h4><label for="defaultPort" data-i18n="settings.rover_port"></label></h4>
+              <p data-i18n="settings.rover_port_help"></p>
             </div>
-            <input type="number" id="defaultPort" class="form-input"
+            <input type="number" id="defaultPort" class="form-input" min="1" max="65535"
                    style="width:90px;"
                    placeholder="8080"
                    onchange="savePref('default_port', this.value)" />
@@ -287,31 +281,35 @@
         <!-- About -->
         <div class="s-card">
           <div class="s-card-hdr">
-            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <h3>About GREEN</h3>
+            <h3 data-i18n="settings.about"></h3>
           </div>
           <div class="s-row">
             <div class="s-row-info">
-              <h4>Version</h4>
-              <p>Agricultural AI Platform — MVP build</p>
+              <h4 data-i18n="settings.version"></h4>
+              <p data-i18n="settings.version_help"></p>
             </div>
-            <span class="version-tag">v1.0.0-mvp</span>
+            <span class="version-tag" id="appVersion">—</span>
           </div>
           <div class="s-row">
             <div class="s-row-info">
-              <h4>AI Models</h4>
-              <p>EfficientNet-B0 — Disease detection</p>
+              <h4 data-i18n="settings.model"></h4>
+              <p data-i18n="settings.model_help"></p>
             </div>
-            <span class="model-chip" id="modelStatus">Checking…</span>
+            <span class="model-chip" id="modelStatus" data-i18n="settings.checking"></span>
           </div>
           <div class="s-row">
             <div class="s-row-info">
-              <h4>Session</h4>
-              <p>Logged in as <strong id="sessionUser" style="color:var(--text-primary);"></strong></p>
+              <h4 data-i18n="settings.services"></h4>
+              <p><span data-i18n="settings.service_greenbot"></span> : <strong id="svcGreenbot">—</strong> ·
+                 <span data-i18n="settings.service_weather"></span> : <strong id="svcWeather">—</strong></p>
             </div>
-            <button class="btn" onclick="App.logout()" style="font-size:var(--text-sm);">Log out</button>
+          </div>
+          <div class="s-row">
+            <div class="s-row-info">
+              <h4 data-i18n="settings.session"></h4>
+              <p><span data-i18n="settings.signed_in_as"></span> <strong id="sessionUser" style="color:var(--text-primary);"></strong></p>
+            </div>
+            <button type="button" class="btn" onclick="App.logout()" style="font-size:var(--text-sm);" data-i18n="common.actions.sign_out"></button>
           </div>
         </div>
 
@@ -326,76 +324,104 @@
 <script src="/js/app.js"></script>
 <script src="/js/layout.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
-  App.boot();
-  await i18n.init();
-  Layout.init({ page: 'settings', title: i18n.t('settings.title'), subtitle: i18n.t('settings.appearance') });
+Layout.init({ page: 'settings', titleKey: 'nav.settings', subtitleKey: 'settings.subtitle' });
+
+let health = undefined;   // undefined = loading, null = unreachable
+
+document.addEventListener('DOMContentLoaded', () => {
   loadPrefs();
-  loadSession();
+  loadAccount();
   checkApi();
-  setupLanguageListener();
+});
+
+window.addEventListener('languageChanged', () => {
+  updateLanguageButtons();
+  renderHealth();
 });
 
 function setTheme(t) {
   ThemeManager.set(t);
   document.getElementById('themeLight').classList.toggle('active', t === 'light');
   document.getElementById('themeDark').classList.toggle('active', t === 'dark');
-}
-
-function setLang(l) {
-  i18n.setLanguage(l);
-  updateLanguageButtons();
+  document.getElementById('themeLight').setAttribute('aria-pressed', t === 'light');
+  document.getElementById('themeDark').setAttribute('aria-pressed', t === 'dark');
 }
 
 function updateLanguageButtons() {
-  const lang = i18n.getLang();
-  document.getElementById('langEn').classList.toggle('active', lang === 'en');
-  document.getElementById('langFr').classList.toggle('active', lang === 'fr');
-}
-
-function setupLanguageListener() {
-  window.addEventListener('languageChanged', () => {
-    updateLanguageButtons();
-  });
+  for (const [id, lang] of [['langFr', 'fr'], ['langEn', 'en']]) {
+    const btn = document.getElementById(id);
+    btn.classList.toggle('active', I18n.lang === lang);
+    btn.setAttribute('aria-pressed', I18n.lang === lang);
+  }
 }
 
 function savePref(key, value) {
-  localStorage.setItem('green_pref_' + key, value);
+  try { localStorage.setItem('green_pref_' + key, value); } catch (_) { /* private mode */ }
 }
 
 function loadPrefs() {
-  const t = ThemeManager.get();
-  setTheme(t);
+  setTheme(ThemeManager.get());
   updateLanguageButtons();
-
-  const ip   = localStorage.getItem('green_pref_default_ip')   || '192.168.10.1';
-  const port = localStorage.getItem('green_pref_default_port') || '8080';
-  document.getElementById('defaultIp').value   = ip;
-  document.getElementById('defaultPort').value = port;
-
-  const alerts = localStorage.getItem('green_pref_alerts');
-  document.getElementById('toggleAlerts').checked = alerts !== 'false';
-  const sound = localStorage.getItem('green_pref_sound');
-  document.getElementById('toggleSound').checked  = sound === 'true';
+  let ip = null, port = null;
+  try {
+    ip   = localStorage.getItem('green_pref_default_ip');
+    port = localStorage.getItem('green_pref_default_port');
+  } catch (_) { /* private mode */ }
+  document.getElementById('defaultIp').value   = ip || '192.168.10.1';
+  document.getElementById('defaultPort').value = port || '8080';
 }
 
-function loadSession() {
-  const user = Auth.getUser();
-  if (user) {
-    document.getElementById('sessionUser').textContent = `${user.first_name} ${user.last_name}`;
+/* Consents live on the server (they decide what GREEN Data may use) */
+function loadAccount() {
+  const user = Auth.getUser() || {};
+  document.getElementById('sessionUser').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+  document.getElementById('toggleDataset').checked  = !!user.dataset_consent;
+  document.getElementById('toggleLocation').checked = !!user.location_consent;
+  // Refresh from the server: the cached user may predate the consent fields
+  API.auth.me().then(({ data }) => {
+    if (!data) return;
+    Auth.updateUser(data);
+    document.getElementById('toggleDataset').checked  = !!data.dataset_consent;
+    document.getElementById('toggleLocation').checked = !!data.location_consent;
+  });
+}
+
+async function saveConsent(field, input) {
+  input.disabled = true;
+  const { data, error } = await API.auth.updateProfile({ [field]: input.checked });
+  input.disabled = false;
+  if (error) {
+    input.checked = !input.checked;   // back to the stored value
+    App.toast(error, 'error');
+    return;
   }
+  Auth.updateUser(data);
+  App.toast(I18n.t('settings.saved'), 'success', 2000);
 }
 
 async function checkApi() {
   const { data } = await API.health();
-  const el = document.getElementById('modelStatus');
-  if (data) {
-    el.textContent = 'API online';
-    el.className   = 'model-chip online';
+  health = data || null;
+  renderHealth();
+}
+
+function renderHealth() {
+  if (health === undefined) return;
+  const chip = document.getElementById('modelStatus');
+  chip.removeAttribute('data-i18n');
+  const svc = (el, on) => {
+    el.textContent = I18n.t(health ? (on ? 'settings.status_on' : 'settings.status_off') : 'settings.status_offline');
+  };
+  if (health) {
+    chip.textContent = health.model_version || 'efficientnet';
+    chip.className   = 'model-chip online';
+    document.getElementById('appVersion').textContent = `v${health.version}`;
   } else {
-    el.textContent = 'API offline';
-    el.className   = 'model-chip offline';
+    chip.textContent = I18n.t('settings.status_offline');
+    chip.className   = 'model-chip offline';
   }
+  svc(document.getElementById('svcGreenbot'), health && health.services && health.services.greenbot);
+  svc(document.getElementById('svcWeather'),  health && health.services && health.services.weather);
 }
 </script>
 </body>

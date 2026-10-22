@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -141,9 +141,9 @@
       <div style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 60%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-8);position:relative;overflow:hidden;">
         <div style="position:absolute;width:240px;height:240px;background:rgba(255,255,255,.05);border-radius:50%;right:-30px;top:-70px;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;">
-          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:var(--weight-semibold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);">Account</div>
-          <div style="font-size:var(--text-2xl);font-weight:var(--weight-extrabold);color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp-2);">My Profile</div>
-          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.6);">Manage your account, enterprise settings, and security.</div>
+          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:var(--weight-semibold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);" data-i18n="profile.banner_kicker"></div>
+          <div style="font-size:var(--text-2xl);font-weight:var(--weight-extrabold);color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp-2);" data-i18n="profile.banner_title"></div>
+          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.7);" data-i18n="profile.banner_text"></div>
         </div>
       </div>
 
@@ -156,7 +156,7 @@
             <!-- Avatar gradient header -->
             <div class="avatar-section">
               <div class="avatar-circle" id="avatarCircle">—</div>
-              <div class="avatar-name" id="avatarName">Loading…</div>
+              <div class="avatar-name" id="avatarName"></div>
               <div class="avatar-role" id="avatarRole">—</div>
             </div>
 
@@ -165,28 +165,28 @@
               <div class="info-list">
                 <div class="info-item">
                   <svg class="info-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.1 19.79 19.79 0 0 1 1.61 4.48 2 2 0 0 1 3.6 2.25h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                  <div><div class="info-label">Phone</div><div class="info-value" id="infoPhone">—</div></div>
+                  <div><div class="info-label" data-i18n="profile.phone"></div><div class="info-value" id="infoPhone">—</div></div>
                 </div>
                 <div class="info-item">
                   <svg class="info-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                  <div><div class="info-label">Email</div><div class="info-value" id="infoEmail">—</div></div>
+                  <div><div class="info-label" data-i18n="profile.email"></div><div class="info-value" id="infoEmail">—</div></div>
                 </div>
                 <div class="info-item">
                   <svg class="info-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                  <div><div class="info-label">Company</div><div class="info-value" id="infoCompany">—</div></div>
+                  <div><div class="info-label" data-i18n="profile.company"></div><div class="info-value" id="infoCompany">—</div></div>
                 </div>
                 <div class="info-item">
                   <svg class="info-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  <div><div class="info-label">Region</div><div class="info-value" id="infoRegion">—</div></div>
+                  <div><div class="info-label" data-i18n="profile.region"></div><div class="info-value" id="infoRegion">—</div></div>
                 </div>
               </div>
             </div>
 
             <!-- Stats -->
             <div class="stats-row">
-              <div class="stat-cell"><div class="stat-val" id="statAnalyses">—</div><div class="stat-lbl">Scans</div></div>
-              <div class="stat-cell"><div class="stat-val" id="statDiseases">—</div><div class="stat-lbl">Diseases</div></div>
-              <div class="stat-cell"><div class="stat-val" id="statHealthy">—</div><div class="stat-lbl">Healthy</div></div>
+              <div class="stat-cell"><div class="stat-val" id="statAnalyses">—</div><div class="stat-lbl" data-i18n="profile.stats_analyses"></div></div>
+              <div class="stat-cell"><div class="stat-val" id="statDiseases">—</div><div class="stat-lbl" data-i18n="profile.stats_diseases"></div></div>
+              <div class="stat-cell"><div class="stat-val" id="statHealthy">—</div><div class="stat-lbl" data-i18n="profile.stats_healthy"></div></div>
             </div>
           </div>
 
@@ -199,55 +199,49 @@
           <div class="p-card">
             <div class="p-card-hdr">
               <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <h3>Edit Profile</h3>
+              <h3 data-i18n="profile.edit"></h3>
             </div>
             <div class="p-card-body">
-              <div id="profileAlert" style="margin-bottom:var(--sp-4);"></div>
+              <div id="profileAlert" class="alert" role="alert" style="display:none;margin-bottom:var(--sp-4);"></div>
 
               <div class="form-section">
-                <div class="form-section-title">Personal information</div>
+                <div class="form-section-title" data-i18n="profile.section_personal"></div>
                 <div class="form-row">
                   <div class="form-group">
-                    <label>First name</label>
-                    <input type="text" id="firstName" class="form-input" placeholder="Jean" />
+                    <label for="firstName" data-i18n="profile.first_name"></label>
+                    <input type="text" id="firstName" class="form-input" autocomplete="given-name" />
                   </div>
                   <div class="form-group">
-                    <label>Last name</label>
-                    <input type="text" id="lastName" class="form-input" placeholder="Kamga" />
+                    <label for="lastName" data-i18n="profile.last_name"></label>
+                    <input type="text" id="lastName" class="form-input" autocomplete="family-name" />
                   </div>
                 </div>
               </div>
 
               <div class="form-section">
-                <div class="form-section-title">Contact</div>
+                <div class="form-section-title" data-i18n="profile.section_contact"></div>
                 <div class="form-group">
-                  <label>Email (optional)</label>
-                  <input type="email" id="email" class="form-input" placeholder="jean@agro.cm" />
+                  <label for="email" data-i18n="profile.email_optional"></label>
+                  <input type="email" id="email" class="form-input" data-i18n-placeholder="profile.email_placeholder" autocomplete="email" />
                 </div>
               </div>
 
               <div class="form-section">
-                <div class="form-section-title">Enterprise</div>
+                <div class="form-section-title" data-i18n="profile.section_farm"></div>
                 <div class="form-row">
                   <div class="form-group">
-                    <label>Company name</label>
-                    <input type="text" id="companyName" class="form-input" placeholder="AgroVert Sarl" />
+                    <label for="companyName" data-i18n="profile.company_name"></label>
+                    <input type="text" id="companyName" class="form-input" data-i18n-placeholder="profile.company_placeholder" />
                   </div>
                   <div class="form-group">
-                    <label>Region</label>
-                    <select id="region" class="form-input">
-                      <option value="">— Select region —</option>
-                      <option>Adamaoua</option><option>Centre</option><option>Est</option>
-                      <option>Extrême-Nord</option><option>Littoral</option><option>Nord</option>
-                      <option>Nord-Ouest</option><option>Ouest</option><option>Sud</option>
-                      <option>Sud-Ouest</option>
-                    </select>
+                    <label for="region" data-i18n="profile.region"></label>
+                    <select id="region" class="form-input" data-placeholder-key="profile.region_placeholder"></select>
                   </div>
                 </div>
               </div>
 
               <button class="btn btn-primary" onclick="saveProfile()" id="saveBtn">
-                Save Changes
+                <span class="spinner"></span><span class="btn-text" data-i18n="profile.save"></span>
               </button>
             </div>
           </div>
@@ -256,25 +250,25 @@
           <div class="p-card">
             <div class="p-card-hdr">
               <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <h3>Change Password</h3>
+              <h3 data-i18n="profile.password_title"></h3>
             </div>
             <div class="p-card-body">
-              <div id="pwdAlert" style="margin-bottom:var(--sp-4);"></div>
+              <div id="pwdAlert" class="alert" role="alert" style="display:none;margin-bottom:var(--sp-4);"></div>
               <div style="display:flex;flex-direction:column;gap:var(--sp-4);">
                 <div class="form-group">
-                  <label>Current password</label>
-                  <input type="password" id="currentPwd" class="form-input" />
+                  <label for="currentPwd" data-i18n="profile.current_password"></label>
+                  <input type="password" id="currentPwd" class="form-input" autocomplete="current-password" />
                 </div>
                 <div class="form-group">
-                  <label>New password (min. 8 characters)</label>
-                  <input type="password" id="newPwd" class="form-input" />
+                  <label for="newPwd" data-i18n="profile.new_password"></label>
+                  <input type="password" id="newPwd" class="form-input" autocomplete="new-password" minlength="8" />
                 </div>
                 <div class="form-group">
-                  <label>Confirm new password</label>
-                  <input type="password" id="confirmPwd" class="form-input" />
+                  <label for="confirmPwd" data-i18n="profile.confirm_password"></label>
+                  <input type="password" id="confirmPwd" class="form-input" autocomplete="new-password" />
                 </div>
                 <div>
-                  <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+                  <button class="btn btn-primary" onclick="changePassword()" id="pwdBtn"><span class="spinner"></span><span class="btn-text" data-i18n="profile.update_password"></span></button>
                 </div>
               </div>
             </div>
@@ -282,12 +276,10 @@
 
           <!-- Danger zone -->
           <div class="danger-zone">
-            <h4>Danger Zone</h4>
-            <p>Deactivating your account will remove access to GREEN. Your analysis data will be preserved.</p>
+            <h4 data-i18n="profile.danger_title"></h4>
+            <p data-i18n="profile.danger_text"></p>
             <button class="btn" onclick="deactivateAccount()"
-                    style="border-color:rgba(239,68,68,.35);color:var(--color-error);background:rgba(239,68,68,.05);">
-              Deactivate Account
-            </button>
+                    style="border-color:rgba(239,68,68,.35);color:var(--color-error);background:rgba(239,68,68,.05);" data-i18n="profile.deactivate"></button>
           </div>
 
         </div><!-- /right -->
@@ -302,78 +294,90 @@
 <script src="/js/app.js"></script>
 <script src="/js/layout.js"></script>
 <script>
+Layout.init({ page: 'profile', titleKey: 'nav.profile', subtitleKey: 'profile.subtitle' });
+
+let profileUser = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
-  App.boot();
-  Layout.init({ page: 'profile', title: 'My Profile', subtitle: 'Account & enterprise settings' });
+  fillRegionSelect(document.getElementById('region'));
   await loadProfile();
   await loadStats();
+});
+
+window.addEventListener('languageChanged', () => {
+  fillRegionSelect(document.getElementById('region'));
+  renderProfileCard();
 });
 
 async function loadProfile() {
   const { data } = await API.auth.me();
   if (!data) return;
-  const user = data.user || data;
-  Auth.updateUser(user);
+  profileUser = data;
+  Auth.updateUser(data);
+  renderProfileCard();
+  document.getElementById('firstName').value   = data.first_name   || '';
+  document.getElementById('lastName').value    = data.last_name    || '';
+  document.getElementById('email').value       = data.email        || '';
+  document.getElementById('companyName').value = data.company_name || '';
+  fillRegionSelect(document.getElementById('region'), data.region || '');
+}
 
-  const initials = getInitials(user.first_name || '', user.last_name || '');
-  document.getElementById('avatarCircle').textContent  = initials;
-  document.getElementById('avatarName').textContent    = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-  document.getElementById('avatarRole').textContent    = user.company_name || 'Agribusiness Manager';
-  document.getElementById('infoPhone').textContent     = user.phone        || '—';
-  document.getElementById('infoEmail').textContent     = user.email        || '—';
-  document.getElementById('infoCompany').textContent   = user.company_name || '—';
-  document.getElementById('infoRegion').textContent    = user.region       || '—';
-
-  document.getElementById('firstName').value   = user.first_name   || '';
-  document.getElementById('lastName').value    = user.last_name    || '';
-  document.getElementById('email').value       = user.email        || '';
-  document.getElementById('companyName').value = user.company_name || '';
-  document.getElementById('region').value      = user.region       || '';
+function renderProfileCard() {
+  const user = profileUser;
+  if (!user) return;
+  document.getElementById('avatarCircle').textContent = getInitials(user.first_name || '', user.last_name || '');
+  document.getElementById('avatarName').textContent   = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+  document.getElementById('avatarRole').textContent   = I18n.t(`profile.roles.${user.role || 'farmer'}`);
+  document.getElementById('infoPhone').textContent    = user.phone        || '—';
+  document.getElementById('infoEmail').textContent    = user.email        || '—';
+  document.getElementById('infoCompany').textContent  = user.company_name || '—';
+  document.getElementById('infoRegion').textContent   = user.region ? regionLabel(user.region) : '—';
 }
 
 async function loadStats() {
   const { data } = await API.dashboard.stats();
   if (!data) return;
-  document.getElementById('statAnalyses').textContent = data.analyses ?? '—';
-  document.getElementById('statDiseases').textContent = data.diseases ?? '—';
-  document.getElementById('statHealthy').textContent = data.healthy ?? '—';
+  document.getElementById('statAnalyses').textContent = I18n.number(data.analyses);
+  document.getElementById('statDiseases').textContent = I18n.number(data.diseases);
+  document.getElementById('statHealthy').textContent  = I18n.number(data.healthy);
 }
 
 async function saveProfile() {
-  const btn = document.getElementById('saveBtn');
-  setButtonLoading(btn, true, 'Saving…');
-  const { data, error } = await API.auth.updateProfile({
+  hideAlert('profileAlert');
+  setButtonLoading('saveBtn', true);
+  // Empty optional fields are sent as "" so that the server clears them
+  const { error } = await API.auth.updateProfile({
     first_name:   document.getElementById('firstName').value.trim(),
     last_name:    document.getElementById('lastName').value.trim(),
-    email:        document.getElementById('email').value.trim() || null,
-    company_name: document.getElementById('companyName').value.trim() || null,
-    region:       document.getElementById('region').value || null,
+    email:        document.getElementById('email').value.trim(),
+    company_name: document.getElementById('companyName').value.trim(),
+    region:       document.getElementById('region').value,
   });
-  setButtonLoading(btn, false, 'Save Changes');
-  if (error) { showAlert(document.getElementById('profileAlert'), error, 'error'); return; }
-  showAlert(document.getElementById('profileAlert'), 'Profile updated successfully.', 'success');
+  setButtonLoading('saveBtn', false);
+  if (error) { showAlert('profileAlert', error, 'error'); return; }
+  showAlert('profileAlert', I18n.t('profile.saved'), 'success');
   await loadProfile();
   Layout.refreshUser();
 }
 
 async function changePassword() {
-  const cur   = document.getElementById('currentPwd').value;
-  const nw    = document.getElementById('newPwd').value;
-  const conf  = document.getElementById('confirmPwd').value;
-  const alert = document.getElementById('pwdAlert');
-  if (!cur || !nw) { showAlert(alert, 'Please fill all password fields.', 'error'); return; }
-  if (nw !== conf)  { showAlert(alert, 'Passwords do not match.', 'error'); return; }
-  if (nw.length < 8){ showAlert(alert, 'Password must be at least 8 characters.', 'error'); return; }
+  const cur  = document.getElementById('currentPwd').value;
+  const nw   = document.getElementById('newPwd').value;
+  const conf = document.getElementById('confirmPwd').value;
+  hideAlert('pwdAlert');
+  if (!cur || !nw || !conf) { showAlert('pwdAlert', I18n.t('profile.err_fill'), 'error'); return; }
+  if (nw !== conf)          { showAlert('pwdAlert', I18n.t('profile.err_mismatch'), 'error'); return; }
+  if (nw.length < 8)        { showAlert('pwdAlert', I18n.t('profile.err_length'), 'error'); return; }
+  setButtonLoading('pwdBtn', true);
   const { error } = await API.auth.changePassword({ current_password: cur, new_password: nw });
-  if (error) { showAlert(alert, error, 'error'); return; }
-  showAlert(alert, 'Password changed successfully.', 'success');
-  document.getElementById('currentPwd').value = '';
-  document.getElementById('newPwd').value     = '';
-  document.getElementById('confirmPwd').value = '';
+  setButtonLoading('pwdBtn', false);
+  if (error) { showAlert('pwdAlert', error, 'error'); return; }
+  showAlert('pwdAlert', I18n.t('profile.password_changed'), 'success');
+  ['currentPwd', 'newPwd', 'confirmPwd'].forEach(id => { document.getElementById(id).value = ''; });
 }
 
 async function deactivateAccount() {
-  if (!confirm('Are you sure you want to deactivate your account? This cannot be undone.')) return;
+  if (!App.confirm(I18n.t('profile.deactivate_confirm'))) return;
   const { error } = await API.auth.deleteAccount();
   if (error) { App.toast(error, 'error'); return; }
   App.logout();

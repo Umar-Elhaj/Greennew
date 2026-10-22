@@ -219,16 +219,23 @@ async def benchmark_page():
 @app.get("/api/health", tags=["Health"])
 async def health_check():
     """Returns server status and which models are already loaded."""
+    from config import GEMINI_API_KEY, MODEL_VERSION, WEATHER_API_KEY
     from inference import _model as _eff_model
     from routers.chatbot_router import _chunks
     return {
         "status":            "ok",
         "app":               APP_NAME,
         "version":           APP_VERSION,
+        "model_version":     MODEL_VERSION,
         "models": {
             "efficientnet":  "ready" if _eff_model  is not None else "lazy",
             "rag_index":     "ready" if len(_chunks) > 0             else "lazy",
-        }
+        },
+        # Optional services: false = feature disabled with a clear message in the UI
+        "services": {
+            "greenbot": bool(GEMINI_API_KEY),
+            "weather":  bool(WEATHER_API_KEY),
+        },
     }
 
 
