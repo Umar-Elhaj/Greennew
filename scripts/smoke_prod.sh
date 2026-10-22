@@ -69,13 +69,17 @@ else
   fail "POST /api/camera/upload (HTTP $code, ${secs}s): $(head -c 200 "$TMP/analysis.json")"
 fi
 
-# 5. stored image: readable with token, refused without
+# 5. stored image: readable with the token or the signed URL the API returned,
+#    refused (401) with neither
 IMG_URL="$(json x "d.get('image_path') or ''" "$TMP/analysis.json")"
 if [ -n "$IMG_URL" ]; then
-  code=$(curl -s -o "$TMP/img" -w '%{http_code}' "${AUTH[@]}" "$BASE$IMG_URL")
+  BARE="${IMG_URL%%\?*}"
+  code=$(curl -s -o "$TMP/img" -w '%{http_code}' "${AUTH[@]}" "$BASE$BARE")
   ctype=$(file -b --mime-type "$TMP/img" 2>/dev/null || echo "?")
   [ "$code" = 200 ] && pass "GET stored image with token ($ctype)" || fail "GET stored image with token (HTTP $code)"
   code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE$IMG_URL")
+  [ "$code" = 200 ] && pass "GET stored image with signed URL" || fail "GET stored image with signed URL (HTTP $code)"
+  code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE$BARE")
   [ "$code" = 401 ] && pass "GET stored image without token → 401" || fail "GET stored image without token (HTTP $code, expected 401)"
 else
   fail "stored image path missing from the analysis response"
