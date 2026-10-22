@@ -21,7 +21,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 - [x] 0.8 Harnais : `ruff` configuré sur `backend/` — « All checks passed! »
 - [x] 0.9 Nettoyage : suppression de `backend/=1.40.0`
 - [x] 0.10 Nettoyage : `DEBUG=false` par défaut ; `SECRET_KEY` obligatoire si `DEBUG=false` ; `CORS_ORIGINS` configurable sans `*` + credentials
-- [ ] CP1 — résumé d'audit + prémisses P1–P5 + choix par défaut
+- [x] CP1 — résumé d'audit + prémisses P1–P5 + choix par défaut (réponses humaines du 22/10/2026 : D3–D8)
 
 ## LOT 1 — Supabase via `DATABASE_URL` uniquement
 
@@ -100,12 +100,23 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 
 | # | Décision | Justification |
 |---|---|---|
+| D3 | P1 : file d'attente IndexedDB côté navigateur (a) ; envoi direct par le Pi (c) **documenté seulement** (contrat d'API, pas de code serveur ni rover) | Choix humain au CP1. |
+| D4 | P2 : `mission_id` + `cell_index` sur chaque analyse, GPS facultatif, rattachement serveur par point-dans-polygone | Défaut accepté (pas de GPS garanti sur le rover). |
+| D5 | P3 : IndexedDB = copie hors ligne ; le serveur reste la source de vérité | Défaut accepté. |
+| D6 | P4 : ONNX Runtime en production, PyTorch en dev seulement, après test de parité | Défaut accepté (limites LVE du mutualisé). |
+| D7 | P5 : **frontend conservé sur Vercel** ; `vercel.json` réécrit `/api/*` vers le domaine o2switch (même origine vue du navigateur, donc pas de CORS nécessaire) ; `CORS_ORIGINS` limité au domaine Vercel en secours ; images compressées côté client avant envoi (limite de corps des proxys) ; images affichées via `fetch` + jeton → `blob:` (une balise `<img>` ne porte pas l'en-tête `Authorization`) | Choix humain au CP1. |
+| D8 | Contenu inventé retiré (notes, badges « vérifié », marques réelles, moyennes régionales, chiffres marketing) ; catalogue marqué « aperçu, prix indicatifs » ; benchmark comparé à l'historique propre de l'utilisateur. YOLO retiré du README (travail futur, `best.pt` conservé) | Choix humain au CP1. |
 | D2 | Dépendances de dev dans `backend/requirements-dev.txt` (pytest, ruff, onnx) | Ne pas alourdir le serveur de production. |
 | D1 | Clone de `Umar-Elhaj/Greennew` dans `Greennew/` (et non `TCHOUANANG-dimitri/GREEN`) | Le prompt maître cible ce dépôt ; HEAD distant = `36d4768`, identique au contexte vérifié. |
 
 ## Blocages
 
 _Aucun pour l'instant._
+
+## Actions humaines en attente
+
+1. Fournir le domaine public de l'API sur o2switch (pour la réécriture `/api/*` de `vercel.json`, lot 7).
+2. T16 : faire valider par un agronome la correspondance classe du modèle → fiche maladie (lot 4).
 
 ## Écarts constatés par rapport au contexte fourni
 
