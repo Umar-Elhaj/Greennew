@@ -45,28 +45,28 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 
 - [x] 3.1 `i18n.js` étendu (attributs, interpolation, pluriels, `Intl` fr-CM/en-CM XAF), langue appliquée avant le premier rendu, sélecteur dans l'en-tête
 - [x] 3.2 Dictionnaire hiérarchisé + glossaire `docs/i18n_glossary.md` — sources `frontend/i18n/<ns>.json` → `js/translations.js` (`scripts/build_i18n.py`), 754 clés/langue
-- [~] 3.3 Pages : balisage `data-i18n*` de toutes les pages — 13/14 pages faites ; `map.html` réécrite au lot 5 (54 chaînes restantes, toutes dans `map.html`)
+- [x] 3.3 Pages : balisage `data-i18n*` de toutes les pages (14/14 ; GREEN Data au lot 6)
 - [x] 3.4 JS dynamique : chaînes JS, toasts, Chart.js, popups Leaflet, redessin sur `languageChanged`
 - [x] 3.5 Backend : `Accept-Language`/`lang`, `diseases.json` fr/en, erreurs API, GreenBot dans la langue de l'utilisateur
-- [ ] 3.6 `check_i18n.py` vert + Playwright vert dans les deux langues (après le lot 5)
+- [x] 3.6 `check_i18n.py` vert + Playwright vert dans les deux langues — `check_i18n: 889 keys/lang, 0 problem(s)` ; Playwright 70 passed (56 balayages + 14 parcours)
 
 ## LOT 4 — Audit et réparation fonctionnelle
 
-- [~] 4.1 Corriger chaque ligne « cassé »/« partiel » d'`AUDIT.md` (test ou étape Playwright à chaque fois)
+- [x] 4.1 Corriger chaque ligne « cassé »/« partiel » d'`AUDIT.md` (test ou étape Playwright à chaque fois)
 - [x] 4.2 Legacy drone : `drone.html` hors navigation + redirection ; `drone_router` supprimé s'il n'a plus d'appelant — `drone.html`, `drone.css`, `drone_router.py` et `API.drone` supprimés (seul appelant : la page morte) ; `/drone` et `/drone.html` → 307 `/camera` (test)
-- [~] 4.3 Caméra : file d'attente IndexedDB (P1-a), indicateur « N en attente », envoi au retour du réseau, reprise, choix parcelle/mission — fait sauf le choix de mission (lot 5) ; preuve : `qa/flows.spec.ts` « camera: photos imported offline… »
+- [x] 4.3 Caméra : file d'attente IndexedDB (P1-a), indicateur « N en attente », envoi au retour du réseau, reprise, choix parcelle/mission/cellule — preuves : `qa/flows.spec.ts` « camera: photos imported offline… », « captures are tagged with the mission and the cell »
 
 ## LOT 5 — GREEN Map
 
-- [ ] 5.1 Panneau des parcelles (nom, culture, surface, statut de synchro, dernière analyse, centrage)
-- [ ] 5.2 Délimitation : points déplaçables, annuler, ≥ 3 points, « Ajouter ma position » (précision, alerte > 15 m), fond satellite Esri
-- [ ] 5.3 Validation : `turf.kinks`, surface/périmètre/centroïde/emprise, chevauchement, région détectée
-- [ ] 5.4 Formulaire + IndexedDB `pending_sync` → `POST /api/parcels` (GeoJSON Polygon WGS84 [lng, lat]) → `synced` ; file d'opérations hors ligne (le serveur gagne, brouillon local conservé)
-- [ ] 5.5 Quadrillage (1–50 m, défaut 5 m), cellules numérotées, serpentin le long de l'axe long, départ choisi, distance/durée, garde-fou 5 000 cellules
-- [ ] 5.6 Table `missions` + exports JSON/GeoJSON + `GET /api/missions/{id}/waypoints` + `docs/rover_mission_contract.md`
-- [ ] 5.7 `disease_analyses.mission_id` + `cell_index` ; avancement de mission
-- [ ] 5.8 Heatmap choroplèthe par cellule + `GET /api/missions/{id}/heatmap` + légende, filtres, détail de cellule
-- [ ] 5.9 Tests géométrie + Playwright hors ligne + scénario complet (6 analyses → heatmap)
+- [x] 5.1 Panneau des parcelles (nom, culture, surface, statut de synchro, dernière analyse, centrage)
+- [x] 5.2 Délimitation : points déplaçables, annuler, ≥ 3 points, « Ajouter ma position » (précision, alerte > 15 m), fond satellite Esri
+- [x] 5.3 Validation : `turf.kinks`, surface/périmètre/centroïde/emprise, chevauchement, région détectée
+- [x] 5.4 Formulaire + IndexedDB `pending_sync` → `POST /api/parcels` (GeoJSON Polygon WGS84 [lng, lat]) → `synced` ; file d'opérations hors ligne (le serveur gagne, brouillon local conservé)
+- [x] 5.5 Quadrillage (1–50 m, défaut 5 m), cellules numérotées, serpentin le long de l'axe long, départ choisi, distance/durée, garde-fou 5 000 cellules
+- [x] 5.6 Table `missions` + exports JSON/GeoJSON + `GET /api/missions/{id}/waypoints` + `docs/rover_mission_contract.md`
+- [x] 5.7 `disease_analyses.mission_id` + `cell_index` ; avancement de mission
+- [x] 5.8 Heatmap choroplèthe par cellule + `GET /api/missions/{id}/heatmap` + légende, filtres, détail de cellule
+- [x] 5.9 Tests géométrie + Playwright hors ligne + scénario complet (6 analyses → heatmap) — `test_geo.py` (21), `test_parcels.py` (11), `test_missions.py` (5) ; flows « GREEN Map: … » (3)
 
 ## LOT 6 — GREEN Data
 
@@ -122,6 +122,9 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 | D22 | Marché = catalogue de types d'intrants génériques à prix indicatifs ; marques, photos de produits (licence inconnue), panier et formulaire factice supprimés | D8. |
 | D23 | Benchmark → « Ma progression » (historique propre, `GET /api/dashboard/progress`) | D8 ; aucune moyenne inventée. |
 | D24 | `GEMINI_MODEL` configurable, défaut `gemini-3.1-flash-lite` (vérifié stable sur ai.google.dev le 22/10/2026 ; `gemini-3.5-flash-lite` recommandé pour les nouveaux projets) | Pas de changement de comportement sans décision humaine. |
+| D25 | Quadrillage et parcours calculés par le serveur (Python pur), grille orientée selon l'axe long, détours par des cellules de transit ; Turf côté client seulement pour valider le tracé hors ligne | Une seule implémentation testable (surface, nombre de cellules, absence de saut) ; l'aperçu de grille demande le réseau. |
+| D26 | Région détectée côté serveur par point-dans-polygone (geoBoundaries ADM1 Cameroun, CC BY 3.0, `backend/data/cameroon_regions.json`) | Les boîtes englobantes d'origine se chevauchaient (Buea → « Littoral »). |
+| D27 | Cellules numérotées à partir de 1 (affichage = stockage) ; cellule « non analysée » = aucune analyse dans la cellule pour les filtres choisis | Lisible pour l'exploitant et le rover. |
 | D2 | Dépendances de dev dans `backend/requirements-dev.txt` (pytest, ruff, onnx) | Ne pas alourdir le serveur de production. |
 | D1 | Clone de `Umar-Elhaj/Greennew` dans `Greennew/` (et non `TCHOUANANG-dimitri/GREEN`) | Le prompt maître cible ce dépôt ; HEAD distant = `36d4768`, identique au contexte vérifié. |
 

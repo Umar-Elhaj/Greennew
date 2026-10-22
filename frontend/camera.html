@@ -114,6 +114,22 @@
               <option value="" data-i18n="camera.no_parcel"></option>
             </select>
           </div>
+          <div id="missionBox" hidden>
+            <label class="f-lbl" for="missionSelect" data-i18n="camera.mission"></label>
+            <select id="missionSelect" class="device-select">
+              <option value="" data-i18n="camera.no_mission"></option>
+            </select>
+          </div>
+          <div id="cellBox" hidden>
+            <label class="f-lbl" for="cellInput" data-i18n="camera.cell"></label>
+            <div class="auto-row">
+              <input type="number" id="cellInput" class="form-input" min="1" style="width:90px;" />
+              <span id="cellTotal" class="gps-info"></span>
+              <button type="button" class="btn" id="nextCellBtn" style="font-size:var(--text-xs);" data-i18n="camera.next_cell"></button>
+            </div>
+            <label class="check-row" style="margin-top:var(--sp-2);"><input type="checkbox" id="autoAdvance" checked /> <span data-i18n="camera.auto_advance"></span></label>
+            <div class="gps-info" data-i18n="camera.cell_hint"></div>
+          </div>
           <label class="check-row"><input type="checkbox" id="gpsToggle" /> <span data-i18n="camera.attach_gps"></span></label>
           <div class="gps-info" id="gpsInfo"></div>
         </div>
@@ -297,6 +313,8 @@ document.addEventListener('DOMContentLoaded', () => {
   $('gpsToggle').addEventListener('change', toggleGps);
   $('uploadInput').addEventListener('change', e => queueFiles(e.target.files));
   $('retryAllBtn').addEventListener('click', () => UploadQueue.retryFailed());
+  $('missionSelect').addEventListener('change', () => { $('cellInput').value = ''; onMissionChange(); });
+  $('nextCellBtn').addEventListener('click', nextCell);
   const zone = $('uploadZone');
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
   zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
@@ -336,6 +354,7 @@ window.addEventListener('languageChanged', () => {
   renderResult();
   renderRecent();
   renderGps();
+  onMissionChange();
   $('vpHint').textContent = I18n.t(`camera.vp_hint.${S.mode}`);
 });
 
@@ -397,8 +416,54 @@ async function loadParcels() {
     o.textContent = p.name;
     sel.appendChild(o);
   });
-  const wanted = new URLSearchParams(location.search).get('parcel_id');
-  if (wanted) sel.value = wanted;
+  const q = new URLSearchParams(location.search);
+  if (q.get('parcel_id')) sel.value = q.get('parcel_id');
+  sel.addEventListener('change', () => loadMissions(null));
+  await loadMissions(q.get('mission_id'));
+}
+
+/* Missions of the chosen parcel: images are tagged with mission + cell */
+let missions = [];
+async function loadMissions(wanted) {
+  const parcel = $('parcelSelect').value;
+  const sel = $('missionSelect');
+  sel.querySelectorAll('option:not([value=""])').forEach(o => o.remove());
+  missions = [];
+  if (parcel) {
+    const { data } = await API.missions.list(parcel);
+    missions = Array.isArray(data) ? data : [];
+  }
+  missions.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m.id;
+    o.textContent = m.name || `#${m.id}`;
+    sel.appendChild(o);
+  });
+  $('missionBox').hidden = !missions.length;
+  if (wanted && missions.some(m => String(m.id) === String(wanted))) sel.value = wanted;
+  onMissionChange();
+}
+
+function currentMission() {
+  return missions.find(m => String(m.id) === $('missionSelect').value) || null;
+}
+
+function onMissionChange() {
+  const m = currentMission();
+  $('cellBox').hidden = !m;
+  if (m) {
+    $('cellInput').max = m.cells_total;
+    $('cellTotal').textContent = I18n.t('camera.cell_of', { n: m.cells_total });
+    if (!$('cellInput').value) $('cellInput').value = 1;
+  } else {
+    $('cellInput').value = '';
+  }
+}
+
+function nextCell() {
+  const m = currentMission();
+  const v = parseInt($('cellInput').value, 10) || 0;
+  if (m && v < m.cells_total) $('cellInput').value = v + 1;
 }
 
 function toggleGps() {
@@ -426,6 +491,12 @@ function captureMeta(source) {
   const meta = { source };
   const parcel = $('parcelSelect').value;
   if (parcel) meta.parcel_id = parcel;
+  const mission = currentMission();
+  if (mission) {
+    meta.mission_id = mission.id;
+    const cell = parseInt($('cellInput').value, 10);
+    if (cell >= 1 && cell <= mission.cells_total) meta.cell_index = cell;
+  }
   if ($('gpsToggle').checked && S.position) {
     meta.latitude = S.position.coords.latitude.toFixed(7);
     meta.longitude = S.position.coords.longitude.toFixed(7);
@@ -436,6 +507,7 @@ function captureMeta(source) {
 async function enqueue(blob, source) {
   try {
     await UploadQueue.add(blob, captureMeta(source));
+    if (currentMission() && $('autoAdvance').checked && source !== 'upload') nextCell();
     App.toast(I18n.t(navigator.onLine ? 'camera.captured' : 'camera.queued_offline'), 'info', 2500);
   } catch (e) {
     App.toast(I18n.t('common.errors.generic'), 'error');

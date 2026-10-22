@@ -272,7 +272,14 @@ window.GREEN_I18N_DICT = {
     "captured_at": "Captured {{date}}"
    },
    "recent": "Recent analyses",
-   "recent_empty": "No analysis yet."
+   "recent_empty": "No analysis yet.",
+   "mission": "Mission",
+   "no_mission": "No mission",
+   "cell": "Cell",
+   "cell_of": "of {{n}}",
+   "next_cell": "Next cell",
+   "auto_advance": "Move to the next cell after each capture",
+   "cell_hint": "Leave empty if the image has a GPS position: the cell is found automatically."
   },
   "chatbot": {
    "subtitle": "AI agronomic assistant",
@@ -1380,7 +1387,14 @@ window.GREEN_I18N_DICT = {
     "captured_at": "Capturée le {{date}}"
    },
    "recent": "Analyses récentes",
-   "recent_empty": "Aucune analyse pour l'instant."
+   "recent_empty": "Aucune analyse pour l'instant.",
+   "mission": "Mission",
+   "no_mission": "Aucune mission",
+   "cell": "Cellule",
+   "cell_of": "sur {{n}}",
+   "next_cell": "Cellule suivante",
+   "auto_advance": "Passer à la cellule suivante après chaque capture",
+   "cell_hint": "Laissez vide si l'image a une position GPS : la cellule est trouvée automatiquement."
   },
   "chatbot": {
    "subtitle": "Assistant agronomique IA",

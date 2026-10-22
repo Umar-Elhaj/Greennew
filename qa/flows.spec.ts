@@ -306,3 +306,20 @@ test('GREEN Map: parcel -> grid -> mission -> 6 analyses -> heatmap', async ({ p
   const wp = await (await request.get(`/api/missions/${missionId}/waypoints`, { headers: auth })).json();
   expect(wp.waypoints.length).toBe(40);
 });
+
+test('camera: captures are tagged with the mission and the cell', async ({ page, request }) => {
+  const s = await newUser(request);
+  const auth = { Authorization: `Bearer ${s.token}` };
+  const ring = [[11.5, 3.85], [11.5005, 3.85], [11.5005, 3.8502], [11.5, 3.8502], [11.5, 3.85]];
+  const parcel = await (await request.post('/api/parcels', { headers: auth, data: { name: 'P', geometry: { type: 'Polygon', coordinates: [ring] } } })).json();
+  const mission = await (await request.post('/api/missions', { headers: auth, data: { parcel_id: parcel.id, cell_size_m: 10 } })).json();
+  await signIn(page, s);
+  await page.goto(`/camera?parcel_id=${parcel.id}&mission_id=${mission.id}`);
+  await expect(page.locator('#missionSelect')).toHaveValue(String(mission.id));
+  await page.fill('#cellInput', '3');
+  await page.click('#tabPhotos');
+  await page.setInputFiles('#uploadInput', [{ name: 'a.png', mimeType: 'image/png', buffer: solidPng('#30a040') }]);
+  await expect(page.locator('#resultBody')).toContainText('pas un diagnostic', { timeout: 15000 });
+  const hm = await (await request.get(`/api/missions/${mission.id}/heatmap`, { headers: auth })).json();
+  expect(hm.cells.map((c: any) => c.index)).toEqual([3]);
+});

@@ -17,7 +17,11 @@
     },
     "panel_title": "Capture",
     "mode_label": "Image source",
-    "modes": { "device": "Camera", "photos": "Photos", "rover": "Rover" },
+    "modes": {
+      "device": "Camera",
+      "photos": "Photos",
+      "rover": "Rover"
+    },
     "context": "Context",
     "parcel": "Parcel",
     "no_parcel": "No parcel",
@@ -55,7 +59,11 @@
     "seconds": "{{n}} s",
     "viewer": "Preview",
     "live": "LIVE",
-    "vp_hint": { "device": "Start the camera to see the preview", "photos": "Imported images are analysed automatically", "rover": "Enter the rover address and show the stream" },
+    "vp_hint": {
+      "device": "Start the camera to see the preview",
+      "photos": "Imported images are analysed automatically",
+      "rover": "Enter the rover address and show the stream"
+    },
     "captured": "Image added to the queue.",
     "queued_offline": "You are offline: the image is kept on this device and will be sent automatically.",
     "sending": "Sending an image…",
@@ -71,7 +79,14 @@
       "captured_at": "Captured {{date}}"
     },
     "recent": "Recent analyses",
-    "recent_empty": "No analysis yet."
+    "recent_empty": "No analysis yet.",
+    "mission": "Mission",
+    "no_mission": "No mission",
+    "cell": "Cell",
+    "cell_of": "of {{n}}",
+    "next_cell": "Next cell",
+    "auto_advance": "Move to the next cell after each capture",
+    "cell_hint": "Leave empty if the image has a GPS position: the cell is found automatically."
   },
   "fr": {
     "subtitle": "Analysez des images de vos cultures",
@@ -91,7 +106,11 @@
     },
     "panel_title": "Capture",
     "mode_label": "Source des images",
-    "modes": { "device": "Caméra", "photos": "Photos", "rover": "Rover" },
+    "modes": {
+      "device": "Caméra",
+      "photos": "Photos",
+      "rover": "Rover"
+    },
     "context": "Contexte",
     "parcel": "Parcelle",
     "no_parcel": "Aucune parcelle",
@@ -129,7 +148,11 @@
     "seconds": "{{n}} s",
     "viewer": "Aperçu",
     "live": "EN DIRECT",
-    "vp_hint": { "device": "Démarrez la caméra pour voir l'aperçu", "photos": "Les images importées sont analysées automatiquement", "rover": "Saisissez l'adresse du rover et affichez le flux" },
+    "vp_hint": {
+      "device": "Démarrez la caméra pour voir l'aperçu",
+      "photos": "Les images importées sont analysées automatiquement",
+      "rover": "Saisissez l'adresse du rover et affichez le flux"
+    },
     "captured": "Image ajoutée à la file d'envoi.",
     "queued_offline": "Vous êtes hors ligne : l'image est conservée sur cet appareil et sera envoyée automatiquement.",
     "sending": "Envoi d'une image…",
@@ -145,6 +168,13 @@
       "captured_at": "Capturée le {{date}}"
     },
     "recent": "Analyses récentes",
-    "recent_empty": "Aucune analyse pour l'instant."
+    "recent_empty": "Aucune analyse pour l'instant.",
+    "mission": "Mission",
+    "no_mission": "Aucune mission",
+    "cell": "Cellule",
+    "cell_of": "sur {{n}}",
+    "next_cell": "Cellule suivante",
+    "auto_advance": "Passer à la cellule suivante après chaque capture",
+    "cell_hint": "Laissez vide si l'image a une position GPS : la cellule est trouvée automatiquement."
   }
 }
