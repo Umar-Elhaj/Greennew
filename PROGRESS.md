@@ -35,11 +35,11 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 
 ## LOT 2 — Stockage des images d'inférence
 
-- [ ] 2.1 `MEDIA_DIR/<yyyy>/<mm>/<uuid>.jpg` + miniature `_thumb.jpg` (320 px) ; colonnes taille/dimensions ; déduplication sha256 par utilisateur
-- [ ] 2.2 `GET /api/media/{path}` authentifié (propriétaire / agronome / admin), anti-traversée, cache privé ; suppression du montage public
-- [ ] 2.3 Upload : taille max (`MAX_UPLOAD_MB`, 8 Mo), `verify()` Pillow, réencodage JPEG, EXIF retiré sauf GPS (stocké si consentement)
-- [ ] 2.4 `scripts/media_report.py` (disque, fichiers, orphelins ; `--apply` pour supprimer)
-- [ ] 2.5 Tests 401/403/200, traversée `../`, déduplication
+- [x] 2.1 `MEDIA_DIR/<yyyy>/<mm>/<uuid>.jpg` + miniature `_thumb.jpg` (320 px) ; colonnes taille/dimensions ; déduplication sha256 par utilisateur
+- [x] 2.2 `GET /api/media/{path}` authentifié (propriétaire / agronome / admin), anti-traversée, cache privé ; suppression du montage public
+- [x] 2.3 Upload : taille max (`MAX_UPLOAD_MB`, 8 Mo), `verify()` Pillow, réencodage JPEG, EXIF retiré sauf GPS (stocké si consentement)
+- [x] 2.4 `scripts/media_report.py` (disque, fichiers, orphelins ; `--apply` pour supprimer)
+- [x] 2.5 Tests 401/403/200, traversée `../`, déduplication — `test_media.py` (14 tests), `test_media_report.py` ; SQLite 49 passed, Postgres 52 passed ; `smoke_prod.sh` local : 7/8 PASS (GREEN Data attendu au lot 6)
 
 ## LOT 3 — Internationalisation FR/EN intégrale
 
@@ -108,6 +108,11 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 | D8 | Contenu inventé retiré (notes, badges « vérifié », marques réelles, moyennes régionales, chiffres marketing) ; catalogue marqué « aperçu, prix indicatifs » ; benchmark comparé à l'historique propre de l'utilisateur. YOLO retiré du README (travail futur, `best.pt` conservé) | Choix humain au CP1. |
 | D9 | CP2 présenté une seule fois, quand les révisions additives des lots 2, 5 et 6 existent ; en production, la seule opération sera `alembic stamp 0001_baseline` puis `alembic upgrade head` | La production est déjà au niveau de la baseline (vérifié : `models.py` ⇄ SQL de `36d4768` sans écart sur Postgres 16) ; une seule fenêtre de migration validée. |
 | D10 | `models.py` aligné sur le schéma Supabase réel (identity, jsonb, `ON DELETE CASCADE`, `NOT NULL`, noms d'index) | Sans ça, Alembic aurait généré des différences parasites ; `compare_metadata` = [] est maintenant testé. |
+| D11 | Images servies par `GET /api/media/{path}` avec en-tête `Authorization` **ou** URL signée HMAC (utilisateur + expiration 1–2 h) renvoyée par l'API | Une balise `<img>` (historique, popups Leaflet, miniatures de heatmap) ne peut pas porter l'en-tête ; sans signature ni jeton : 401. |
+| D12 | Toutes les métadonnées EXIF sont retirées du fichier ; la position GPS EXIF n'est stockée en base que si `users.location_consent` ; une position fournie explicitement l'emporte | Vie privée par défaut ; consentement explicite et distinct de `dataset_consent`. |
+| D13 | Images stockées réduites à 2048 px de grand côté, JPEG q88 | Le modèle travaille en 224 px ; économise le quota disque du mutualisé. |
+| D14 | `users.role` créé dès la révision 0002 (utilisé par l'accès aux médias), garde GREEN Data au lot 6 | Une seule migration pour les colonnes utilisateur. |
+| D15 | Les anciens chemins publics `/assets/captures/...` ne sont plus servis | Ils étaient publics ; `media_report.py` les signale. |
 | D2 | Dépendances de dev dans `backend/requirements-dev.txt` (pytest, ruff, onnx) | Ne pas alourdir le serveur de production. |
 | D1 | Clone de `Umar-Elhaj/Greennew` dans `Greennew/` (et non `TCHOUANANG-dimitri/GREEN`) | Le prompt maître cible ce dépôt ; HEAD distant = `36d4768`, identique au contexte vérifié. |
 

@@ -212,3 +212,11 @@ Serveur : `DEBUG=true DATABASE_URL=sqlite:///… uvicorn main:app` (venv Python 
 | `.venv/bin/ruff check backend` | 11 erreurs (imports inutilisés, variable morte) → corrigées, « All checks passed! » |
 | `python scripts/check_i18n.py --summary` | 532 chaînes HTML statiques non balisées |
 | `npx playwright test` (dans `qa/`) | 21 passed, 35 failed : 28 × FR (texte anglais visible), `dashboard` (`pageerror: data.map is not a function`, 4 combinaisons), débordement horizontal à 390 px sur `camera` (86 px), `calendar`, `economics`, `benchmark`, `marketplace` (164 à 366 px) |
+
+### Défauts découverts pendant les lots 1–2
+
+| # | Défaut | État | Correction |
+|---|---|---|---|
+| T17 | `dataset_consent` absent de `UserResponse`/`UserUpdate` : aucun utilisateur ne pouvait consentir, GREEN Data serait toujours vide | cassé | Exposé et modifiable via `PUT /api/auth/me` (lot 2) |
+| T18 | `parcel_id` d'upload non vérifié : une analyse pouvait être rattachée à la parcelle d'un autre utilisateur | cassé (sécurité) | 404 si la parcelle n'appartient pas à l'utilisateur (lot 2) |
+| T19 | En-tête `Authorization` absent → 403 au lieu de 401 | partiel | `HTTPBearer(auto_error=False)` + 401 (lot 2) |
