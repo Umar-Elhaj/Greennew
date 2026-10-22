@@ -123,6 +123,13 @@ async function ensureUser(request: APIRequestContext) {
     });
     expect(up.status(), await up.text()).toBe(200);
   }
+  // …and a parcel, so GREEN Map renders real geometry
+  const ring = [[11.5, 3.85], [11.5006, 3.85], [11.5006, 3.8503], [11.5, 3.8503], [11.5, 3.85]];
+  const pr = await request.post('/api/parcels', {
+    headers: { Authorization: `Bearer ${body.access_token}` },
+    data: { name: 'E2E-1', crop_type: 'Maize', geometry: { type: 'Polygon', coordinates: [ring] } },
+  });
+  expect(pr.status(), await pr.text()).toBe(201);
   return session;
 }
 

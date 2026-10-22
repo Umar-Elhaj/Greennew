@@ -1,5 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
+<!--
+  GREEN App — GREEN Map
+  Parcels (drawn and edited offline, synced through js/parcel-store.js),
+  grid + serpentine path computed by the server (missions), and the
+  per-cell heatmap of analysis results.
+-->
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,1026 +22,923 @@
   <link rel="stylesheet" href="/css/main.css" />
   <link rel="stylesheet" href="/css/app.css" />
   <link rel="stylesheet" href="/css/mobile.css" />
-
-  <!-- Leaflet CSS -->
+  <!-- Leaflet 1.9.4 (map) and Turf 7.1.0 (offline geometry checks), exact versions -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Leaflet Draw CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
-
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@turf/turf@7.1.0/turf.min.js"></script>
   <style>
-    /* ---- Page layout --------------------------------------- */
-    .map-page-layout {
-      display: grid;
-      grid-template-columns: 340px 1fr;
-      gap: 0;
-      height: calc(100vh - var(--header-height) - var(--sp-12));
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-    }
+    .app-content.map-content { padding: 0; display: flex; overflow: hidden; }
+    .map-page { display: flex; flex: 1; min-height: calc(100vh - 64px); min-width: 0; }
+    .map-side { width: 360px; flex: none; background: var(--surface-1); border-right: 1px solid var(--border-subtle);
+                overflow-y: auto; display: flex; flex-direction: column; }
+    .map-wrap { position: relative; flex: 1; min-width: 0; }
+    #map { position: absolute; inset: 0; background: var(--bg-muted); }
+    .side-view { padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-4); }
+    .side-view[hidden] { display: none; }
+    .side-hdr { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+    .side-hdr h2 { font-size: var(--text-lg); margin: 0; color: var(--text-primary); }
+    .link-btn { background: none; border: none; padding: 0; color: var(--brand-primary); font: 600 var(--text-sm) var(--font-sans); cursor: pointer; text-align: left; }
+    .note { font-size: var(--text-xs); color: var(--text-muted); line-height: 1.5; }
+    .banner-warn { font-size: var(--text-xs); line-height: 1.5; padding: var(--sp-3); border-radius: var(--radius-md);
+                   background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); color: #92400E; }
+    [data-theme="dark"] .banner-warn { color: #FCD34D; }
+    .banner-err { font-size: var(--text-xs); line-height: 1.5; padding: var(--sp-3); border-radius: var(--radius-md);
+                  background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); color: var(--color-error); }
+    .parcel-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+    .parcel-item { width: 100%; text-align: left; background: var(--surface-2); border: 1px solid var(--border-subtle);
+                   border-radius: var(--radius-md); padding: var(--sp-3); cursor: pointer; font: inherit; color: inherit; }
+    .parcel-item:hover, .parcel-item:focus-visible { border-color: var(--brand-primary); }
+    .parcel-item .pi-top { display: flex; justify-content: space-between; gap: var(--sp-2); align-items: baseline; }
+    .parcel-item .pi-name { font-weight: 600; color: var(--text-primary); }
+    .parcel-item .pi-meta { font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px; }
+    .sync-badge { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+    .sync-synced   { background: rgba(46,204,113,.12); color: var(--brand-primary); }
+    .sync-pending  { background: rgba(245,158,11,.14); color: #b45309; }
+    .sync-conflict, .sync-error { background: rgba(239,68,68,.12); color: var(--color-error); }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2) var(--sp-4); font-size: var(--text-sm); }
+    .stats dt { font-size: var(--text-xs); color: var(--text-muted); }
+    .stats dd { margin: 0; color: var(--text-primary); font-weight: 600; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label, .field .lbl { font-size: var(--text-xs); font-weight: 600; color: var(--text-secondary); }
+    .row { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+    .row > * { flex: 1 1 auto; }
+    .mission-item { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--sp-3); font-size: var(--text-sm); }
+    .mission-item .mi-top { display: flex; justify-content: space-between; gap: var(--sp-2); }
+    .progress { height: 6px; background: var(--bg-muted); border-radius: 999px; overflow: hidden; margin: 6px 0; }
+    .progress > div { height: 100%; background: var(--brand-primary); }
+    .draw-bar { position: absolute; z-index: 1000; left: 50%; transform: translateX(-50%); bottom: 16px; width: min(560px, calc(100% - 24px));
+                background: var(--surface-1); border: 1px solid var(--border-default); border-radius: var(--radius-lg);
+                box-shadow: 0 6px 24px rgba(0,0,0,.18); padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); }
+    .draw-bar[hidden] { display: none; }
+    .draw-bar .db-msg { font-size: var(--text-xs); color: var(--text-secondary); }
+    .draw-bar .db-status { font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
+    .draw-bar .row .btn { font-size: var(--text-sm); }
+    .legend { position: absolute; z-index: 900; right: 10px; top: 64px; background: var(--surface-1); border: 1px solid var(--border-subtle);
+              border-radius: var(--radius-md); padding: var(--sp-2) var(--sp-3); font-size: var(--text-xs); color: var(--text-secondary); max-width: 240px; }
+    .legend[hidden] { display: none; }
+    .legend .lg-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+    .legend .sw { width: 14px; height: 14px; border-radius: 3px; flex: none; border: 1px solid rgba(0,0,0,.15); }
+    .legend .sw.hatch { background: repeating-linear-gradient(45deg, #9ca3af 0 2px, transparent 2px 5px); }
+    .vertex-icon { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid #16a34a; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+    .vertex-icon.first { border-color: #1d4ed8; }
+    .start-icon { width: 18px; height: 18px; border-radius: 50%; background: #1d4ed8; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+    .cell-detail .fiche-body { padding: var(--sp-3) 0; border-bottom: 1px solid var(--border-subtle); }
+    .leaflet-container { font-family: var(--font-sans); }
+    .picking #map { cursor: crosshair; }
     @media (max-width: 900px) {
-      .map-page-layout { grid-template-columns: 1fr; height: auto; }
-      #mapContainer     { height: 400px; order: -1; }
-    }
-
-    /* ---- Left sidebar -------------------------------------- */
-    .map-sidebar {
-      background: var(--surface-1);
-      border-right: 1px solid var(--border-subtle);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .map-sidebar-hdr {
-      padding: var(--sp-5) var(--sp-5);
-      border-bottom: 1px solid var(--border-subtle);
-      background: var(--bg-subtle);
-    }
-    .map-sidebar-title {
-      font-size: var(--text-base);
-      font-weight: var(--weight-semibold);
-      color: var(--text-primary);
-      margin-bottom: var(--sp-4);
-    }
-    .parcel-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: var(--sp-3);
-    }
-    .parcel-item {
-      padding: var(--sp-4);
-      border: 1.5px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      margin-bottom: var(--sp-2);
-      cursor: pointer;
-      transition: all var(--dur-base) var(--ease-out);
-      background: var(--surface-1);
-    }
-    .parcel-item:hover { border-color: var(--brand-primary); }
-    .parcel-item.active {
-      border-color: var(--brand-primary);
-      background: rgba(46,204,113,0.04);
-    }
-    .parcel-item-hdr {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
-    .parcel-item-name {
-      font-size: var(--text-sm);
-      font-weight: var(--weight-semibold);
-      color: var(--text-primary);
-    }
-    .parcel-item-crop {
-      font-size: 10px;
-      padding: 2px 7px;
-      border-radius: var(--radius-full);
-      background: rgba(46,204,113,0.10);
-      color: var(--brand-primary);
-      font-weight: var(--weight-semibold);
-    }
-    .parcel-item-meta {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-    .parcel-actions {
-      display: flex;
-      gap: var(--sp-2);
-      margin-top: var(--sp-3);
-    }
-
-    /* ---- Map container ------------------------------------- */
-    #mapContainer {
-      z-index: 0;
-    }
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-
-    /* Override Leaflet z-index for dark mode */
-    .leaflet-container {
-      background: var(--bg-app) !important;
-      font-family: var(--font-sans) !important;
-    }
-    .leaflet-popup-content-wrapper {
-      background: var(--surface-1) !important;
-      color: var(--text-primary) !important;
-      border: 1px solid var(--border-subtle) !important;
-      border-radius: var(--radius-lg) !important;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
-    }
-    .leaflet-popup-tip { background: var(--surface-1) !important; }
-    .leaflet-popup-content { margin: 12px 16px !important; }
-    .popup-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; color: var(--text-primary); }
-    .popup-sub   { font-size: 12px; color: var(--text-muted); }
-
-    /* ---- Add parcel form modal ----------------------------- */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.55);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
-      padding: var(--sp-4);
-      animation: fadeOverlay var(--dur-base) var(--ease-out);
-    }
-    @keyframes fadeOverlay { from { opacity:0; } to { opacity:1; } }
-
-    .modal {
-      background: var(--surface-1);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-xl);
-      width: 100%;
-      max-width: 520px;
-      max-height: 90vh;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.22);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      animation: slideModal .22s var(--ease-out);
-    }
-    @keyframes slideModal {
-      from { opacity:0; transform: translateY(14px) scale(.98); }
-      to   { opacity:1; transform: translateY(0)    scale(1);   }
-    }
-
-    /* Header gradient */
-    .modal-header {
-      background: linear-gradient(135deg, var(--brand-darker) 0%, var(--brand-dark) 60%, var(--brand-mid) 100%);
-      padding: var(--sp-5) var(--sp-6);
-      display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4);
-      position: relative; overflow: hidden;
-    }
-    .modal-header::before {
-      content:''; position:absolute;
-      width:200px; height:200px;
-      background: rgba(255,255,255,.06);
-      border-radius:50%; right:-40px; top:-70px; pointer-events:none;
-    }
-    .modal-header-left { display:flex; align-items:center; gap:var(--sp-3); position:relative; z-index:1; }
-    .modal-header-icon {
-      width:40px; height:40px; border-radius:var(--radius-md);
-      background:rgba(255,255,255,.15);
-      display:flex; align-items:center; justify-content:center;
-      font-size:18px; flex-shrink:0;
-    }
-    .modal-header-title {
-      font-size:var(--text-base); font-weight:var(--weight-bold); color:#fff; margin:0;
-    }
-    .modal-header-sub {
-      font-size:var(--text-xs); color:rgba(255,255,255,.65); margin:2px 0 0;
-    }
-    .modal-close-btn {
-      position:relative; z-index:1;
-      background: rgba(255,255,255,.15); border:none; cursor:pointer;
-      width:32px; height:32px; border-radius:var(--radius-md);
-      display:flex; align-items:center; justify-content:center;
-      color:#fff; transition: background var(--dur-base) var(--ease-out);
-      flex-shrink:0;
-    }
-    .modal-close-btn:hover { background:rgba(255,255,255,.25); }
-
-    /* Body */
-    .modal-body { padding: var(--sp-6); flex: 1; overflow-y: auto; }
-
-    /* Section label */
-    .form-section-label {
-      font-size: 10px; font-weight:var(--weight-semibold);
-      text-transform:uppercase; letter-spacing:.1em;
-      color:var(--text-muted); margin: 0 0 var(--sp-3);
-      display:flex; align-items:center; gap:var(--sp-2);
-    }
-    .form-section-label::after {
-      content:''; flex:1; height:1px; background:var(--border-subtle);
-    }
-    .form-section + .form-section { margin-top: var(--sp-5); }
-
-    .form-row { margin-bottom: var(--sp-4); }
-    .form-row:last-child { margin-bottom: 0; }
-
-    .form-label {
-      display: block;
-      font-size: var(--text-xs);
-      font-weight: var(--weight-semibold);
-      color: var(--text-secondary);
-      margin-bottom: var(--sp-2);
-    }
-    .form-label span.req { color: var(--color-error); margin-left:2px; }
-
-    .form-input, .form-select {
-      width: 100%;
-      height: 42px;
-      padding: 0 var(--sp-4);
-      background: var(--bg-subtle);
-      border: 1.5px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      color: var(--text-primary);
-      font-size: var(--text-sm);
-      font-family: var(--font-sans);
-      outline: none;
-      box-sizing: border-box;
-      transition: border-color var(--dur-base) var(--ease-out),
-                  box-shadow var(--dur-base) var(--ease-out),
-                  background var(--dur-base) var(--ease-out);
-    }
-    .form-input:hover,  .form-select:hover  { border-color: var(--border-default); background: var(--surface-1); }
-    .form-input:focus,  .form-select:focus  {
-      border-color: var(--input-border-focus);
-      background: var(--surface-1);
-      box-shadow: 0 0 0 3px var(--input-ring);
-    }
-    .form-input.invalid { border-color: var(--color-error); box-shadow: 0 0 0 3px rgba(239,68,68,.15); }
-
-    /* Input with icon prefix */
-    .input-icon-wrap { position:relative; }
-    .input-icon-wrap .input-icon {
-      position:absolute; left:12px; top:50%; transform:translateY(-50%);
-      color:var(--text-muted); pointer-events:none; display:flex; align-items:center;
-    }
-    .input-icon-wrap .form-input { padding-left: 36px; }
-
-    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
-
-    /* Coordinate picker */
-    .coord-picker-hint {
-      margin-top: var(--sp-2);
-      padding: var(--sp-3) var(--sp-4);
-      border-radius: var(--radius-md);
-      background: var(--color-info-bg);
-      border: 1px solid var(--color-info-border);
-      display: flex; align-items: center; gap: var(--sp-2);
-      font-size: var(--text-xs); color: var(--color-info);
-      transition: all var(--dur-base) var(--ease-out);
-    }
-    .coord-picker-hint.active-mode {
-      background: rgba(46,204,113,0.08);
-      border-color: var(--brand-primary);
-      color: var(--text-brand);
-    }
-    .coord-picker-hint svg { flex-shrink:0; }
-
-    /* Modal footer */
-    .modal-footer {
-      padding: var(--sp-4) var(--sp-6);
-      border-top: 1px solid var(--border-subtle);
-      display: flex; gap: var(--sp-3); justify-content: flex-end;
-      background: var(--bg-subtle);
-    }
-
-    /* ---- Empty state in sidebar ---------------------------- */
-    .sidebar-empty {
-      padding: var(--sp-10) var(--sp-5);
-      text-align: center;
-      color: var(--text-muted);
-    }
-    .sidebar-empty svg { opacity: .2; margin-bottom: var(--sp-3); display: block; margin-inline: auto; }
-    .sidebar-empty p   { font-size: var(--text-sm); margin: 0; }
-
-    /* ---- Delete button in parcel list ---------------------- */
-    .del-parcel {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--text-muted);
-      padding: 3px;
-      border-radius: var(--radius-sm);
-      transition: color var(--dur-base) var(--ease-out);
-      display: flex; align-items: center;
-    }
-    .del-parcel:hover { color: var(--color-error); }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ---- Analysis dot on map ------------------------------- */
-    .analysis-marker {
-      width: 12px; height: 12px;
-      border-radius: 50%;
-      border: 2px solid #fff;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-    }
-
-    /* ---- Draw mode banner ---------------------------------- */
-    #drawBanner {
-      display: none;
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 2000;
-      background: var(--brand-darker);
-      color: #fff;
-      border-radius: var(--radius-lg);
-      padding: var(--sp-3) var(--sp-5);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      align-items: center;
-      gap: var(--sp-4);
-      font-size: var(--text-sm);
-      font-weight: var(--weight-medium);
-      white-space: nowrap;
-    }
-    #drawBanner svg { flex-shrink: 0; }
-    #drawBanner .draw-cancel-btn {
-      background: rgba(255,255,255,0.2);
-      border: none; cursor: pointer;
-      color: #fff; padding: 4px 12px;
-      border-radius: var(--radius-md);
-      font-size: var(--text-xs);
-      font-weight: var(--weight-semibold);
-      font-family: var(--font-sans);
-      transition: background var(--dur-base) var(--ease-out);
-    }
-    #drawBanner .draw-cancel-btn:hover { background: rgba(255,255,255,0.3); }
-
-    /* ---- Draw polygon button ------------------------------- */
-    .draw-poly-btn {
-      display: flex; align-items: center; gap: var(--sp-2);
-      width: 100%; height: 42px;
-      padding: 0 var(--sp-4);
-      background: rgba(46,204,113,0.08);
-      border: 1.5px dashed var(--brand-primary);
-      border-radius: var(--radius-md);
-      color: var(--text-brand);
-      font-size: var(--text-sm);
-      font-weight: var(--weight-semibold);
-      font-family: var(--font-sans);
-      cursor: pointer;
-      transition: all var(--dur-base) var(--ease-out);
-    }
-    .draw-poly-btn:hover { background: rgba(46,204,113,0.14); }
-    .draw-poly-btn.has-polygon {
-      background: rgba(46,204,113,0.12);
-      border-style: solid;
+      .map-page { flex-direction: column-reverse; min-height: 0; }
+      .map-wrap { height: 58vh; flex: none; }
+      .map-side { width: 100%; border-right: none; border-top: 1px solid var(--border-subtle); overflow: visible; }
+      .app-content.map-content { overflow: visible; }
     }
   </style>
 </head>
 <body>
 <div class="app-layout" id="appLayout">
   <div class="app-main" id="appMain">
-    <main class="app-content" id="appContent" style="padding-bottom:0;">
+    <main class="app-content map-content" id="appContent">
+      <div class="map-page">
 
-      <!-- Banner row -->
-      <div style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 60%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-6) var(--sp-10);margin-bottom:var(--sp-6);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-6);">
-        <div style="position:absolute;width:240px;height:240px;background:rgba(255,255,255,.05);border-radius:50%;right:-40px;top:-60px;pointer-events:none;"></div>
-        <div style="position:relative;z-index:1;">
-          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-1);">Operations</div>
-          <div style="font-size:var(--text-2xl);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.2;">GREEN Map</div>
-          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.65);margin-top:var(--sp-1);">
-            Manage parcels and visualise disease detections on your field map.
-          </div>
-        </div>
-        <button class="btn btn-primary" style="flex-shrink:0;background:#fff;color:var(--brand-darker);font-weight:600;"
-                onclick="openAddParcel()">
-          + Add Parcel
-        </button>
-      </div>
+        <!-- ===== Side panel ========================================== -->
+        <aside class="map-side" aria-live="polite">
 
-      <!-- Map layout -->
-      <div class="map-page-layout">
+          <!-- Parcel list -->
+          <section class="side-view" id="viewList">
+            <div class="side-hdr">
+              <h2 data-i18n="map.panel.title"></h2>
+              <button type="button" class="btn btn-primary" id="newParcelBtn" data-i18n="map.panel.new"></button>
+            </div>
+            <div class="banner-warn" id="offlineBanner" hidden data-i18n="map.panel.offline"></div>
+            <div class="note" id="pendingOps"></div>
+            <ul class="parcel-list" id="parcelList"></ul>
+            <p class="note" id="parcelEmpty" hidden data-i18n="map.panel.empty"></p>
+          </section>
 
-        <!-- Sidebar -->
-        <div class="map-sidebar">
-          <div class="map-sidebar-hdr">
-            <div class="map-sidebar-title">Parcels</div>
-            <div style="font-size:var(--text-xs);color:var(--text-muted);" id="parcelSummary">Loading...</div>
-          </div>
-          <div class="parcel-list" id="parcelList">
-            <div class="sidebar-empty" id="parcelEmpty">
-              <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-              </svg>
-              <p>No parcels yet.<br/>Click <strong>+ Add Parcel</strong> to create one.</p>
+          <!-- One parcel -->
+          <section class="side-view" id="viewParcel" hidden>
+            <button type="button" class="link-btn" data-back="list">← <span data-i18n="map.panel.title"></span></button>
+            <div class="side-hdr">
+              <h2 id="pName"></h2>
+              <span class="sync-badge" id="pSync"></span>
+            </div>
+            <div id="pConflict" class="banner-err" hidden>
+              <p data-i18n="map.form.conflict" style="margin:0 0 var(--sp-2);"></p>
+              <div class="row">
+                <button type="button" class="btn" id="applyDraftBtn" data-i18n="map.form.apply_draft"></button>
+                <button type="button" class="btn" id="discardDraftBtn" data-i18n="map.form.discard_draft"></button>
+              </div>
+            </div>
+            <div id="pError" class="banner-err" hidden></div>
+            <dl class="stats">
+              <div><dt data-i18n="map.parcel.area"></dt><dd id="pArea">—</dd></div>
+              <div><dt data-i18n="map.parcel.perimeter"></dt><dd id="pPerimeter">—</dd></div>
+              <div><dt data-i18n="map.parcel.crop"></dt><dd id="pCrop">—</dd></div>
+              <div><dt data-i18n="map.parcel.region"></dt><dd id="pRegion">—</dd></div>
+              <div><dt data-i18n="map.parcel.sowing"></dt><dd id="pSowing">—</dd></div>
+              <div><dt data-i18n="nav.history"></dt><dd id="pAnalyses">—</dd></div>
+            </dl>
+            <p class="note" id="pNotes"></p>
+            <div class="row">
+              <button type="button" class="btn" id="zoomBtn" data-i18n="map.parcel.zoom"></button>
+              <button type="button" class="btn" id="editBtn" data-i18n="map.parcel.edit"></button>
+            </div>
+            <button type="button" class="btn btn-primary" id="gridBtn" data-i18n="map.parcel.grid"></button>
+            <p class="note" id="gridUnsynced" hidden data-i18n="map.parcel.unsynced"></p>
+            <h3 style="font-size:var(--text-sm);margin:var(--sp-2) 0 0;" data-i18n="map.mission.list_title"></h3>
+            <div id="missionList" style="display:flex;flex-direction:column;gap:var(--sp-2);"></div>
+          </section>
+
+          <!-- Create / edit form -->
+          <section class="side-view" id="viewForm" hidden>
+            <div class="side-hdr"><h2 id="formTitle"></h2></div>
+            <div class="note" id="formMeasures"></div>
+            <div class="banner-warn" id="formOverlap" hidden></div>
+            <div class="field">
+              <label for="fName" data-i18n="map.form.name"></label>
+              <input type="text" id="fName" class="form-input" maxlength="255" data-i18n-placeholder="map.form.name_placeholder" />
+            </div>
+            <div class="field">
+              <label for="fCrop" data-i18n="map.form.crop"></label>
+              <select id="fCrop" class="form-input">
+                <option value="" data-i18n="map.form.crop_none"></option>
+                <option value="Maize" data-i18n="map.form.crops.Maize"></option>
+                <option value="Cassava" data-i18n="map.form.crops.Cassava"></option>
+                <option value="Tomato" data-i18n="map.form.crops.Tomato"></option>
+                <option value="Groundnut" data-i18n="map.form.crops.Groundnut"></option>
+                <option value="Plantain" data-i18n="map.form.crops.Plantain"></option>
+                <option value="Other" data-i18n="map.form.crops.Other"></option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="fSowing" data-i18n="map.form.sowing_date"></label>
+              <input type="date" id="fSowing" class="form-input" />
+            </div>
+            <div class="field">
+              <label for="fNotes" data-i18n="map.form.notes"></label>
+              <textarea id="fNotes" class="form-input" rows="3" maxlength="2000"></textarea>
+            </div>
+            <div class="field">
+              <span class="lbl" data-i18n="map.form.region"></span>
+              <span class="note" id="fRegion"></span>
+            </div>
+            <div class="banner-err" id="formError" hidden></div>
+            <div class="row">
+              <button type="button" class="btn btn-primary" id="saveParcelBtn" data-i18n="map.form.save"></button>
+              <button type="button" class="btn" id="cancelFormBtn" data-i18n="map.draw.cancel"></button>
+            </div>
+            <div class="row" id="formEditActions">
+              <button type="button" class="btn" id="redrawBtn" data-i18n="map.form.redraw"></button>
+              <button type="button" class="btn" id="deleteParcelBtn" style="color:var(--color-error);" data-i18n="map.form.delete"></button>
+            </div>
+          </section>
+
+          <!-- Grid -->
+          <section class="side-view" id="viewGrid" hidden>
+            <button type="button" class="link-btn" data-back="parcel">← <span data-i18n="map.mission.back"></span></button>
+            <div class="side-hdr"><h2 data-i18n="map.grid.title"></h2></div>
+            <div class="banner-warn" id="gridOffline" hidden data-i18n="map.grid.offline"></div>
+            <div class="field">
+              <label for="cellSize"><span data-i18n="map.grid.cell_size"></span> : <strong id="cellSizeVal"></strong></label>
+              <input type="range" id="cellSize" min="1" max="50" step="1" value="5" />
+              <span class="note" data-i18n="map.grid.cell_help"></span>
+            </div>
+            <div class="field">
+              <label for="speed"><span data-i18n="map.grid.speed"></span> : <strong id="speedVal"></strong></label>
+              <input type="range" id="speed" min="0.1" max="2" step="0.1" value="0.5" />
+            </div>
+            <div class="field">
+              <span class="lbl" data-i18n="map.grid.start"></span>
+              <div class="row">
+                <button type="button" class="btn" id="pickStartBtn" data-i18n="map.grid.start_choose"></button>
+                <span class="note" id="startInfo"></span>
+              </div>
+              <span class="note" data-i18n="map.grid.start_help"></span>
+            </div>
+            <button type="button" class="btn" id="previewBtn" data-i18n="map.grid.preview"></button>
+            <div class="note" id="gridSummary"></div>
+            <div class="banner-err" id="gridError" hidden></div>
+            <button type="button" class="btn btn-primary" id="createMissionBtn" disabled data-i18n="map.grid.create"></button>
+          </section>
+
+          <!-- Mission + heatmap -->
+          <section class="side-view" id="viewMission" hidden>
+            <button type="button" class="link-btn" data-back="parcel">← <span data-i18n="map.mission.back"></span></button>
+            <div class="side-hdr"><h2 id="mName"></h2></div>
+            <div class="note" id="mSummary"></div>
+            <div class="progress"><div id="mProgressBar" style="width:0"></div></div>
+            <div class="note" id="mProgress"></div>
+            <div class="field">
+              <label for="mStatus" data-i18n="map.mission.status_label"></label>
+              <select id="mStatus" class="form-input">
+                <option value="draft" data-i18n="map.mission.status.draft"></option>
+                <option value="ready" data-i18n="map.mission.status.ready"></option>
+                <option value="running" data-i18n="map.mission.status.running"></option>
+                <option value="done" data-i18n="map.mission.status.done"></option>
+              </select>
+            </div>
+            <div class="row">
+              <button type="button" class="btn" id="exportJsonBtn" data-i18n="map.mission.export_json"></button>
+              <button type="button" class="btn" id="exportGeoBtn" data-i18n="map.mission.export_geojson"></button>
+            </div>
+            <a class="btn btn-primary" id="analyseMissionLink" href="/camera" data-i18n="map.mission.analyse"></a>
+
+            <h3 style="font-size:var(--text-sm);margin:var(--sp-2) 0 0;" data-i18n="map.heat.title"></h3>
+            <div class="field">
+              <label for="heatIndicator" data-i18n="map.heat.indicator"></label>
+              <select id="heatIndicator" class="form-input">
+                <option value="rate" data-i18n="map.heat.rate"></option>
+                <option value="alert" data-i18n="map.heat.alert"></option>
+                <option value="dominant" data-i18n="map.heat.dominant"></option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="heatDisease" data-i18n="map.heat.disease"></label>
+              <select id="heatDisease" class="form-input"></select>
+            </div>
+            <div class="row">
+              <div class="field"><label for="heatFrom" data-i18n="map.heat.from"></label><input type="date" id="heatFrom" class="form-input" /></div>
+              <div class="field"><label for="heatTo" data-i18n="map.heat.to"></label><input type="date" id="heatTo" class="form-input" /></div>
+            </div>
+            <button type="button" class="btn" id="heatApplyBtn" data-i18n="map.heat.apply"></button>
+            <p class="note" data-i18n="map.heat.note"></p>
+            <div id="cellDetail" class="cell-detail"></div>
+            <button type="button" class="link-btn" id="deleteMissionBtn" style="color:var(--color-error);" data-i18n="map.mission.delete"></button>
+          </section>
+        </aside>
+
+        <!-- ===== Map ================================================ -->
+        <div class="map-wrap">
+          <div id="map" role="application" aria-label="GREEN Map"></div>
+
+          <div class="draw-bar" id="drawBar" hidden>
+            <div class="db-status"><span data-i18n="map.draw.title"></span> · <span id="drawCount"></span></div>
+            <div class="db-msg" data-i18n="map.draw.help"></div>
+            <div class="db-msg" id="drawMsg" role="status"></div>
+            <div class="row">
+              <button type="button" class="btn" id="undoPointBtn" data-i18n="map.draw.undo"></button>
+              <button type="button" class="btn" id="myPositionBtn" data-i18n="map.draw.my_position"></button>
+              <button type="button" class="btn btn-primary" id="finishDrawBtn" data-i18n="map.draw.finish"></button>
+              <button type="button" class="btn" id="cancelDrawBtn" data-i18n="map.draw.cancel"></button>
             </div>
           </div>
-        </div>
 
-        <!-- Map -->
-        <div id="mapContainer">
-          <div id="map"></div>
+          <div class="legend" id="legend" hidden></div>
         </div>
-
       </div>
-
     </main>
   </div>
 </div>
 
-<!-- Add Parcel Modal -->
-<div class="modal-overlay" id="addParcelModal" style="display:none;" onclick="closeModal(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-
-    <!-- Header -->
-    <div class="modal-header">
-      <div class="modal-header-left">
-        <div class="modal-header-icon">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
-            <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
-          </svg>
-        </div>
-        <div>
-          <div class="modal-header-title">Add New Parcel</div>
-          <div class="modal-header-sub">Register a new agricultural field</div>
-        </div>
-      </div>
-      <button class="modal-close-btn" onclick="closeAddParcel()" title="Close">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Body -->
-    <div class="modal-body">
-
-      <!-- Section 1 : Parcel info -->
-      <div class="form-section">
-        <div class="form-section-label">Parcel Information</div>
-
-        <div class="form-row">
-          <label class="form-label">Name <span class="req">*</span></label>
-          <div class="input-icon-wrap">
-            <span class="input-icon">
-              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M3 7h18M3 12h18M3 17h12"/>
-              </svg>
-            </span>
-            <input class="form-input" id="pName" placeholder="e.g. North Field — Maize 2024" autocomplete="off" />
-          </div>
-        </div>
-
-        <div class="form-row-2">
-          <div class="form-row">
-            <label class="form-label">Crop type</label>
-            <select class="form-select" id="pCrop">
-              <option value="">— Select crop —</option>
-              <option value="Maïs">Maize</option>
-              <option value="Manioc">Cassava</option>
-              <option value="Tomate">Tomato</option>
-              <option value="Plantain">Plantain</option>
-              <option value="Arachides">Groundnut</option>
-              <option value="Haricot">Bean</option>
-              <option value="Cacao">Cacao</option>
-              <option value="Café">Coffee</option>
-              <option value="Autre">Other</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <label class="form-label">Area (hectares)</label>
-            <div class="input-icon-wrap">
-              <span class="input-icon" style="font-size:11px;font-weight:600;color:var(--text-muted);">ha</span>
-              <input class="form-input" id="pArea" type="number" min="0.01" step="0.01" placeholder="0.50"
-                     style="padding-left:38px;" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section 2 : Location -->
-      <div class="form-section">
-        <div class="form-section-label">Location</div>
-
-        <!-- Draw polygon button -->
-        <div class="form-row">
-          <label class="form-label">Parcel boundary</label>
-          <button type="button" class="draw-poly-btn" id="drawPolyBtn" onclick="startDrawPolygon()">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
-              <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
-            </svg>
-            <span id="drawPolyBtnText">Draw parcel polygon on the map</span>
-          </button>
-        </div>
-
-        <div class="form-row">
-          <label class="form-label">Region <span style="color:var(--text-muted);font-weight:400;">(auto-detected from drawing)</span></label>
-          <div class="input-icon-wrap">
-            <span class="input-icon">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-              </svg>
-            </span>
-            <select class="form-select" id="pRegion" style="padding-left:36px;">
-              <option value="">— Select region —</option>
-              <option>Centre</option><option>Littoral</option><option>Ouest</option>
-              <option>Nord-Ouest</option><option>Sud-Ouest</option><option>Sud</option>
-              <option>Est</option><option>Adamaoua</option><option>Nord</option>
-              <option>Extrême-Nord</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row-2">
-          <div class="form-row">
-            <label class="form-label">Latitude <span style="color:var(--text-muted);font-weight:400;">(centroid)</span></label>
-            <input class="form-input" id="pLat" type="number" step="any" placeholder="3.84800" />
-          </div>
-          <div class="form-row">
-            <label class="form-label">Longitude <span style="color:var(--text-muted);font-weight:400;">(centroid)</span></label>
-            <input class="form-input" id="pLon" type="number" step="any" placeholder="11.50200" />
-          </div>
-        </div>
-
-        <!-- Coordinate pick hint -->
-        <div class="coord-picker-hint" id="coordHint">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <span id="coordHintText">Draw a polygon or click on the map to set coordinates</span>
-        </div>
-      </div>
-
-      <!-- Section 3 : Notes -->
-      <div class="form-section">
-        <div class="form-section-label">Additional Notes</div>
-        <div class="form-row">
-          <div class="input-icon-wrap">
-            <span class="input-icon">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-            </span>
-            <input class="form-input" id="pDesc" placeholder="Soil type, irrigation, observations…" />
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /modal-body -->
-
-    <!-- Footer -->
-    <div class="modal-footer">
-      <button class="btn" onclick="closeAddParcel()">Cancel</button>
-      <button class="btn btn-primary" id="saveParcelBtn" onclick="submitParcel()">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" style="margin-right:6px;">
-          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-          <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-        </svg>
-        Save Parcel
-      </button>
-    </div>
-
-  </div>
-</div>
-
-<!-- Draw mode banner -->
-<div id="drawBanner">
-  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
-    <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
-  </svg>
-  <span>Click points to draw your parcel boundary. Double-click to finish.</span>
-  <button class="draw-cancel-btn" onclick="cancelDraw()">Cancel</button>
-</div>
-
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Leaflet Draw JS -->
-<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="/js/utils.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/app.js"></script>
 <script src="/js/layout.js"></script>
+<script src="/js/fiche.js"></script>
+<script src="/js/parcel-store.js"></script>
 <script>
-/* ---- State ------------------------------------------------ */
-let _map           = null;
-let _parcels       = [];
-let _markers       = {};      // parcelId → leaflet marker/polygon
-let _addMode       = false;
-let _activeId      = null;
-let _analysisLayer = null;
-let _drawnItems    = null;    // FeatureGroup for drawn polygons
-let _polygonHandler = null;   // Leaflet.Draw polygon handler
-let _drawnGeoJSON  = null;    // stored GeoJSON of drawn polygon
-let _drawingActive = false;
+/* ============================================================
+   GREEN Map — controller
+   ============================================================ */
+Layout.init({ page: 'map', titleKey: 'nav.map', subtitleKey: 'map.subtitle' });
 
-/* ---- Boot ------------------------------------------------- */
-document.addEventListener('DOMContentLoaded', () => {
-  App.boot();
-  Layout.init({ page: 'map', title: 'GREEN Map', subtitle: 'Parcel management' });
-  initMap();
-  loadParcels();
-  loadGeoAnalyses();
+const $ = id => document.getElementById(id);
+const S = {
+  parcels: [],            // ParcelStore records
+  selectedKey: null,
+  view: 'list',
+  draw: null,             // { points: [L.Marker], editKey, base }
+  pendingGeometry: null,  // validated polygon waiting for the form
+  pickingStart: false,
+  start: null,            // {lat, lng}
+  preview: null,
+  mission: null,          // full mission
+  heat: null,             // heatmap payload
+  missions: [],
+};
+
+/* ---- Formatting ------------------------------------------- */
+const fmtHa = v => v == null ? '—' : I18n.t('map.units.ha', { v: I18n.number(v, { maximumFractionDigits: v < 10 ? 2 : 1 }) });
+function fmtDistance(m) {
+  if (m == null) return '—';
+  return m < 1000 ? I18n.t('map.units.m', { v: I18n.number(Math.round(m)) })
+                  : I18n.t('map.units.km', { v: I18n.number(m / 1000, { maximumFractionDigits: 2 }) });
+}
+function fmtDuration(s) {
+  const min = Math.round(s / 60);
+  return min < 60 ? I18n.t('map.units.min', { v: min }) : I18n.t('map.units.h', { h: Math.floor(min / 60), m: min % 60 });
+}
+const cropLabel = c => c ? (I18n.has(`map.form.crops.${c}`) ? I18n.t(`map.form.crops.${c}`) : c) : I18n.t('map.panel.no_crop');
+
+/* ---- Map ---------------------------------------------------- */
+const map = L.map('map', { zoomControl: true }).setView([5.6, 12.3], 6);   // Cameroon
+const baseLayers = {
+  streets: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }),
+  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19, attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+  }),
+};
+baseLayers.streets.addTo(map);
+const parcelLayer = L.featureGroup().addTo(map);
+const gridLayer = L.featureGroup().addTo(map);
+const drawLayer = L.featureGroup().addTo(map);
+const analysesLayer = L.featureGroup();
+let layerControl = null;
+
+function buildLayerControl() {
+  if (layerControl) layerControl.remove();
+  layerControl = L.control.layers(
+    { [I18n.t('map.layers.streets')]: baseLayers.streets, [I18n.t('map.layers.satellite')]: baseLayers.satellite },
+    { [I18n.t('map.layers.analyses')]: analysesLayer },
+    { position: 'topright' }).addTo(map);
+}
+
+// SVG pattern for "not analysed" cells (hatched grey)
+function ensureHatch() {
+  const svg = map.getPanes().overlayPane.querySelector('svg');
+  if (!svg || svg.querySelector('#green-hatch')) return;
+  const ns = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(ns, 'defs');
+  defs.innerHTML = '<pattern id="green-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
+    + '<rect width="6" height="6" fill="rgba(156,163,175,.15)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#9ca3af" stroke-width="2"/></pattern>';
+  svg.insertBefore(defs, svg.firstChild);
+}
+
+/* ---- Views ---------------------------------------------------- */
+function showView(name) {
+  S.view = name;
+  for (const v of ['List', 'Parcel', 'Form', 'Grid', 'Mission']) $(`view${v}`).hidden = v.toLowerCase() !== name;
+  if (name !== 'grid' && name !== 'mission') { gridLayer.clearLayers(); $('legend').hidden = true; }
+  if (name !== 'grid') stopPickStart();
+}
+document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.back === 'list') { S.selectedKey = null; showView('list'); renderParcels(); }
+  else openParcel(S.selectedKey);
+}));
+
+/* ---- Parcels: list & map ------------------------------------- */
+async function loadParcels(fromServer = true) {
+  try { S.parcels = await ParcelStore.list(fromServer); } catch (e) { S.parcels = []; }
+  await renderParcels();
+}
+
+function parcelStyle(p, selected) {
+  const color = p.sync === 'synced' ? '#16a34a' : p.sync === 'pending' ? '#d97706' : '#dc2626';
+  return { color, weight: selected ? 3 : 2, fillOpacity: selected ? 0.12 : 0.18, dashArray: p.sync === 'pending' ? '6 4' : null };
+}
+
+async function renderParcels() {
+  $('offlineBanner').hidden = navigator.onLine;
+  let pending = 0;
+  try { pending = await ParcelStore.pendingCount(); } catch (_) {}
+  $('pendingOps').textContent = pending ? I18n.t('map.panel.pending_ops', { count: pending }) : '';
+
+  parcelLayer.clearLayers();
+  const list = $('parcelList');
+  list.innerHTML = '';
+  $('parcelEmpty').hidden = S.parcels.length > 0;
+  S.parcels.forEach(p => {
+    if (p.geometry) {
+      const layer = L.geoJSON(p.geometry, { style: parcelStyle(p, p.key === S.selectedKey) });
+      layer.on('click', () => { if (!S.draw && !S.pickingStart) openParcel(p.key); });
+      layer.bindTooltip(escapeHtml(p.name), { sticky: true });
+      parcelLayer.addLayer(layer);
+    }
+    const li = document.createElement('li');
+    const last = p.last_analysis_at ? I18n.t('map.panel.last_analysis', { date: I18n.date(p.last_analysis_at) })
+                                    : I18n.t('map.panel.no_analysis');
+    li.innerHTML = `
+      <button type="button" class="parcel-item" data-key="${escapeHtml(p.key)}">
+        <div class="pi-top"><span class="pi-name">${escapeHtml(p.name)}</span>
+          <span class="sync-badge sync-${p.sync}">${escapeHtml(I18n.t(`map.sync.${p.sync}`))}</span></div>
+        <div class="pi-meta">${escapeHtml(cropLabel(p.crop_type))} · ${escapeHtml(fmtHa(p.area_ha))}</div>
+        <div class="pi-meta">${escapeHtml(last)}</div>
+      </button>`;
+    li.querySelector('button').addEventListener('click', () => openParcel(p.key, true));
+    list.appendChild(li);
+  });
+  if (S.view === 'parcel' && S.selectedKey) renderParcelView();
+}
+
+function selected() { return S.parcels.find(p => p.key === S.selectedKey); }
+
+function zoomTo(p) {
+  if (p && p.geometry) map.fitBounds(L.geoJSON(p.geometry).getBounds(), { padding: [30, 30], maxZoom: 19 });
+}
+
+async function openParcel(key, zoom = false) {
+  S.selectedKey = key;
+  showView('parcel');
+  renderParcels();
+  const p = selected();
+  if (!p) { showView('list'); return; }
+  if (zoom) zoomTo(p);
+  renderParcelView();
+  loadMissions();
+}
+
+function renderParcelView() {
+  const p = selected();
+  if (!p) return;
+  $('pName').textContent = p.name;
+  $('pSync').className = `sync-badge sync-${p.sync}`;
+  $('pSync').textContent = I18n.t(`map.sync.${p.sync}`);
+  $('pConflict').hidden = p.sync !== 'conflict';
+  $('pError').hidden = p.sync !== 'error';
+  $('pError').textContent = p.error || '';
+  $('pArea').textContent = fmtHa(p.area_ha);
+  $('pPerimeter').textContent = fmtDistance(p.perimeter_m);
+  $('pCrop').textContent = cropLabel(p.crop_type);
+  $('pRegion').textContent = p.region ? regionLabel(p.region) : '—';
+  $('pSowing').textContent = p.sowing_date ? I18n.date(p.sowing_date) : '—';
+  $('pAnalyses').textContent = I18n.t('map.panel.analyses', { count: p.analyses_count || 0 });
+  $('pNotes').textContent = p.description || '';
+  const online = !!p.id;
+  $('gridBtn').disabled = !online;
+  $('gridUnsynced').hidden = online;
+}
+
+$('zoomBtn').addEventListener('click', () => zoomTo(selected()));
+$('editBtn').addEventListener('click', () => openForm(selected()));
+$('gridBtn').addEventListener('click', openGrid);
+$('applyDraftBtn').addEventListener('click', async () => { await ParcelStore.applyDraft(S.selectedKey); loadParcels(false); });
+$('discardDraftBtn').addEventListener('click', async () => { await ParcelStore.discardDraft(S.selectedKey); loadParcels(false); });
+
+/* ---- Drawing --------------------------------------------------- */
+$('newParcelBtn').addEventListener('click', () => startDraw(null));
+
+function vertexIcon(first) {
+  return L.divIcon({ className: '', html: `<div class="vertex-icon${first ? ' first' : ''}"></div>`, iconSize: [14, 14], iconAnchor: [7, 7] });
+}
+
+function startDraw(editKey, initial) {
+  stopDraw();
+  showView(editKey ? 'form' : 'list');
+  S.draw = { points: [], editKey };
+  drawLayer.clearLayers();
+  (initial || []).forEach(([lng, lat]) => addPoint(L.latLng(lat, lng)));
+  $('drawBar').hidden = false;
+  document.body.classList.add('picking');
+  updateDraw();
+}
+
+function stopDraw() {
+  S.draw = null;
+  drawLayer.clearLayers();
+  $('drawBar').hidden = true;
+  $('drawMsg').textContent = '';
+  document.body.classList.remove('picking');
+}
+
+function addPoint(latlng) {
+  const m = L.marker(latlng, { draggable: true, icon: vertexIcon(S.draw.points.length === 0), keyboard: false });
+  m.on('drag', updateDraw);
+  m.on('dragend', updateDraw);
+  drawLayer.addLayer(m);
+  S.draw.points.push(m);
+  updateDraw();
+}
+
+function drawRing() {
+  return S.draw.points.map(m => [m.getLatLng().lng, m.getLatLng().lat]);
+}
+
+/** Turf checks: returns { polygon, error, warning, area_ha, perimeter_m } */
+function checkRing(ring) {
+  if (ring.length < 3) return { error: I18n.t('map.draw.need_three') };
+  const poly = turf.polygon([[...ring, ring[0]]]);
+  if (turf.kinks(poly).features.length) return { polygon: poly, error: I18n.t('map.draw.kinks') };
+  const area_ha = turf.area(poly) / 10000;
+  const perimeter_m = turf.length(turf.polygonToLine(poly), { units: 'kilometers' }) * 1000;
+  let warning = null;
+  for (const other of S.parcels) {
+    if (!other.geometry || (S.draw && other.key === S.draw.editKey)) continue;
+    try {
+      if (turf.booleanOverlap(poly, other.geometry) || turf.booleanContains(other.geometry, poly)
+          || turf.booleanContains(poly, other.geometry)) {
+        warning = I18n.t('map.draw.overlap', { name: other.name });
+        break;
+      }
+    } catch (_) { /* malformed legacy geometry */ }
+  }
+  return { polygon: poly, area_ha, perimeter_m, warning };
+}
+
+function updateDraw() {
+  if (!S.draw) return;
+  drawLayer.eachLayer(l => { if (!(l instanceof L.Marker)) drawLayer.removeLayer(l); });
+  const pts = S.draw.points.map(m => m.getLatLng());
+  if (pts.length >= 2) L.polyline(pts, { color: '#16a34a', weight: 2, dashArray: '4 4' }).addTo(drawLayer);
+  if (pts.length >= 3) L.polygon(pts, { color: '#16a34a', weight: 1, fillOpacity: 0.15, interactive: false }).addTo(drawLayer);
+  $('drawCount').textContent = I18n.t('map.draw.points', { count: pts.length });
+  const res = checkRing(drawRing());
+  $('finishDrawBtn').disabled = !!res.error;
+  $('undoPointBtn').disabled = pts.length === 0;
+  if (pts.length >= 3) {
+    $('drawMsg').textContent = res.error || [I18n.t('map.draw.area', {
+      ha: I18n.number(res.area_ha, { maximumFractionDigits: 3 }), m: I18n.number(Math.round(res.perimeter_m)) }), res.warning]
+      .filter(Boolean).join(' · ');
+  }
+}
+
+map.on('click', e => {
+  if (S.pickingStart) { setStart(e.latlng); return; }
+  if (S.draw) addPoint(e.latlng);
+});
+$('undoPointBtn').addEventListener('click', () => {
+  const m = S.draw && S.draw.points.pop();
+  if (m) drawLayer.removeLayer(m);
+  updateDraw();
+});
+$('cancelDrawBtn').addEventListener('click', () => {
+  const editKey = S.draw && S.draw.editKey;
+  stopDraw();
+  if (editKey) openForm(S.parcels.find(p => p.key === editKey)); else showView('list');
+});
+$('myPositionBtn').addEventListener('click', () => {
+  if (!navigator.geolocation) { $('drawMsg').textContent = I18n.t('map.draw.geo_unavailable'); return; }
+  $('drawMsg').textContent = I18n.t('map.draw.locating');
+  navigator.geolocation.getCurrentPosition(pos => {
+    if (!S.draw) return;
+    const ll = L.latLng(pos.coords.latitude, pos.coords.longitude);
+    addPoint(ll);
+    map.setView(ll, Math.max(map.getZoom(), 18));
+    const acc = Math.round(pos.coords.accuracy);
+    $('drawMsg').textContent = I18n.t(acc > 15 ? 'map.draw.accuracy_warning' : 'map.draw.accuracy', { m: acc });
+  }, () => { $('drawMsg').textContent = I18n.t('map.draw.geo_unavailable'); },
+  { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+});
+$('finishDrawBtn').addEventListener('click', () => {
+  const res = checkRing(drawRing());
+  if (res.error) { $('drawMsg').textContent = res.error; return; }
+  const editKey = S.draw.editKey;
+  S.pendingGeometry = { geometry: res.polygon.geometry, area_ha: res.area_ha, perimeter_m: res.perimeter_m, warning: res.warning };
+  stopDraw();
+  openForm(editKey ? S.parcels.find(p => p.key === editKey) : null, true);
 });
 
-/* ---- Cameroon region bounding boxes (lat_min, lat_max, lon_min, lon_max) --- */
-const CAMEROON_REGIONS = [
-  { name: 'Extrême-Nord', latMin: 10.0, latMax: 13.1, lonMin: 13.5, lonMax: 15.2 },
-  { name: 'Nord',         latMin:  7.5, latMax: 10.5, lonMin: 12.5, lonMax: 15.5 },
-  { name: 'Adamaoua',     latMin:  6.0, latMax:  8.2, lonMin: 11.5, lonMax: 15.5 },
-  { name: 'Est',          latMin:  1.5, latMax:  7.2, lonMin: 13.5, lonMax: 16.2 },
-  { name: 'Nord-Ouest',   latMin:  5.5, latMax:  7.2, lonMin:  9.2, lonMax: 11.0 },
-  { name: 'Ouest',        latMin:  4.5, latMax:  6.5, lonMin:  9.7, lonMax: 11.2 },
-  { name: 'Littoral',     latMin:  3.0, latMax:  4.8, lonMin:  9.0, lonMax: 10.8 },
-  { name: 'Sud-Ouest',    latMin:  3.5, latMax:  5.8, lonMin:  8.5, lonMax: 10.0 },
-  { name: 'Centre',       latMin:  2.9, latMax:  6.5, lonMin: 10.8, lonMax: 14.5 },
-  { name: 'Sud',          latMin:  1.5, latMax:  3.8, lonMin:  9.5, lonMax: 16.0 },
-];
+/* ---- Form --------------------------------------------------------- */
+let formParcel = null;
 
-function regionFromLatLng(lat, lng) {
-  for (const r of CAMEROON_REGIONS) {
-    if (lat >= r.latMin && lat <= r.latMax && lng >= r.lonMin && lng <= r.lonMax) {
-      return r.name;
-    }
-  }
-  return '';
+function openForm(p, keepGeometry = false) {
+  formParcel = p || null;
+  if (!keepGeometry) S.pendingGeometry = null;
+  if (!p && !S.pendingGeometry) { startDraw(null); return; }
+  showView('form');
+  $('formTitle').textContent = I18n.t(p ? 'map.form.title_edit' : 'map.form.title_new');
+  $('formEditActions').hidden = !p;
+  $('formError').hidden = true;
+  $('fName').value = p ? p.name : '';
+  $('fCrop').value = p && p.crop_type ? p.crop_type : '';
+  $('fSowing').value = p && p.sowing_date ? p.sowing_date : '';
+  $('fNotes').value = p && p.description ? p.description : '';
+  $('fRegion').textContent = p && p.region ? regionLabel(p.region) : I18n.t('map.form.region_auto');
+  const g = S.pendingGeometry;
+  $('formMeasures').textContent = g ? I18n.t('map.draw.area', { ha: I18n.number(g.area_ha, { maximumFractionDigits: 3 }),
+                                                              m: I18n.number(Math.round(g.perimeter_m)) })
+                                    : (p ? `${fmtHa(p.area_ha)} · ${fmtDistance(p.perimeter_m)}` : '');
+  $('formOverlap').hidden = !(g && g.warning);
+  $('formOverlap').textContent = g && g.warning ? g.warning : '';
+  if (g) drawPreview(g.geometry);
+  $('fName').focus();
 }
 
-/* ---- Init Leaflet map ------------------------------------- */
-function initMap() {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-
-  _map = L.map('map', {
-    center:  [3.848, 11.502],   // Yaoundé, Cameroon
-    zoom:    7,
-    zoomControl: true,
-  });
-
-  // Tile layer
-  const tileUrl = isDark
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-
-  L.tileLayer(tileUrl, {
-    attribution: '© OpenStreetMap © CARTO',
-    maxZoom: 18,
-  }).addTo(_map);
-
-  // FeatureGroup for drawn polygons
-  _drawnItems = new L.FeatureGroup();
-  _map.addLayer(_drawnItems);
-
-  // Polygon draw handler (no toolbar shown — triggered programmatically)
-  _polygonHandler = new L.Draw.Polygon(_map, {
-    allowIntersection: false,
-    showArea: true,
-    shapeOptions: {
-      color: '#2ecc71',
-      weight: 2.5,
-      fillColor: '#2ecc71',
-      fillOpacity: 0.15,
-    },
-  });
-
-  // When a polygon is drawn
-  _map.on(L.Draw.Event.CREATED, e => {
-    _drawingActive = false;
-    document.getElementById('drawBanner').style.display = 'none';
-
-    // Remove previous drawing
-    _drawnItems.clearLayers();
-    _drawnItems.addLayer(e.layer);
-
-    // Compute centroid from latlngs
-    const latlngs = e.layer.getLatLngs()[0];
-    const centLat = latlngs.reduce((s, p) => s + p.lat, 0) / latlngs.length;
-    const centLng = latlngs.reduce((s, p) => s + p.lng, 0) / latlngs.length;
-
-    // Store GeoJSON geometry
-    _drawnGeoJSON = e.layer.toGeoJSON().geometry;
-
-    // Auto-fill form
-    document.getElementById('pLat').value = centLat.toFixed(5);
-    document.getElementById('pLon').value = centLng.toFixed(5);
-    const detectedRegion = regionFromLatLng(centLat, centLng);
-    if (detectedRegion) {
-      const sel = document.getElementById('pRegion');
-      for (const opt of sel.options) {
-        if (opt.value === detectedRegion) { opt.selected = true; break; }
-      }
-    }
-
-    // Update UI
-    const btn = document.getElementById('drawPolyBtn');
-    if (btn) {
-      btn.classList.add('has-polygon');
-      document.getElementById('drawPolyBtnText').textContent =
-        `Boundary drawn${detectedRegion ? ' · ' + detectedRegion : ''} — click to redraw`;
-    }
-    _updateCoordHint();
-
-    // Re-show modal if it was hidden
-    const modal = document.getElementById('addParcelModal');
-    if (modal) { modal.style.opacity = '1'; modal.style.pointerEvents = ''; }
-  });
-
-  // If user presses Escape while drawing
-  _map.on(L.Draw.Event.DRAWSTOP, () => {
-    if (_drawingActive) {
-      _drawingActive = false;
-      document.getElementById('drawBanner').style.display = 'none';
-      const modal = document.getElementById('addParcelModal');
-      if (modal) { modal.style.opacity = '1'; modal.style.pointerEvents = ''; }
-    }
-  });
-
-  // Click on map fills lat/lon when in add mode (non-draw)
-  _map.on('click', e => {
-    if (_addMode && !_drawingActive) {
-      document.getElementById('pLat').value = e.latlng.lat.toFixed(5);
-      document.getElementById('pLon').value = e.latlng.lng.toFixed(5);
-      _updateCoordHint();
-    }
-  });
+function drawPreview(geometry) {
+  drawLayer.clearLayers();
+  L.geoJSON(geometry, { style: { color: '#d97706', weight: 2, dashArray: '6 4', fillOpacity: 0.1 } }).addTo(drawLayer);
 }
 
-/* ---- Draw polygon controls -------------------------------- */
-function startDrawPolygon() {
-  _drawingActive = true;
-  _drawnGeoJSON  = null;
-  _drawnItems.clearLayers();
-
-  // Dim modal so user can interact with map
-  const modal = document.getElementById('addParcelModal');
-  if (modal) { modal.style.opacity = '0.15'; modal.style.pointerEvents = 'none'; }
-
-  document.getElementById('drawBanner').style.display = 'flex';
-  _polygonHandler.enable();
-}
-
-function cancelDraw() {
-  _drawingActive = false;
-  if (_polygonHandler) _polygonHandler.disable();
-  document.getElementById('drawBanner').style.display = 'none';
-  const modal = document.getElementById('addParcelModal');
-  if (modal) { modal.style.opacity = '1'; modal.style.pointerEvents = ''; }
-}
-
-/* ---- Load parcels ----------------------------------------- */
-async function loadParcels() {
-  const { data, error } = await API.parcels.list();
-  if (error) {
-    document.getElementById('parcelSummary').textContent = 'Error loading parcels.';
+$('cancelFormBtn').addEventListener('click', () => {
+  drawLayer.clearLayers();
+  S.pendingGeometry = null;
+  if (formParcel) openParcel(formParcel.key); else showView('list');
+});
+$('redrawBtn').addEventListener('click', () => {
+  const ring = formParcel && formParcel.geometry ? formParcel.geometry.coordinates[0].slice(0, -1) : [];
+  startDraw(formParcel.key, ring);
+});
+$('deleteParcelBtn').addEventListener('click', async () => {
+  if (!formParcel || !App.confirm(I18n.t('map.form.delete_confirm'))) return;
+  await ParcelStore.remove(formParcel.key);
+  S.selectedKey = null;
+  showView('list');
+  loadParcels(false);
+});
+$('saveParcelBtn').addEventListener('click', async () => {
+  const name = $('fName').value.trim();
+  if (!name) { $('formError').hidden = false; $('formError').textContent = I18n.t('map.form.name_required'); return; }
+  const fields = { name, crop_type: $('fCrop').value || null, sowing_date: $('fSowing').value || null,
+                   description: $('fNotes').value.trim() || null };
+  if (S.pendingGeometry) Object.assign(fields, { geometry: S.pendingGeometry.geometry,
+    area_ha: S.pendingGeometry.area_ha, perimeter_m: S.pendingGeometry.perimeter_m });
+  let rec;
+  try {
+    rec = formParcel ? await ParcelStore.update(formParcel.key, fields) : await ParcelStore.create(fields);
+  } catch (e) {
+    $('formError').hidden = false;
+    $('formError').textContent = I18n.t('common.errors.generic');
     return;
   }
-  _parcels = data || [];
-  renderParcelList();
-  renderParcelMarkers();
+  S.pendingGeometry = null;
+  drawLayer.clearLayers();
+  App.toast(I18n.t(navigator.onLine ? 'map.form.saved' : 'map.form.saved_offline'), 'success', 2500);
+  await loadParcels(false);
+  openParcel(rec.key);
+});
+
+/* ---- Grid & missions ----------------------------------------------- */
+function openGrid() {
+  const p = selected();
+  if (!p || !p.id) return;
+  showView('grid');
+  S.preview = null;
+  S.start = null;
+  $('createMissionBtn').disabled = true;
+  $('gridSummary').textContent = '';
+  $('gridError').hidden = true;
+  $('gridOffline').hidden = navigator.onLine;
+  renderGridLabels();
+  zoomTo(p);
 }
 
-/* ---- Render parcel list in sidebar ------------------------ */
-function renderParcelList() {
-  const list  = document.getElementById('parcelList');
-  const empty = document.getElementById('parcelEmpty');
-  const summary = document.getElementById('parcelSummary');
+function renderGridLabels() {
+  $('cellSizeVal').textContent = I18n.t('map.units.m', { v: $('cellSize').value });
+  $('speedVal').textContent = I18n.t('map.units.mps', { v: I18n.number(parseFloat($('speed').value)) });
+  $('startInfo').textContent = S.pickingStart ? I18n.t('map.grid.start_pick')
+    : S.start ? `${I18n.number(S.start.lat, { maximumFractionDigits: 5 })}, ${I18n.number(S.start.lng, { maximumFractionDigits: 5 })}`
+    : I18n.t('map.grid.start_default');
+}
+$('cellSize').addEventListener('input', () => { renderGridLabels(); $('createMissionBtn').disabled = true; });
+$('speed').addEventListener('input', () => { renderGridLabels(); $('createMissionBtn').disabled = true; });
+$('pickStartBtn').addEventListener('click', () => {
+  S.pickingStart = true;
+  document.body.classList.add('picking');
+  renderGridLabels();
+});
+function stopPickStart() { S.pickingStart = false; document.body.classList.remove('picking'); }
+let startMarker = null;
+function setStart(latlng) {
+  stopPickStart();
+  S.start = { lat: latlng.lat, lng: latlng.lng };
+  if (startMarker) startMarker.remove();
+  startMarker = L.marker(latlng, { icon: L.divIcon({ className: '', html: '<div class="start-icon"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }) }).addTo(gridLayer);
+  $('createMissionBtn').disabled = true;
+  renderGridLabels();
+}
 
-  const total_ha = _parcels.reduce((s, p) => s + (p.area_ha || 0), 0);
-  summary.textContent = `${_parcels.length} parcel${_parcels.length !== 1 ? 's' : ''} · ${total_ha.toFixed(2)} ha total`;
+function gridPayload() {
+  return { parcel_id: selected().id, cell_size_m: parseInt($('cellSize').value, 10),
+           speed_mps: parseFloat($('speed').value), start: S.start || undefined };
+}
 
-  if (!_parcels.length) {
-    empty.style.display = '';
-    return;
+$('previewBtn').addEventListener('click', async () => {
+  $('gridError').hidden = true;
+  if (!navigator.onLine) { $('gridOffline').hidden = false; return; }
+  const { data, error } = await API.missions.preview(gridPayload());
+  if (error) { $('gridError').hidden = false; $('gridError').textContent = error; return; }
+  S.preview = data;
+  drawGrid(data.cells, data.waypoints, null);
+  $('gridSummary').textContent = I18n.t('map.grid.summary', {
+    cells: I18n.t('map.grid.cells', { count: data.cells_total }), distance: fmtDistance(data.distance_m),
+    duration: fmtDuration(data.duration_s) });
+  $('createMissionBtn').disabled = false;
+});
+
+$('createMissionBtn').addEventListener('click', async () => {
+  $('createMissionBtn').disabled = true;
+  const { data, error } = await API.missions.create({
+    ...gridPayload(), name: I18n.t('map.mission.name_default', { date: I18n.date(new Date()) }) });
+  if (error) { $('gridError').hidden = false; $('gridError').textContent = error; $('createMissionBtn').disabled = false; return; }
+  App.toast(I18n.t('map.grid.created'), 'success', 2000);
+  openMission(data.id);
+});
+
+/* ---- Grid drawing + heatmap colours --------------------------- */
+const RATE_COLORS = ['#1a9850', '#91cf60', '#fee08b', '#fc8d59', '#d73027'];
+const ALERT_COLORS = { none: '#1a9850', low: '#4575b4', medium: '#fdae61', high: '#d73027' };
+const CAT_COLORS = ['#7570b3', '#e7298a', '#66a61e', '#e6ab02', '#a6761d', '#1b9e77', '#d95f02', '#666666'];
+const rateColor = r => RATE_COLORS[Math.min(4, Math.floor(r * 5))];
+
+function cellColor(stat, indicator, diseases) {
+  if (!stat) return null;
+  if (indicator === 'alert') return ALERT_COLORS[stat.max_alert] || ALERT_COLORS.none;
+  if (indicator === 'dominant') {
+    if (!stat.dominant) return ALERT_COLORS.none;
+    return CAT_COLORS[diseases.indexOf(stat.dominant) % CAT_COLORS.length];
   }
-  empty.style.display = 'none';
-
-  const items = _parcels.map(p => {
-    const crop = p.crop_type ? `<span class="parcel-item-crop">${p.crop_type}</span>` : '';
-    const area = p.area_ha ? `${p.area_ha} ha · ` : '';
-    const region = p.region || 'No region';
-    const isSel = p.id === _activeId ? ' active' : '';
-    return `
-      <div class="parcel-item${isSel}" id="parcel-item-${p.id}" onclick="selectParcel(${p.id})">
-        <div class="parcel-item-hdr">
-          <span class="parcel-item-name">${p.name}</span>
-          ${crop}
-        </div>
-        <div class="parcel-item-meta">${area}${region}</div>
-        <div class="parcel-actions">
-          <button class="btn" style="height:28px;font-size:11px;padding:0 10px;"
-                  onclick="event.stopPropagation();flyToParcel(${p.id})">
-            View on map
-          </button>
-          <button class="del-parcel" onclick="event.stopPropagation();deleteParcel(${p.id})"
-                  title="Delete parcel">
-            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
-              <path d="M9 6V4h6v2"/>
-            </svg>
-          </button>
-        </div>
-      </div>`;
-  });
-
-  list.innerHTML = items.join('') + '<div id="parcelEmpty" style="display:none;"></div>';
+  return stat.diseased === 0 ? RATE_COLORS[0] : rateColor(stat.rate);
 }
 
-/* ---- Render parcel markers on map ------------------------- */
-function renderParcelMarkers() {
-  // Clear old markers
-  Object.values(_markers).forEach(m => _map.removeLayer(m));
-  _markers = {};
-
-  const cropColor = {
-    'Maïs': '#16a34a', 'Manioc': '#ca8a04', 'Tomate': '#dc2626',
-    'Plantain': '#d97706', 'Arachides': '#92400e', 'Cacao': '#78350f', default: '#6b7280'
-  };
-  const popupHtml = p => `
-    <div class="popup-title">${p.name}</div>
-    <div class="popup-sub">${p.crop_type || 'Unknown crop'} · ${p.area_ha ? p.area_ha + ' ha' : '?'}</div>
-    <div class="popup-sub" style="margin-top:4px;">${p.region || ''}</div>
-  `;
-
-  _parcels.forEach(p => {
-    const color = cropColor[p.crop_type] || cropColor.default;
-
-    // If parcel has polygon geometry, draw it
-    if (p.geometry && p.geometry.type === 'Polygon') {
-      const layer = L.geoJSON(p.geometry, {
-        style: { color, weight: 2.5, fillColor: color, fillOpacity: 0.15 }
-      }).addTo(_map)
-        .bindPopup(popupHtml(p));
-      layer.on('click', () => selectParcel(p.id));
-      _markers[p.id] = layer;
-      return;
+function drawGrid(cells, waypoints, heat) {
+  gridLayer.clearLayers();
+  if (startMarker && S.view === 'grid') startMarker.addTo(gridLayer);
+  const stats = heat ? Object.fromEntries(heat.cells.map(c => [c.index, c])) : {};
+  const indicator = $('heatIndicator').value;
+  const diseases = heat ? heat.diseases : [];
+  cells.forEach(c => {
+    const stat = stats[c.index];
+    const color = heat ? cellColor(stat, indicator, diseases) : null;
+    const layer = L.polygon(c.polygon.map(([lng, lat]) => [lat, lng]), {
+      color: heat ? '#374151' : '#2563eb', weight: heat ? 0.6 : 1,
+      fillColor: color || '#2563eb', fillOpacity: heat ? (color ? 0.75 : 1) : 0.08,
+    });
+    layer.bindTooltip(I18n.t('map.grid.cell_label', { n: c.index }), { sticky: true });
+    if (heat) layer.on('click', () => showCell(c.index, stat));
+    gridLayer.addLayer(layer);
+    if (heat && !color && layer._path) {   // not analysed: hatched (pattern lives in the SVG renderer)
+      ensureHatch();
+      layer._path.setAttribute('fill', 'url(#green-hatch)');
     }
-
-    if (!p.latitude || !p.longitude) return;
-
-    const icon = L.divIcon({
-      className: '',
-      html: `<div style="
-        width:28px;height:28px;border-radius:50%;
-        background:${color};border:2.5px solid #fff;
-        box-shadow:0 2px 8px rgba(0,0,0,0.25);
-        display:flex;align-items:center;justify-content:center;
-        cursor:pointer;
-      "><svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 1 0 20A10 10 0 0 1 12 2"/><path d="M12 6v6l4 2"/></svg></div>`,
-      iconSize:   [28, 28],
-      iconAnchor: [14, 14],
-    });
-
-    const marker = L.marker([p.latitude, p.longitude], { icon })
-      .addTo(_map)
-      .bindPopup(popupHtml(p));
-
-    marker.on('click', () => selectParcel(p.id));
-    _markers[p.id] = marker;
   });
-}
-
-/* ---- Load geolocated disease analyses --------------------- */
-async function loadGeoAnalyses() {
-  // Use history endpoint with small limit and filter for geolocated items
-  const { data } = await API.analysis.history(100, 0);
-  if (!data?.items) return;
-
-  const geoItems = data.items.filter(a => a.latitude && a.longitude);
-  if (!geoItems.length) return;
-
-  if (_analysisLayer) _map.removeLayer(_analysisLayer);
-
-  const markers = geoItems.map(a => {
-    const sev = a.severity || 'low';
-    const colMap = { high: '#ef4444', medium: '#f59e0b', low: '#22c55e' };
-    const color  = a.detected_disease === 'healthy' ? '#22c55e' : (colMap[sev] || '#6b7280');
-
-    const icon = L.divIcon({
-      className: '',
-      html: `<div style="
-        width:22px;height:22px;border-radius:50%;
-        background:${color};border:2px solid #fff;opacity:0.9;
-        box-shadow:0 1px 4px rgba(0,0,0,0.2);
-      "></div>`,
-      iconSize:   [22, 22],
-      iconAnchor: [11, 11],
-    });
-
-    return L.marker([a.latitude, a.longitude], { icon })
-      .bindPopup(`
-        <div class="popup-title">${a.disease_name || (a.detected_disease === 'healthy' ? 'Healthy' : '—')}</div>
-        <div class="popup-sub">${a.plant_type || '—'} · ${a.source || '—'}</div>
-        <div class="popup-sub" style="margin-top:4px;">${new Date(a.created_at).toLocaleDateString()}</div>
-      `);
-  });
-
-  _analysisLayer = L.layerGroup(markers).addTo(_map);
-}
-
-/* ---- Select a parcel -------------------------------------- */
-function selectParcel(id) {
-  _activeId = id;
-  document.querySelectorAll('.parcel-item').forEach(el => {
-    el.classList.toggle('active', el.id === `parcel-item-${id}`);
-  });
-  flyToParcel(id);
-}
-
-function flyToParcel(id) {
-  const layer = _markers[id];
-  if (!layer) return;
-  if (layer.getBounds) {
-    _map.flyToBounds(layer.getBounds(), { padding: [40, 40], duration: 1 });
-  } else if (layer.getLatLng) {
-    _map.flyTo(layer.getLatLng(), 14, { duration: 1 });
+  if (waypoints && waypoints.length) {
+    L.polyline(waypoints.map(w => [w.lat, w.lng]), { color: '#111827', weight: 1.5, opacity: 0.7, dashArray: '3 4', interactive: false }).addTo(gridLayer);
+    L.circleMarker([waypoints[0].lat, waypoints[0].lng], { radius: 6, color: '#fff', weight: 2, fillColor: '#1d4ed8', fillOpacity: 1 })
+      .bindTooltip(I18n.t('map.grid.start')).addTo(gridLayer);
   }
-  layer.openPopup?.();
+  renderLegend(heat, indicator, diseases);
 }
 
-/* ---- Delete parcel ---------------------------------------- */
-async function deleteParcel(id) {
-  if (!confirm('Delete this parcel permanently?')) return;
-  const { error } = await API.parcels.delete(id);
-  if (error) { App.toast(error, 'error'); return; }
-  App.toast('Parcel deleted.', 'success');
-  if (_markers[id]) { _map.removeLayer(_markers[id]); delete _markers[id]; }
-  loadParcels();
-}
-
-/* ---- Add parcel modal ------------------------------------- */
-function openAddParcel() {
-  _addMode       = true;
-  _drawnGeoJSON  = null;
-  _drawnItems.clearLayers();
-  document.getElementById('addParcelModal').style.display = 'flex';
-  _updateCoordHint();
-}
-
-function _updateCoordHint() {
-  const hint = document.getElementById('coordHint');
-  const text = document.getElementById('coordHintText');
-  const lat  = document.getElementById('pLat')?.value;
-  const lon  = document.getElementById('pLon')?.value;
-  if (!hint || !text) return;
-  if (lat && lon) {
-    hint.classList.add('active-mode');
-    text.textContent = `Pin set: ${parseFloat(lat).toFixed(4)}°N, ${parseFloat(lon).toFixed(4)}°E`;
+function renderLegend(heat, indicator, diseases) {
+  const lg = $('legend');
+  if (!heat) { lg.hidden = true; return; }
+  const row = (color, label) => `<div class="lg-row"><span class="sw" style="background:${color}"></span>${escapeHtml(label)}</div>`;
+  let html = `<strong>${escapeHtml(I18n.t(`map.heat.${indicator}`))}</strong>`;
+  if (indicator === 'rate') {
+    ['0–20 %', '20–40 %', '40–60 %', '60–80 %', '80–100 %'].forEach((l, i) => { html += row(RATE_COLORS[i], l); });
+  } else if (indicator === 'alert') {
+    ['none', 'low', 'medium', 'high'].forEach(l => { html += row(ALERT_COLORS[l], alertLabel(l)); });
   } else {
-    hint.classList.remove('active-mode');
-    text.textContent = 'Click on the map to auto-fill coordinates';
+    html += row(ALERT_COLORS.none, I18n.t('map.heat.healthy'));
+    diseases.forEach((d, i) => { html += row(CAT_COLORS[i % CAT_COLORS.length], classLabel(d)); });
   }
+  html += '<div class="lg-row"><span class="sw hatch"></span>' + escapeHtml(I18n.t('map.heat.not_analysed')) + '</div>';
+  lg.innerHTML = html;
+  lg.hidden = false;
 }
 
-function closeAddParcel() {
-  _addMode       = false;
-  _drawingActive = false;
-  _drawnGeoJSON  = null;
-  if (_polygonHandler) _polygonHandler.disable();
-  _drawnItems.clearLayers();
-  document.getElementById('drawBanner').style.display = 'none';
-  document.getElementById('addParcelModal').style.display = 'none';
-  document.getElementById('addParcelModal').style.opacity = '1';
-  document.getElementById('addParcelModal').style.pointerEvents = '';
-  ['pName','pCrop','pArea','pRegion','pLat','pLon','pDesc'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  const btn = document.getElementById('drawPolyBtn');
-  if (btn) {
-    btn.classList.remove('has-polygon');
-    document.getElementById('drawPolyBtnText').textContent = 'Draw parcel polygon on the map';
-  }
-  const hint = document.getElementById('coordHint');
-  if (hint) hint.classList.remove('active-mode');
+/* ---- Missions ------------------------------------------------------- */
+async function loadMissions() {
+  const p = selected();
+  const box = $('missionList');
+  box.innerHTML = '';
+  if (!p || !p.id || !navigator.onLine) { S.missions = []; return; }
+  const { data } = await API.missions.list(p.id);
+  S.missions = Array.isArray(data) ? data : [];
+  renderMissionList();
 }
 
-function closeModal(e) {
-  if (e.target.id === 'addParcelModal') closeAddParcel();
+function renderMissionList() {
+  const box = $('missionList');
+  if (!S.missions.length) { box.innerHTML = `<p class="note">${escapeHtml(I18n.t('map.mission.none'))}</p>`; return; }
+  box.innerHTML = S.missions.map(m => `
+    <div class="mission-item">
+      <div class="mi-top"><strong>${escapeHtml(m.name || '#' + m.id)}</strong>
+        <span class="sync-badge sync-synced">${escapeHtml(I18n.t(`map.mission.status.${m.status}`))}</span></div>
+      <div class="progress"><div style="width:${Math.round(m.progress.ratio * 100)}%"></div></div>
+      <div class="note">${escapeHtml(I18n.t('map.mission.progress', { done: m.progress.analysed_cells, total: m.progress.total_cells }))}
+        · ${escapeHtml(I18n.t('map.grid.cells', { count: m.cells_total }))} · ${escapeHtml(I18n.t('map.units.m', { v: m.cell_size_m }))}</div>
+      <button type="button" class="link-btn" data-mission="${m.id}">${escapeHtml(I18n.t('map.mission.open'))} →</button>
+    </div>`).join('');
+  box.querySelectorAll('[data-mission]').forEach(b => b.addEventListener('click', () => openMission(parseInt(b.dataset.mission, 10))));
 }
 
-async function submitParcel() {
-  const nameEl = document.getElementById('pName');
-  const name   = nameEl.value.trim();
-  if (!name) {
-    nameEl.classList.add('invalid');
-    nameEl.focus();
-    App.toast('Parcel name is required.', 'error');
-    setTimeout(() => nameEl.classList.remove('invalid'), 2000);
-    return;
-  }
+async function openMission(id) {
+  const { data, error } = await API.missions.get(id);
+  if (error || !data) { App.toast(error || I18n.t('common.errors.generic'), 'error'); return; }
+  S.mission = data;
+  showView('mission');
+  $('cellDetail').innerHTML = '';
+  $('mStatus').value = data.status;
+  $('analyseMissionLink').href = `/camera?parcel_id=${data.parcel_id}&mission_id=${data.id}`;
+  renderMissionHeader();
+  await loadHeat();
+  map.fitBounds(L.geoJSON({ type: 'MultiPolygon', coordinates: data.grid.map(c => [c.polygon]) }).getBounds(), { padding: [20, 20], maxZoom: 20 });
+}
 
-  const btn = document.getElementById('saveParcelBtn');
-  btn.disabled   = true;
-  btn.innerHTML  = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>Saving…';
+function renderMissionHeader() {
+  const m = S.mission;
+  if (!m) return;
+  $('mName').textContent = m.name || `#${m.id}`;
+  $('mSummary').textContent = I18n.t('map.grid.summary', {
+    cells: I18n.t('map.grid.cells', { count: m.cells_total }), distance: fmtDistance(m.distance_m), duration: fmtDuration(m.duration_s) });
+  const prog = (S.heat && S.heat.mission.progress) || m.progress;
+  $('mProgressBar').style.width = `${Math.round(prog.ratio * 100)}%`;
+  $('mProgress').textContent = I18n.t('map.mission.progress', { done: prog.analysed_cells, total: prog.total_cells });
+}
 
-  const lat = parseFloat(document.getElementById('pLat').value);
-  const lon = parseFloat(document.getElementById('pLon').value);
-
-  const payload = {
-    name,
-    crop_type:   document.getElementById('pCrop').value   || null,
-    area_ha:     parseFloat(document.getElementById('pArea').value)   || null,
-    region:      document.getElementById('pRegion').value || null,
-    description: document.getElementById('pDesc').value  || null,
-    latitude:    isNaN(lat) ? null : lat,
-    longitude:   isNaN(lon) ? null : lon,
-    geometry:    _drawnGeoJSON || null,
-  };
-
-  const { data, error } = await API.parcels.create(payload);
-
-  btn.disabled  = false;
-  btn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" style="margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Parcel';
-
+async function loadHeat() {
+  const m = S.mission;
+  const { data, error } = await API.missions.heatmap(m.id, {
+    disease: $('heatDisease').value, date_from: $('heatFrom').value, date_to: $('heatTo').value });
   if (error) { App.toast(error, 'error'); return; }
-
-  App.toast(`Parcel "${name}" created!`, 'success');
-  closeAddParcel();
-  loadParcels();
+  S.heat = data;
+  fillDiseaseFilter();
+  renderMissionHeader();
+  drawGrid(m.grid, m.waypoints, data);
 }
+
+function fillDiseaseFilter() {
+  const sel = $('heatDisease');
+  const current = sel.value;
+  const known = new Set([...(S.heat ? S.heat.diseases : []), current].filter(Boolean));
+  sel.innerHTML = `<option value="">${escapeHtml(I18n.t('map.heat.all_diseases'))}</option>`
+    + [...known].sort().map(d => `<option value="${escapeHtml(d)}">${escapeHtml(classLabel(d))}</option>`).join('');
+  sel.value = current;
+}
+
+$('heatApplyBtn').addEventListener('click', loadHeat);
+$('heatIndicator').addEventListener('change', () => { if (S.mission && S.heat) drawGrid(S.mission.grid, S.mission.waypoints, S.heat); });
+$('mStatus').addEventListener('change', async () => {
+  const { error } = await API.missions.update(S.mission.id, { status: $('mStatus').value });
+  if (error) App.toast(error, 'error'); else S.mission.status = $('mStatus').value;
+});
+$('deleteMissionBtn').addEventListener('click', async () => {
+  if (!App.confirm(I18n.t('map.mission.delete_confirm'))) return;
+  const { error } = await API.missions.delete(S.mission.id);
+  if (error) { App.toast(error, 'error'); return; }
+  S.mission = null;
+  openParcel(S.selectedKey);
+});
+
+function download(name, content, type) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+$('exportJsonBtn').addEventListener('click', async () => {
+  const { data, error } = await API.missions.waypoints(S.mission.id);
+  if (error) { App.toast(error, 'error'); return; }
+  download(`green-mission-${S.mission.id}-waypoints.json`, JSON.stringify(data, null, 2), 'application/json');
+});
+$('exportGeoBtn').addEventListener('click', async () => {
+  const { data, error } = await API.missions.exportGeojson(S.mission.id);
+  if (error) { App.toast(error, 'error'); return; }
+  download(`green-mission-${S.mission.id}.geojson`, JSON.stringify(data), 'application/geo+json');
+});
+
+async function showCell(index, stat) {
+  const box = $('cellDetail');
+  const title = `<h4 style="margin:var(--sp-3) 0 var(--sp-1);">${escapeHtml(I18n.t('map.heat.cell_title', { n: index }))}</h4>`;
+  if (!stat) { box.innerHTML = title + `<p class="note">${escapeHtml(I18n.t('map.heat.cell_empty'))}</p>`; return; }
+  box.innerHTML = title + `<p class="note">${escapeHtml(I18n.t('map.heat.cell_stats', { n: stat.analyses, rate: I18n.percent(stat.rate) }))}</p>`
+    + `<p class="note">${escapeHtml(I18n.t('map.heat.loading'))}</p>`;
+  const items = await Promise.all(stat.analysis_ids.map(id => API.analysis.get(id).then(r => r.data).catch(() => null)));
+  box.innerHTML = title + `<p class="note">${escapeHtml(I18n.t('map.heat.cell_stats', { n: stat.analyses, rate: I18n.percent(stat.rate) }))}</p>`
+    + items.filter(Boolean).map(a => Fiche.html(a, { compact: true })
+      .replace('<div class="fiche-body">', `<div class="fiche-body"><a class="note" href="/history?id=${a.id}">#${a.id} · ${escapeHtml(I18n.dateTime(a.created_at))}</a>`)).join('');
+  if (window.innerWidth <= 900) box.scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ---- Geolocated analyses overlay ----------------------------------- */
+async function loadAnalysesOverlay() {
+  if (!navigator.onLine) return;
+  const { data } = await API.parcels.geoAnalyses();
+  analysesLayer.clearLayers();
+  (Array.isArray(data) ? data : []).forEach(a => {
+    const color = isHealthy(a) ? '#16a34a' : (ALERT_COLORS[alertLevel(a)] || '#d73027');
+    L.circleMarker([a.latitude, a.longitude], { radius: 6, color: '#fff', weight: 1.5, fillColor: color, fillOpacity: 0.9 })
+      .bindPopup(`<strong>${escapeHtml(analysisLabel(a))}</strong><br>${escapeHtml(I18n.dateTime(a.created_at))}<br>`
+        + `<a href="/history?id=${a.id}">${escapeHtml(I18n.t('common.actions.view'))}</a>`)
+      .addTo(analysesLayer);
+  });
+}
+
+/* ---- Wiring ---------------------------------------------------------- */
+ParcelStore.on('changed', () => loadParcels(false));
+ParcelStore.on('conflict', p => App.toast(p.error || I18n.t('map.form.conflict'), 'warning', 6000));
+ParcelStore.on('error', p => App.toast(p.error || I18n.t('common.errors.generic'), 'error', 6000));
+window.addEventListener('online', () => { renderParcels(); loadParcels(true); });
+window.addEventListener('offline', renderParcels);
+
+window.addEventListener('languageChanged', () => {
+  buildLayerControl();
+  renderParcels();
+  if (S.view === 'grid') { renderGridLabels(); }
+  if (S.view === 'mission' && S.mission) { renderMissionHeader(); fillDiseaseFilter(); drawGrid(S.mission.grid, S.mission.waypoints, S.heat); }
+  if (S.view === 'form') $('fRegion').textContent = formParcel && formParcel.region ? regionLabel(formParcel.region) : I18n.t('map.form.region_auto');
+  updateDraw();
+  loadAnalysesOverlay();
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+  buildLayerControl();
+  await loadParcels(true);
+  const bounds = parcelLayer.getBounds();
+  if (bounds.isValid()) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 18 });
+  ParcelStore.sync();
+  loadAnalysesOverlay();
+  // deep links: /map?parcel=<id>&mission=<id>
+  const q = new URLSearchParams(location.search);
+  const pid = parseInt(q.get('parcel'), 10);
+  const p = pid && S.parcels.find(x => x.id === pid);
+  if (p) { await openParcel(p.key, true); if (q.get('mission')) openMission(parseInt(q.get('mission'), 10)); }
+});
 </script>
 </body>
 </html>

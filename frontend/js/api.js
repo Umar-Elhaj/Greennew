@@ -77,7 +77,7 @@ async function request(endpoint, method = 'GET', body = null, auth = false, isFo
     }
 
     const contentType = response.headers.get('content-type') || '';
-    const isJson = contentType.includes('application/json');
+    const isJson = /[/+]json/.test(contentType);   // application/json, application/geo+json
 
     const responseData = isJson ? await response.json() : await response.text();
 
@@ -87,7 +87,8 @@ async function request(endpoint, method = 'GET', body = null, auth = false, isFo
         Auth.clear();
         window.location.replace('/?expired=1');
       }
-      return { data: null, error: errorText(responseData, isJson), status: response.status };
+      // body: the full error payload (e.g. 409 conflicts carry the server version)
+      return { data: null, error: errorText(responseData, isJson), status: response.status, body: isJson ? responseData : null };
     }
 
     return { data: responseData, error: null, status: response.status };
@@ -264,7 +265,31 @@ const API = {
     /** Delete a parcel. */
     delete(id) {
       return request(`/api/parcels/${id}`, 'DELETE', null, true);
+    },
+
+    /** Geolocated analyses of the user (map overlay). */
+    geoAnalyses() {
+      return request('/api/parcels/geo/analyses', 'GET', null, true);
     }
+  },
+
+  /* ----------------------------------------------------------
+     MISSIONS — GREEN Map grid, rover path, heatmap
+     ---------------------------------------------------------- */
+  missions: {
+    preview(payload) { return request('/api/missions/preview', 'POST', payload, true); },
+    create(payload)  { return request('/api/missions', 'POST', payload, true); },
+    list(parcelId)   { return request(`/api/missions${parcelId ? `?parcel_id=${encodeURIComponent(parcelId)}` : ''}`, 'GET', null, true); },
+    get(id)          { return request(`/api/missions/${id}`, 'GET', null, true); },
+    update(id, payload) { return request(`/api/missions/${id}`, 'PATCH', payload, true); },
+    delete(id)       { return request(`/api/missions/${id}`, 'DELETE', null, true); },
+    waypoints(id)    { return request(`/api/missions/${id}/waypoints`, 'GET', null, true); },
+    exportGeojson(id) { return request(`/api/missions/${id}/export.geojson`, 'GET', null, true); },
+    heatmap(id, filters = {}) {
+      const p = new URLSearchParams();
+      for (const [k, v] of Object.entries(filters)) if (v) p.set(k, v);
+      return request(`/api/missions/${id}/heatmap${p.toString() ? '?' + p : ''}`, 'GET', null, true);
+    },
   },
 
   /* ----------------------------------------------------------

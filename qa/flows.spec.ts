@@ -211,3 +211,98 @@ test('economics: net ROI = (losses avoided - cost) / cost', async ({ page, reque
   await page.locator('#appHeader .lang-switch-btn[data-lang="en"]').click();
   await expect(page.locator('#scenarioRows')).toContainText('Epidemic, treated late');
 });
+
+/** Click a ring of points on the map, in pixels relative to the map container. */
+async function clickRing(page: Page, points: Array<[number, number]>) {
+  const box = await page.locator('#map').boundingBox();
+  for (const [x, y] of points) await page.mouse.click(box!.x + x, box!.y + y);
+}
+
+test('GREEN Map: parcel drawn offline is kept, then synced when back online', async ({ page, context, request }) => {
+  const s = await newUser(request);
+  await signIn(page, s);
+  await page.goto('/map');
+  await page.evaluate('map.setView([3.85, 11.5], 18)');
+  await context.setOffline(true);
+  await expect(page.locator('#offlineBanner')).toBeVisible();
+
+  await page.click('#newParcelBtn');
+  await clickRing(page, [[200, 150], [420, 150], [420, 330], [200, 330]]);
+  await expect(page.locator('#drawCount')).toHaveText('4 points');
+  await expect(page.locator('#drawMsg')).toContainText('Surface');
+  await page.click('#undoPointBtn');
+  await expect(page.locator('#drawCount')).toHaveText('3 points');
+  await clickRing(page, [[200, 330]]);
+  await page.click('#finishDrawBtn');
+  await page.fill('#fName', 'Champ hors ligne');
+  await page.selectOption('#fCrop', 'Maize');
+  await page.click('#saveParcelBtn');
+  await expect(page.locator('#pSync')).toHaveText("En attente d'envoi");
+  // nothing on the server yet
+  let list = await (await request.get('/api/parcels', { headers: { Authorization: `Bearer ${s.token}` } })).json();
+  expect(list.length).toBe(0);
+
+  await context.setOffline(false);
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await expect(page.locator('#pSync')).toHaveText('Enregistrée', { timeout: 15000 });
+  list = await (await request.get('/api/parcels', { headers: { Authorization: `Bearer ${s.token}` } })).json();
+  expect(list.length).toBe(1);
+  expect(list[0].name).toBe('Champ hors ligne');
+  expect(list[0].area_ha).toBeGreaterThan(0.05);
+  expect(list[0].region).toBe('Centre');
+  await expect(page.locator('#pRegion')).toHaveText('Centre');
+});
+
+test('GREEN Map: self-crossing outline is refused while drawing', async ({ page, request }) => {
+  const s = await newUser(request);
+  await signIn(page, s);
+  await page.goto('/map');
+  await page.evaluate('map.setView([3.85, 11.5], 18)');
+  await page.click('#newParcelBtn');
+  await clickRing(page, [[200, 150], [420, 330], [420, 150], [200, 330]]);   // bow-tie
+  await expect(page.locator('#drawMsg')).toHaveText('Le contour se croise : déplacez ou supprimez un point.');
+  await expect(page.locator('#finishDrawBtn')).toBeDisabled();
+});
+
+test('GREEN Map: parcel -> grid -> mission -> 6 analyses -> heatmap', async ({ page, request }) => {
+  const s = await newUser(request);
+  const auth = { Authorization: `Bearer ${s.token}` };
+  const lat0 = 3.85, lng0 = 11.5, mLat = 1 / 111195, mLng = 1 / (111195 * Math.cos(lat0 * Math.PI / 180));
+  const ring = [[0, 0], [50, 0], [50, 20], [0, 20], [0, 0]].map(([x, y]) => [lng0 + x * mLng, lat0 + y * mLat]);
+  const parcel = await (await request.post('/api/parcels', { headers: auth,
+    data: { name: 'Grille', crop_type: 'Maize', geometry: { type: 'Polygon', coordinates: [ring] } } })).json();
+
+  await signIn(page, s);
+  await page.goto(`/map?parcel=${parcel.id}`);
+  await expect(page.locator('#pName')).toHaveText('Grille');
+  await page.click('#gridBtn');
+  await page.locator('#cellSize').fill('5');
+  await page.click('#previewBtn');
+  await expect(page.locator('#gridSummary')).toContainText('40 cellules');
+  await page.click('#createMissionBtn');
+  await expect(page.locator('#viewMission')).toBeVisible();
+  await expect(page.locator('#mProgress')).toHaveText('0 cellules analysées sur 40');
+  const missionId = Number((await page.locator('#analyseMissionLink').getAttribute('href'))!.match(/mission_id=(\d+)/)![1]);
+
+  const colors = ['#2a8a3a', '#8a6a2a', '#c04030', '#3060c0', '#a0a020', '#20a0a0'];
+  const cells = [1, 1, 2, 2, 3, 5];
+  for (let i = 0; i < 6; i++) {
+    const r = await request.post('/api/camera/analyze-frame', { headers: auth, multipart: {
+      file: { name: 'f.png', mimeType: 'image/png', buffer: solidPng(colors[i]) },
+      mission_id: String(missionId), cell_index: String(cells[i]) } });
+    expect(r.status(), await r.text()).toBe(200);
+  }
+  await page.reload();
+  await page.goto(`/map?parcel=${parcel.id}&mission=${missionId}`);
+  await expect(page.locator('#mProgress')).toHaveText('4 cellules analysées sur 40');
+  await expect(page.locator('#legend')).toContainText('Non analysée');
+  // 36 cells not analysed are hatched
+  await expect(page.locator('#map path[fill="url(#green-hatch)"]')).toHaveCount(36);
+  await page.selectOption('#heatIndicator', 'alert');
+  await expect(page.locator('#legend')).toContainText("Niveau d'alerte le plus élevé");
+  await page.locator('#map path[fill="url(#green-hatch)"]').first().waitFor();
+  await page.screenshot({ path: 'screenshots/flows/map-heatmap.png' });
+  // export of the waypoints for the rover
+  const wp = await (await request.get(`/api/missions/${missionId}/waypoints`, { headers: auth })).json();
+  expect(wp.waypoints.length).toBe(40);
+});
