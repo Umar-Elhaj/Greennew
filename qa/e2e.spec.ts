@@ -27,9 +27,7 @@ const PAGES = [
   { id: 'history', path: '/history', auth: true },
   { id: 'settings', path: '/settings', auth: true },
   { id: 'profile', path: '/profile', auth: true },
-  ...(fs.existsSync(path.join(__dirname, '..', 'frontend', 'green-data.html'))
-    ? [{ id: 'green-data', path: '/green-data', auth: true }]
-    : []),
+  { id: 'green-data', path: '/green-data', auth: true },
 ];
 
 const LANGS = ['fr', 'en'] as const;
@@ -75,6 +73,13 @@ const WRONG_LANG_WORDS: Record<string, RegExp> = {
 const WRONG_LANG_ALLOW: RegExp[] = [/^GREEN( Map| Data)?$/, /^GreenBot$/, /Esri|OpenStreetMap|Leaflet|Chart\.js/];
 
 let session: { token: string; user: any } | null = null;
+
+export function setRole(phone: string, role: string) {
+  const { execFileSync } = require('child_process');
+  execFileSync(path.join(process.env.E2E_ROOT!, '.venv', 'bin', 'python'),
+    [path.join(process.env.E2E_ROOT!, 'scripts', 'set_role.py'), '--phone', phone, '--role', role],
+    { env: { ...process.env, DATABASE_URL: process.env.E2E_DATABASE_URL } });
+}
 
 /** 16×16 PNG of one colour, built without dependencies. */
 function solidPng(hex: string): Buffer {
@@ -130,6 +135,10 @@ async function ensureUser(request: APIRequestContext) {
     data: { name: 'E2E-1', crop_type: 'Maize', geometry: { type: 'Polygon', coordinates: [ring] } },
   });
   expect(pr.status(), await pr.text()).toBe(201);
+  // partner role, so GREEN Data is reachable (it is empty: no consented analysis yet)
+  setRole(phone, 'partner');
+  const me = await request.get('/api/auth/me', { headers: { Authorization: `Bearer ${body.access_token}` } });
+  session.user = await me.json();
   return session;
 }
 

@@ -274,6 +274,28 @@ const API = {
   },
 
   /* ----------------------------------------------------------
+     GREEN DATA — aggregates for partner / admin accounts
+     ---------------------------------------------------------- */
+  greenData: {
+    /** path: meta | overview | plants | diseases | regions | seasonality | confidence | model-quality | alerts | dataset */
+    get(path, filters = {}) {
+      const p = new URLSearchParams();
+      for (const [k, v] of Object.entries(filters)) if (v) p.set(k, v);
+      return request(`/api/green-data/${path}${p.toString() ? '?' + p : ''}`, 'GET', null, true);
+    },
+    /** Exports as a Blob (the Authorization header cannot be put on a plain link). */
+    async download(path, filters = {}) {
+      const p = new URLSearchParams();
+      for (const [k, v] of Object.entries(filters)) if (v) p.set(k, v);
+      const res = await fetch(`${API_BASE_URL}/api/green-data/${path}${p.toString() ? '?' + p : ''}`, {
+        headers: { Authorization: `Bearer ${Auth.getToken()}`, 'Accept-Language': I18n.lang },
+      });
+      if (!res.ok) return { error: I18n.t('common.errors.generic') };
+      return { blob: await res.blob() };
+    },
+  },
+
+  /* ----------------------------------------------------------
      MISSIONS — GREEN Map grid, rover path, heatmap
      ---------------------------------------------------------- */
   missions: {

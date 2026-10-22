@@ -323,3 +323,42 @@ test('camera: captures are tagged with the mission and the cell', async ({ page,
   const hm = await (await request.get(`/api/missions/${mission.id}/heatmap`, { headers: auth })).json();
   expect(hm.cells.map((c: any) => c.index)).toEqual([3]);
 });
+
+function runScript(args: string[]) {
+  const { execFileSync } = require('child_process');
+  const pathMod = require('path');
+  return execFileSync(pathMod.join(process.env.E2E_ROOT!, '.venv', 'bin', 'python'),
+    [pathMod.join(process.env.E2E_ROOT!, 'scripts', args[0]), ...args.slice(1)],
+    { env: { ...process.env, DATABASE_URL: process.env.E2E_DATABASE_URL, DEBUG: 'true' } }).toString();
+}
+
+test('GREEN Data: farmers are refused, partners see aggregates (demo data, DEBUG only)', async ({ page, context, request }) => {
+  const farmer = await newUser(request);
+  await signIn(page, farmer);
+  await page.goto('/green-data');
+  await expect(page.locator('#forbidden')).toBeVisible();
+  await expect(page.locator('.nav-item[data-page="green-data"]')).toHaveCount(0);
+
+  runScript(['seed_demo.py', '--farmers-per-region', '3', '--analyses-per-farmer', '25']);
+  const partner = await newUser(request);
+  runScript(['set_role.py', '--phone', partner.phone, '--role', 'partner']);
+  page = await context.newPage();      // the farmer's init script stays on the first page
+  await signIn(page, partner);
+  await page.goto('/green-data');
+  await expect(page.locator('.nav-item[data-page="green-data"]')).toHaveCount(1);
+  await expect(page.locator('#demoBox')).toBeVisible();
+  await page.check('#fDemo');
+  await page.click('#filters button[type="submit"]');
+  await expect(page.locator('#mDemo')).toBeVisible();
+  await expect(page.locator('#kpis')).toContainText('750');            // 10 regions x 3 farmers x 25
+  await expect(page.locator('#plantsBox canvas')).toBeVisible();
+  await expect(page.locator('#matrixBox td.cell').first()).toBeVisible();
+  await expect(page.locator('#regionMap path.leaflet-interactive')).toHaveCount(10);
+  await page.selectOption('#fRegion', 'Littoral');
+  await page.click('#filters button[type="submit"]');
+  await expect(page.locator('#kpis')).toContainText('75');
+  await page.screenshot({ path: 'screenshots/flows/green-data.png', fullPage: true });
+  await page.locator('#appHeader .lang-switch-btn[data-lang="en"]').click();
+  await expect(page.locator('.gd-method')).toContainText('Only analyses whose author agreed');
+  runScript(['seed_demo.py', '--remove']);
+});

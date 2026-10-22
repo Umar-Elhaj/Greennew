@@ -1,0 +1,228 @@
+{
+  "en": {
+    "subtitle": "Aggregated statistics for partners",
+    "banner_kicker": "Partners",
+    "banner_title": "GREEN Data",
+    "banner_text": "Aggregated, anonymised statistics on the analyses shared by farmers: crops, probable diseases, regions and trends over time.",
+    "forbidden": "This page is reserved for partner and administrator accounts.",
+    "filters": {
+      "title": "Filters",
+      "from": "From",
+      "to": "To",
+      "region": "Region",
+      "plant": "Plant",
+      "disease": "Probable disease",
+      "source": "Source",
+      "model": "Model version",
+      "all": "All",
+      "demo": "Include demo data",
+      "apply": "Apply",
+      "reset": "Reset"
+    },
+    "method": {
+      "title": "Method and limits",
+      "consent": "Only analyses whose author agreed to share them are counted.",
+      "kanon": "Any figure based on fewer than {{k}} analyses is hidden and shown as “< {{k}}”.",
+      "geo": "The finest geography is the region of Cameroon (region of the parcel, otherwise of the farmer). No name and no coordinates are shown or exported.",
+      "prediction": "Results are AI predictions (probable diseases), not diagnoses; their quality is measured below when agronomists have verified images.",
+      "period": "Period covered: {{from}} to {{to}} · n = {{n}} analyses.",
+      "period_empty": "No analysis matches these filters yet.",
+      "demo": "Demo data is included: these figures are not real."
+    },
+    "masked": "< {{k}}",
+    "not_enough": "Not enough data yet (n = {{n}}).",
+    "table_view": "Show the data as a table",
+    "kpi": {
+      "analyses": "Analyses",
+      "farmers": "Active farmers",
+      "parcels": "Parcels",
+      "area": "Area followed",
+      "disease_rate": "Share of probable diseases"
+    },
+    "volume": {
+      "title": "Analyses per month",
+      "rate_title": "Share of probable diseases per month",
+      "month": "Month",
+      "analyses": "Analyses",
+      "farmers": "Farmers",
+      "rate": "Probable diseases"
+    },
+    "plants": {
+      "title": "Analyses by plant",
+      "plant": "Plant",
+      "diseased": "Probable disease",
+      "healthy": "Healthy",
+      "rate": "Share of probable diseases"
+    },
+    "diseases": {
+      "title": "Most frequent probable diseases",
+      "matrix": "Plant × probable disease",
+      "disease": "Probable disease",
+      "analyses": "Analyses"
+    },
+    "regions": {
+      "title": "By region",
+      "map_metric": "Map colour",
+      "metric_analyses": "Number of analyses",
+      "metric_rate": "Share of probable diseases",
+      "region": "Region",
+      "top": "Most frequent",
+      "no_data": "No data"
+    },
+    "season": {
+      "title": "Seasonality (month × probable disease)",
+      "note": "All years combined."
+    },
+    "confidence": {
+      "title": "Model confidence and alert levels",
+      "histogram": "Distribution of the model confidence",
+      "levels": "Alert levels",
+      "low_rate": "Low-confidence predictions (< {{t}})",
+      "low_help": "A high share suggests images outside what the model knows (blurred, other crop, other disease).",
+      "bin": "Confidence"
+    },
+    "quality": {
+      "title": "Model quality (verified by agronomists)",
+      "verified": "Verified analyses",
+      "agreement": "Agreement with the agronomist",
+      "version": "Model version",
+      "confusion": "Confusion matrix",
+      "predicted": "Predicted",
+      "truth": "Verified",
+      "empty": "No analysis verified by an agronomist yet: model quality cannot be measured."
+    },
+    "alerts": {
+      "title": "Emerging alerts",
+      "none": "No emerging alert at the moment.",
+      "item": "{{disease}} in {{region}}: {{recent}} cases over the last 14 days (usual: {{baseline}} per 14 days).",
+      "as_of": "Computed on {{date}}, regardless of the period filter."
+    },
+    "dataset": {
+      "title": "Dataset maturity (for retraining)",
+      "class": "Class",
+      "images": "Shared images",
+      "verified": "Verified labels"
+    },
+    "export": {
+      "title": "Exports",
+      "csv": "Aggregated table (CSV)",
+      "geojson": "Regions (GeoJSON)",
+      "note": "Exports contain only aggregates (region × month × plant × result), with the same “< {{k}}” masking."
+    },
+    "sources": { "camera": "Camera", "upload": "Imported photo", "rover": "Rover", "drone": "Drone (former)" },
+    "months": "Month"
+  },
+  "fr": {
+    "subtitle": "Statistiques agrégées pour les partenaires",
+    "banner_kicker": "Partenaires",
+    "banner_title": "GREEN Data",
+    "banner_text": "Statistiques agrégées et anonymisées sur les analyses partagées par les exploitants : cultures, maladies probables, régions et évolution dans le temps.",
+    "forbidden": "Cette page est réservée aux comptes partenaires et administrateurs.",
+    "filters": {
+      "title": "Filtres",
+      "from": "Du",
+      "to": "Au",
+      "region": "Région",
+      "plant": "Plante",
+      "disease": "Maladie probable",
+      "source": "Source",
+      "model": "Version du modèle",
+      "all": "Toutes",
+      "demo": "Inclure les données de démonstration",
+      "apply": "Appliquer",
+      "reset": "Réinitialiser"
+    },
+    "method": {
+      "title": "Méthode et limites",
+      "consent": "Seules les analyses dont l'auteur a accepté le partage sont comptées.",
+      "kanon": "Tout chiffre fondé sur moins de {{k}} analyses est masqué et affiché « < {{k}} ».",
+      "geo": "La géographie la plus fine est la région du Cameroun (région de la parcelle, sinon de l'exploitant). Aucun nom ni aucune coordonnée n'est affiché ou exporté.",
+      "prediction": "Les résultats sont des prédictions de l'IA (maladies probables), pas des diagnostics ; leur qualité est mesurée plus bas lorsque des agronomes ont vérifié des images.",
+      "period": "Période couverte : du {{from}} au {{to}} · n = {{n}} analyses.",
+      "period_empty": "Aucune analyse ne correspond encore à ces filtres.",
+      "demo": "Les données de démonstration sont incluses : ces chiffres ne sont pas réels."
+    },
+    "masked": "< {{k}}",
+    "not_enough": "Pas encore assez de données (n = {{n}}).",
+    "table_view": "Afficher les données sous forme de tableau",
+    "kpi": {
+      "analyses": "Analyses",
+      "farmers": "Exploitants actifs",
+      "parcels": "Parcelles",
+      "area": "Surface suivie",
+      "disease_rate": "Part de maladies probables"
+    },
+    "volume": {
+      "title": "Analyses par mois",
+      "rate_title": "Part de maladies probables par mois",
+      "month": "Mois",
+      "analyses": "Analyses",
+      "farmers": "Exploitants",
+      "rate": "Maladies probables"
+    },
+    "plants": {
+      "title": "Analyses par plante",
+      "plant": "Plante",
+      "diseased": "Maladie probable",
+      "healthy": "Saine",
+      "rate": "Part de maladies probables"
+    },
+    "diseases": {
+      "title": "Maladies probables les plus fréquentes",
+      "matrix": "Plante × maladie probable",
+      "disease": "Maladie probable",
+      "analyses": "Analyses"
+    },
+    "regions": {
+      "title": "Par région",
+      "map_metric": "Couleur de la carte",
+      "metric_analyses": "Nombre d'analyses",
+      "metric_rate": "Part de maladies probables",
+      "region": "Région",
+      "top": "La plus fréquente",
+      "no_data": "Aucune donnée"
+    },
+    "season": {
+      "title": "Saisonnalité (mois × maladie probable)",
+      "note": "Toutes années confondues."
+    },
+    "confidence": {
+      "title": "Confiance du modèle et niveaux d'alerte",
+      "histogram": "Répartition de la confiance du modèle",
+      "levels": "Niveaux d'alerte",
+      "low_rate": "Prédictions à faible confiance (< {{t}})",
+      "low_help": "Une part élevée suggère des images hors du domaine connu du modèle (floues, autre culture, autre maladie).",
+      "bin": "Confiance"
+    },
+    "quality": {
+      "title": "Qualité du modèle (vérifications des agronomes)",
+      "verified": "Analyses vérifiées",
+      "agreement": "Accord avec l'agronome",
+      "version": "Version du modèle",
+      "confusion": "Matrice de confusion",
+      "predicted": "Prédit",
+      "truth": "Vérifié",
+      "empty": "Aucune analyse vérifiée par un agronome pour l'instant : la qualité du modèle ne peut pas être mesurée."
+    },
+    "alerts": {
+      "title": "Alertes émergentes",
+      "none": "Aucune alerte émergente pour le moment.",
+      "item": "{{disease}} — {{region}} : {{recent}} cas sur les 14 derniers jours (habituellement {{baseline}} par période de 14 jours).",
+      "as_of": "Calculé le {{date}}, indépendamment du filtre de période."
+    },
+    "dataset": {
+      "title": "Maturité du jeu de données (pour le réentraînement)",
+      "class": "Classe",
+      "images": "Images partagées",
+      "verified": "Libellés vérifiés"
+    },
+    "export": {
+      "title": "Exports",
+      "csv": "Tableau agrégé (CSV)",
+      "geojson": "Régions (GeoJSON)",
+      "note": "Les exports ne contiennent que des agrégats (région × mois × plante × résultat), avec le même masquage « < {{k}} »."
+    },
+    "sources": { "camera": "Caméra", "upload": "Photo importée", "rover": "Rover", "drone": "Drone (ancien)" },
+    "months": "Mois"
+  }
+}

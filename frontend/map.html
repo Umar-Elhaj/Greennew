@@ -294,6 +294,7 @@
 <script src="/js/app.js"></script>
 <script src="/js/layout.js"></script>
 <script src="/js/fiche.js"></script>
+<script src="/js/charts.js"></script>
 <script src="/js/parcel-store.js"></script>
 <script>
 /* ============================================================
@@ -715,19 +716,17 @@ $('createMissionBtn').addEventListener('click', async () => {
 });
 
 /* ---- Grid drawing + heatmap colours --------------------------- */
-const RATE_COLORS = ['#1a9850', '#91cf60', '#fee08b', '#fc8d59', '#d73027'];
-const ALERT_COLORS = { none: '#1a9850', low: '#4575b4', medium: '#fdae61', high: '#d73027' };
-const CAT_COLORS = ['#7570b3', '#e7298a', '#66a61e', '#e6ab02', '#a6761d', '#1b9e77', '#d95f02', '#666666'];
-const rateColor = r => RATE_COLORS[Math.min(4, Math.floor(r * 5))];
+// Colours (js/charts.js): share = one sequential hue, alert = status palette,
+// dominant disease = fixed colour per class (never its rank in the view)
+const RATE_BINS = VIZ.seqBins();
+const rateColor = r => RATE_BINS[Math.min(4, Math.floor(r * 5))];
+const HEALTHY_ONLY = '#d6d4cf';
 
-function cellColor(stat, indicator, diseases) {
+function cellColor(stat, indicator) {
   if (!stat) return null;
-  if (indicator === 'alert') return ALERT_COLORS[stat.max_alert] || ALERT_COLORS.none;
-  if (indicator === 'dominant') {
-    if (!stat.dominant) return ALERT_COLORS.none;
-    return CAT_COLORS[diseases.indexOf(stat.dominant) % CAT_COLORS.length];
-  }
-  return stat.diseased === 0 ? RATE_COLORS[0] : rateColor(stat.rate);
+  if (indicator === 'alert') return VIZ.status(stat.max_alert);
+  if (indicator === 'dominant') return stat.dominant ? VIZ.disease(stat.dominant) : HEALTHY_ONLY;
+  return rateColor(stat.rate);
 }
 
 function drawGrid(cells, waypoints, heat) {
@@ -738,7 +737,7 @@ function drawGrid(cells, waypoints, heat) {
   const diseases = heat ? heat.diseases : [];
   cells.forEach(c => {
     const stat = stats[c.index];
-    const color = heat ? cellColor(stat, indicator, diseases) : null;
+    const color = heat ? cellColor(stat, indicator) : null;
     const layer = L.polygon(c.polygon.map(([lng, lat]) => [lat, lng]), {
       color: heat ? '#374151' : '#2563eb', weight: heat ? 0.6 : 1,
       fillColor: color || '#2563eb', fillOpacity: heat ? (color ? 0.75 : 1) : 0.08,
@@ -765,12 +764,14 @@ function renderLegend(heat, indicator, diseases) {
   const row = (color, label) => `<div class="lg-row"><span class="sw" style="background:${color}"></span>${escapeHtml(label)}</div>`;
   let html = `<strong>${escapeHtml(I18n.t(`map.heat.${indicator}`))}</strong>`;
   if (indicator === 'rate') {
-    ['0–20 %', '20–40 %', '40–60 %', '60–80 %', '80–100 %'].forEach((l, i) => { html += row(RATE_COLORS[i], l); });
+    [0, 20, 40, 60, 80].forEach((lo, i) => {
+      html += row(RATE_BINS[i], `${I18n.percent(lo / 100)} – ${I18n.percent((lo + 20) / 100)}`);
+    });
   } else if (indicator === 'alert') {
-    ['none', 'low', 'medium', 'high'].forEach(l => { html += row(ALERT_COLORS[l], alertLabel(l)); });
+    ['none', 'low', 'medium', 'high'].forEach(l => { html += row(VIZ.status(l), alertLabel(l)); });
   } else {
-    html += row(ALERT_COLORS.none, I18n.t('map.heat.healthy'));
-    diseases.forEach((d, i) => { html += row(CAT_COLORS[i % CAT_COLORS.length], classLabel(d)); });
+    html += row(HEALTHY_ONLY, I18n.t('map.heat.healthy'));
+    diseases.forEach(d => { html += row(VIZ.disease(d), classLabel(d)); });
   }
   html += '<div class="lg-row"><span class="sw hatch"></span>' + escapeHtml(I18n.t('map.heat.not_analysed')) + '</div>';
   lg.innerHTML = html;
@@ -901,7 +902,7 @@ async function loadAnalysesOverlay() {
   const { data } = await API.parcels.geoAnalyses();
   analysesLayer.clearLayers();
   (Array.isArray(data) ? data : []).forEach(a => {
-    const color = isHealthy(a) ? '#16a34a' : (ALERT_COLORS[alertLevel(a)] || '#d73027');
+    const color = VIZ.status(alertLevel(a));
     L.circleMarker([a.latitude, a.longitude], { radius: 6, color: '#fff', weight: 1.5, fillColor: color, fillOpacity: 0.9 })
       .bindPopup(`<strong>${escapeHtml(analysisLabel(a))}</strong><br>${escapeHtml(I18n.dateTime(a.created_at))}<br>`
         + `<a href="/history?id=${a.id}">${escapeHtml(I18n.t('common.actions.view'))}</a>`)

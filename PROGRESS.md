@@ -70,13 +70,13 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 
 ## LOT 6 — GREEN Data
 
-- [ ] 6.1 `users.role` (`farmer|agronomist|partner|admin`) + garde d'accès `/api/green-data/*`
-- [ ] 6.2 Endpoints d'agrégats SQL (volume, plantes, maladies, matrice, régions, saisonnalité, gravité/confiance, qualité modèle, alertes, maturité) + cache 10 min + index
-- [ ] 6.3 Confidentialité : consentement seul, masquage `< 5`, exports sans données personnelles
-- [ ] 6.4 Exports CSV + GeoJSON agrégé + encadré méthodologique
-- [ ] 6.5 Page `green-data.html` (Chart.js 4.4.0, clair/sombre, états vides, traduite)
-- [ ] 6.6 `scripts/seed_demo.py` (`is_demo`), interrupteur démo visible seulement en `DEBUG`
-- [ ] 6.7 Tests agrégats/seuil/rôles + Playwright avec et sans données
+- [x] 6.1 `users.role` (`farmer|agronomist|partner|admin`) + garde d'accès `/api/green-data/*`
+- [x] 6.2 Endpoints d'agrégats SQL (volume, plantes, maladies, matrice, régions, saisonnalité, gravité/confiance, qualité modèle, alertes, maturité) + cache 10 min + index
+- [x] 6.3 Confidentialité : consentement seul, masquage `< 5`, exports sans données personnelles
+- [x] 6.4 Exports CSV + GeoJSON agrégé + encadré méthodologique
+- [x] 6.5 Page `green-data.html` (Chart.js 4.4.0, clair/sombre, états vides, traduite)
+- [x] 6.6 `scripts/seed_demo.py` (`is_demo`), interrupteur démo visible seulement en `DEBUG`
+- [x] 6.7 Tests agrégats/seuil/rôles + Playwright avec et sans données — `test_green_data.py` (9, SQLite + Postgres) ; balayage `green-data` (sans données) ; flow « GREEN Data: farmers are refused, partners see aggregates »
 
 ## LOT 7 — Déploiement o2switch
 
@@ -125,6 +125,9 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 | D25 | Quadrillage et parcours calculés par le serveur (Python pur), grille orientée selon l'axe long, détours par des cellules de transit ; Turf côté client seulement pour valider le tracé hors ligne | Une seule implémentation testable (surface, nombre de cellules, absence de saut) ; l'aperçu de grille demande le réseau. |
 | D26 | Région détectée côté serveur par point-dans-polygone (geoBoundaries ADM1 Cameroun, CC BY 3.0, `backend/data/cameroon_regions.json`) | Les boîtes englobantes d'origine se chevauchaient (Buea → « Littoral »). |
 | D27 | Cellules numérotées à partir de 1 (affichage = stockage) ; cellule « non analysée » = aucune analyse dans la cellule pour les filtres choisis | Lisible pour l'exploitant et le rover. |
+| D28 | Palette des graphiques validée (`dataviz/validate_palette.js`, clair et sombre) : couleur fixe par classe de maladie, bleu séquentiel pour les grandeurs, palette de statut réservée aux niveaux d'alerte ; la heatmap GREEN Map passe d'un arc-en-ciel à une rampe mono-teinte | Les couleurs suivent l'entité (un filtre ne repeint rien) ; lisible pour les daltoniens. |
+| D29 | `scripts/set_role.py` pour attribuer les rôles (aucune interface d'administration) ; `POST /api/analysis/{id}/verify` pour les agronomes | Sans eux, aucun compte partenaire ni aucune mesure de qualité du modèle n'est possible. |
+| D30 | Base SQLite de développement migrée par Alembic au démarrage (et non `create_all`) | Un `green.db` existant recevait sinon le nouveau code sans les nouvelles colonnes. |
 | D2 | Dépendances de dev dans `backend/requirements-dev.txt` (pytest, ruff, onnx) | Ne pas alourdir le serveur de production. |
 | D1 | Clone de `Umar-Elhaj/Greennew` dans `Greennew/` (et non `TCHOUANANG-dimitri/GREEN`) | Le prompt maître cible ce dépôt ; HEAD distant = `36d4768`, identique au contexte vérifié. |
 
