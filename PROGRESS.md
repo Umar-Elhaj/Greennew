@@ -53,7 +53,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 ## LOT 4 — Audit et réparation fonctionnelle
 
 - [ ] 4.1 Corriger chaque ligne « cassé »/« partiel » d'`AUDIT.md` (test ou étape Playwright à chaque fois)
-- [ ] 4.2 Legacy drone : `drone.html` hors navigation + redirection ; `drone_router` supprimé s'il n'a plus d'appelant
+- [x] 4.2 Legacy drone : `drone.html` hors navigation + redirection ; `drone_router` supprimé s'il n'a plus d'appelant — `drone.html`, `drone.css`, `drone_router.py` et `API.drone` supprimés (seul appelant : la page morte) ; `/drone` et `/drone.html` → 307 `/camera` (test)
 - [ ] 4.3 Caméra : file d'attente IndexedDB (P1-a), indicateur « N en attente », envoi au retour du réseau, reprise, choix parcelle/mission
 
 ## LOT 5 — GREEN Map

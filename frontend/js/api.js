@@ -257,53 +257,7 @@ const API = {
   },
 
   /* ----------------------------------------------------------
-     DRONE — Phase 4
-     ---------------------------------------------------------- */
-  drone: {
-    /**
-     * Connect to a drone by IP address.
-     * Backend verifies the MJPEG stream is reachable.
-     * @param {string} ip - e.g. "192.168.10.1"
-     * @param {number|string} port - e.g. 8080
-     */
-    connect(ip, port = 8080) {
-      return request('/api/drone/connect', 'POST', { ip, port }, true);
-    },
-
-    /**
-     * Capture a frame from the drone MJPEG stream and run inference.
-     * @param {string} ip
-     * @param {number|string} port
-     * @param {number|null} parcelId
-     * @param {number|null} latitude
-     * @param {number|null} longitude
-     */
-    captureAndAnalyze(ip, port = 8080, parcelId = null, latitude = null, longitude = null) {
-      return request('/api/drone/capture', 'POST', {
-        ip, port, parcel_id: parcelId, latitude, longitude
-      }, true);
-    },
-
-    /**
-     * Upload a local image file for disease inference.
-     * @param {FormData} formData - must contain 'file' field
-     */
-    upload(formData) {
-      return request('/api/drone/upload', 'POST', formData, true, true);
-    },
-
-    /**
-     * Get the MJPEG stream URL for a given IP.
-     * @param {string} ip
-     * @param {number|string} port
-     */
-    streamUrl(ip, port = 8080) {
-      return request(`/api/drone/stream-url?ip=${encodeURIComponent(ip)}&port=${encodeURIComponent(port)}`, 'GET', null, true);
-    }
-  },
-
-  /* ----------------------------------------------------------
-     CAMERA / ROVER — Phase MVP (replaces drone for MVP)
+     CAMERA / ROVER
      ---------------------------------------------------------- */
   camera: {
     /** Verify rover camera stream is reachable at given IP. */

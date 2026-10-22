@@ -64,3 +64,10 @@ def test_update_profile_and_change_password(client, user):
 def test_deactivated_account_cannot_use_token(client, user):
     assert client.delete("/api/auth/me", headers=user["headers"]).status_code == 200
     assert client.get("/api/auth/me", headers=user["headers"]).status_code == 401
+
+
+def test_legacy_drone_page_redirects_and_api_is_gone(client):
+    for path in ("/drone", "/drone.html"):
+        r = client.get(path, follow_redirects=False)
+        assert r.status_code in (302, 307) and r.headers["location"] == "/camera"
+    assert client.post("/api/drone/connect", json={}).status_code in (404, 405)

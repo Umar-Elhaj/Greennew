@@ -24,7 +24,6 @@ from database import engine, Base, IS_SQLITE
 from routers import auth_router
 from routers import dashboard_router   # Phase 3 — KPIs + trends
 from routers import analysis_router    # Phase 3 — Analysis history + fiche terrain
-from routers import drone_router       # Phase 4 legacy (kept for compat)
 from routers import camera_router      # Phase MVP — Rover camera + dual inference
 from routers import parcel_router      # Phase 5 — Parcel CRUD
 from routers import chatbot_router     # Phase 6 — GreenBot RAG + Gemini API
@@ -121,7 +120,6 @@ if CORS_ORIGINS:
 app.include_router(auth_router.router)
 app.include_router(dashboard_router.router)
 app.include_router(analysis_router.router)
-app.include_router(drone_router.router)
 app.include_router(media_router.router)
 app.include_router(camera_router.router)
 app.include_router(parcel_router.router)
@@ -150,7 +148,9 @@ async def dashboard_page():
     return FileResponse(os.path.join(FRONTEND_DIR, "dashboard.html"))
 
 
+# Legacy drone page: the rover camera page replaced it.
 @app.get("/drone", include_in_schema=False)
+@app.get("/drone.html", include_in_schema=False)
 async def drone_page():
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url="/camera")
