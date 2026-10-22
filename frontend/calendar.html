@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -175,6 +175,8 @@
       .month-hdr  { font-size: 9px; }
       .crop-name  { font-size: var(--text-xs); }
     }
+      .zone-note { font-size: var(--text-sm); color: var(--text-secondary); background: var(--surface-1); border: 1px solid var(--border-subtle);
+                 border-left: 3px solid var(--color-info); border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-5); }
   </style>
 </head>
 <body>
@@ -186,15 +188,12 @@
       <div style="background:linear-gradient(135deg,var(--brand-darker) 0%,var(--brand-dark) 60%,var(--brand-mid) 100%);border-radius:var(--radius-xl);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-8);position:relative;overflow:hidden;">
         <div style="position:absolute;width:280px;height:280px;background:rgba(255,255,255,.05);border-radius:50%;right:-50px;top:-80px;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;">
-          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);">Analytics</div>
+          <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);" data-i18n="calendar.banner_kicker"></div>
           <div style="font-size:var(--text-2xl);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp-2);">
-            Agricultural Calendar
+            <span data-i18n="calendar.banner_title"></span>
             <span class="today-badge" id="currentMonthBadge" style="vertical-align:middle;"></span>
           </div>
-          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.6);">
-            Cameroon seasonal planting guide — maize, cassava, and tomato.
-            Two rainy seasons per year (March–June &amp; August–November).
-          </div>
+          <div style="font-size:var(--text-sm);color:rgba(255,255,255,.75);" data-i18n="calendar.banner_text"></div>
         </div>
       </div>
 
@@ -202,21 +201,23 @@
       <div class="legend">
         <div class="legend-item">
           <div class="legend-dot" style="background:rgba(46,204,113,0.22);border:1px solid rgba(46,204,113,0.4);"></div>
-          <span class="legend-label">Planting period</span>
+          <span class="legend-label" data-i18n="calendar.legend.plant"></span>
         </div>
         <div class="legend-item">
           <div class="legend-dot" style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);"></div>
-          <span class="legend-label">Growing / vegetative phase</span>
+          <span class="legend-label" data-i18n="calendar.legend.grow"></span>
         </div>
         <div class="legend-item">
           <div class="legend-dot" style="background:rgba(245,158,11,0.20);border:1px solid rgba(245,158,11,0.3);"></div>
-          <span class="legend-label">Harvest period</span>
+          <span class="legend-label" data-i18n="calendar.legend.harvest"></span>
         </div>
         <div class="legend-item">
           <div class="legend-dot" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);"></div>
-          <span class="legend-label">High disease risk</span>
+          <span class="legend-label" data-i18n="calendar.legend.risk"></span>
         </div>
       </div>
+
+      <p class="zone-note" data-i18n="calendar.zone_note"></p>
 
       <!-- Calendar table — scrollable on mobile -->
       <div class="calendar-scroll">
@@ -226,7 +227,7 @@
 
       <!-- Section title -->
       <div style="font-size:var(--text-lg);font-weight:700;color:var(--text-primary);letter-spacing:-.01em;margin-bottom:var(--sp-4);display:flex;align-items:center;gap:var(--sp-3);">
-        Monthly Agronomic Tips
+        <span data-i18n="calendar.tips_title"></span>
         <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
       </div>
 
@@ -250,8 +251,6 @@
    Activity per month (0-indexed Jan=0):
      'P' = Plant  |  'G' = Growing  |  'H' = Harvest  |  'R' = High Risk  |  '' = Off
    ============================================================ */
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
 /* ---- Crop icons -------------------------------------------- */
 const CROP_ICONS = {
   maize:   { svg: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="14" rx="3"/><path d="M9 8H5a2 2 0 0 0 0 4h4"/><path d="M15 6h4a2 2 0 0 1 0 4h-4"/><line x1="12" y1="16" x2="12" y2="22"/></svg>`, bg:'rgba(46,204,113,.12)', color:'#16a34a' },
@@ -262,151 +261,114 @@ const CROP_ICONS = {
 
 const CROPS = [
   {
-    name:  'Maize (Season 1)',
-    sub:   'Grande saison des pluies',
+    key:   'maize1',
     iconKey: 'maize',
     // Plant Mar-Apr, Grow May, Harvest Jun-Jul, Risk May-Jun
     acts: ['','','P','P','G','H','H','','','','',''],
     risk: ['','','','','R','R','','','','','',''],
   },
   {
-    name:  'Maize (Season 2)',
-    sub:   'Petite saison des pluies',
+    key:   'maize2',
     iconKey: 'maize',
     // Plant Aug-Sep, Grow Oct, Harvest Nov-Dec, Risk Sep-Oct
     acts: ['','','','','','','','P','P','G','H','H'],
     risk: ['','','','','','','','','R','R','',''],
   },
   {
-    name:  'Cassava',
-    sub:   'Year-round crop (~18 months)',
+    key:   'cassava',
     iconKey: 'cassava',
     // Plant Mar-Apr or Aug-Sep, long growing cycle, harvest staggered
     acts: ['G','G','P','P','G','G','G','P','P','G','G','G'],
     risk: ['','','','','R','R','','','R','R','',''],
   },
   {
-    name:  'Tomato (Season 1)',
-    sub:   'Grande saison',
+    key:   'tomato1',
     iconKey: 'tomato',
     // Seedlings Feb, transplant Mar, grow Apr-May, harvest Jun
     acts: ['','P','P','G','G','H','','','','','',''],
     risk: ['','','','R','R','R','','','','','',''],
   },
   {
-    name:  'Tomato (Season 2)',
-    sub:   'Petite saison',
+    key:   'tomato2',
     iconKey: 'tomato',
     // Seedlings Jul, transplant Aug, grow Sep-Oct, harvest Nov
     acts: ['','','','','','','P','P','G','G','H',''],
     risk: ['','','','','','','','','R','R','R',''],
   },
   {
-    name:  'Disease Risk — Maize',
-    sub:   'Criquet pèlerin (monitoring)',
+    key:   'locust',
     iconKey: 'locust',
     acts: ['','','','','','','','','','','',''],
     risk: ['','','R','R','','','','R','R','','',''],
   },
 ];
 
-/* ============================================================
-   MONTHLY TIPS
-   ============================================================ */
-const TIPS = [
-  { month: 'January',   type: 'ok',      title: 'Prepare fields',         body: 'Dry season — ideal for clearing, soil preparation and applying organic amendments. Plan crop rotations for the upcoming season.' },
-  { month: 'February',  type: 'ok',      title: 'Nursery for tomatoes',   body: 'Start tomato and pepper seedlings in nurseries. Apply basal fertilizer. Begin irrigation trials if water is available.' },
-  { month: 'March',     type: 'caution', title: 'Maize planting begins',  body: 'First rains arrive. Plant maize S1 and cassava cuttings. First wave of weeds — apply pre-emergent herbicide. Monitor for cassava mosaic.' },
-  { month: 'April',     type: 'caution', title: 'Transplant tomatoes',    body: 'Transplant tomato seedlings. Apply top-dressing nitrogen to maize. High humidity increases downy mildew risk — inspect weekly.' },
-  { month: 'May',       type: 'warning', title: 'Peak disease pressure',  body: 'High humidity and temperature create ideal conditions for Cercospora, blight, and mildew. Apply preventive fungicide sprays every 10–14 days.' },
-  { month: 'June',      type: 'warning', title: 'Harvest S1 maize',       body: 'Harvest S1 maize when kernels dent. Continue monitoring tomatoes for late blight. Begin drying and storage. Store dry at < 13% moisture.' },
-  { month: 'July',      type: 'ok',      title: 'Short dry season',       body: 'Brief dry spell — prepare land for S2 planting. Apply compost to improve soil structure. Control weeds before next rains.' },
-  { month: 'August',    type: 'caution', title: 'S2 planting begins',     body: 'Plant S2 maize and new cassava plots. Transplant tomato S2 seedlings. First locust monitoring reports in the Sahel — check regional alerts.' },
-  { month: 'September', type: 'warning', title: 'Watch for locusts',      body: 'Peak locust migration risk in northern Cameroon. Inspect crops every 2–3 days. Tomato late blight at peak risk. Use copper-based fungicides.' },
-  { month: 'October',   type: 'warning', title: 'Disease peak S2',        body: 'Second rainy season peak — highest disease pressure of the year. Double scouting frequency. Run rover scans every other day.' },
-  { month: 'November',  type: 'caution', title: 'Harvest S2 crops',       body: 'Harvest S2 maize and tomatoes. Cassava can be selectively harvested from 8-month plots. Prepare storage facilities.' },
-  { month: 'December',  type: 'ok',      title: 'Post-harvest',           body: 'Dry crops for storage. Assess season results. Plan fertilizer inputs and variety selection for next year. Soil testing recommended.' },
-];
+/* Monthly tips: calendar.tips.<0-11>.{title,body}; tone per month */
+const TIP_TYPES = ['ok', 'ok', 'caution', 'caution', 'warning', 'warning', 'ok', 'caution', 'warning', 'warning', 'caution', 'ok'];
 
 /* ============================================================
    RENDER
    ============================================================ */
-document.addEventListener('DOMContentLoaded', () => {
-  App.boot();
-  Layout.init({ page: 'calendar', title: 'Ag. Calendar', subtitle: 'Seasonal planting guide' });
+Layout.init({ page: 'calendar', titleKey: 'nav.calendar', subtitleKey: 'calendar.subtitle' });
 
-  const currentMonthIdx = new Date().getMonth();
+const CELL_ICONS = {
+  P: `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" opacity=".7"><path d="M12 22V12"/><path d="M20 6s-4 0-8 6c-4-6-8-6-8-6s0 6 8 8c8-2 8-8 8-8z"/></svg>`,
+  H: `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" opacity=".7"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`,
+  R: `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" opacity=".7"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+};
+const ACT_LEGEND = { P: 'plant', G: 'grow', H: 'harvest', R: 'risk' };
 
-  // Current month badge
+function monthName(i, style) {
+  return I18n.date(new Date(2026, i, 15), { month: style });
+}
+
+function renderCalendar() {
+  const current = new Date().getMonth();
+
   document.getElementById('currentMonthBadge').innerHTML =
-    `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-     ${MONTHS[currentMonthIdx]}`;
+    `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${escapeHtml(monthName(current, 'long'))}`;
 
-  // Month header strip
-  const strip = document.getElementById('monthsStrip');
-  let stripHtml = '<div class="month-hdr">Crop / Activity</div>';
-  MONTHS.forEach((m, i) => {
-    const isCurrent = i === currentMonthIdx;
-    stripHtml += `<div class="month-hdr${isCurrent ? ' current-month' : ''}">${m}</div>`;
-  });
-  strip.innerHTML = stripHtml;
+  let strip = `<div class="month-hdr">${escapeHtml(I18n.t('calendar.crop_activity'))}</div>`;
+  for (let i = 0; i < 12; i++) {
+    strip += `<div class="month-hdr${i === current ? ' current-month' : ''}"${i === current ? ` title="${escapeHtml(I18n.t('calendar.current'))}"` : ''}>${escapeHtml(monthName(i, 'short'))}</div>`;
+  }
+  document.getElementById('monthsStrip').innerHTML = strip;
 
-  // Crop rows
-  const table = document.getElementById('cropTable');
-  const CELL_ICONS = {
-    P: `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" opacity=".7"><path d="M12 22V12"/><path d="M20 6s-4 0-8 6c-4-6-8-6-8-6s0 6 8 8c8-2 8-8 8-8z"/></svg>`,
-    H: `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" opacity=".7"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`,
-    R: `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" opacity=".7"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
-  };
-
-  table.innerHTML = CROPS.map(crop => {
-    const cropIcon = CROP_ICONS[crop.iconKey];
-    let rowHtml = `
+  document.getElementById('cropTable').innerHTML = CROPS.map(crop => {
+    const icon = CROP_ICONS[crop.iconKey];
+    let row = `
       <div class="crop-row">
         <div class="crop-label">
-          <div class="crop-icon" style="background:${cropIcon.bg};color:${cropIcon.color};">${cropIcon.svg}</div>
+          <div class="crop-icon" style="background:${icon.bg};color:${icon.color};">${icon.svg}</div>
           <div>
-            <div class="crop-name">${crop.name}</div>
-            <div class="crop-sub">${crop.sub}</div>
+            <div class="crop-name">${escapeHtml(I18n.t(`calendar.crops.${crop.key}`))}</div>
+            <div class="crop-sub">${escapeHtml(I18n.t(`calendar.crops.${crop.key}_sub`))}</div>
           </div>
         </div>`;
-
     for (let i = 0; i < 12; i++) {
-      const act  = crop.acts[i];
+      const act = crop.acts[i];
       const risk = crop.risk[i];
-      let cls = 'act-empty';
-      if (risk === 'R') cls = 'act-risk';
-      else if (act === 'P') cls = 'act-plant';
-      else if (act === 'G') cls = 'act-grow';
-      else if (act === 'H') cls = 'act-harvest';
-
-      const isCurrentMonth = i === currentMonthIdx;
-      const cellStyle = isCurrentMonth ? 'background:rgba(46,204,113,0.04);' : '';
-      const label = CELL_ICONS[act] || CELL_ICONS[risk] || '';
-
-      rowHtml += `
-        <div class="cell" style="${cellStyle}">
-          <div class="act-block ${cls}" title="${act||risk||'—'}">
-            ${label}
-          </div>
+      const code = risk === 'R' ? 'R' : act;
+      const cls = { R: 'act-risk', P: 'act-plant', G: 'act-grow', H: 'act-harvest' }[code] || 'act-empty';
+      const title = code ? I18n.t(`calendar.legend.${ACT_LEGEND[code]}`) : '';
+      row += `
+        <div class="cell" style="${i === current ? 'background:rgba(46,204,113,0.04);' : ''}">
+          <div class="act-block ${cls}"${title ? ` title="${escapeHtml(monthName(i, 'long'))} : ${escapeHtml(title)}"` : ''}>${CELL_ICONS[act] || CELL_ICONS[risk] || ''}</div>
         </div>`;
     }
-    rowHtml += '</div>';
-    return rowHtml;
+    return row + '</div>';
   }).join('');
 
-  // Monthly tips
-  const tipsGrid = document.getElementById('tipsGrid');
-  tipsGrid.innerHTML = TIPS.map((tip, i) => {
-    const isCurrent = i === currentMonthIdx;
-    return `
-      <div class="tip-card ${tip.type}" style="${isCurrent ? 'box-shadow:0 0 0 2px var(--brand-primary);' : ''}">
-        <div class="tip-month">${isCurrent ? '▶ ' : ''}${tip.month}</div>
-        <div class="tip-title">${tip.title}</div>
-        <div class="tip-body">${tip.body}</div>
-      </div>`;
-  }).join('');
-});
+  document.getElementById('tipsGrid').innerHTML = TIP_TYPES.map((type, i) => `
+    <div class="tip-card ${type}" style="${i === current ? 'box-shadow:0 0 0 2px var(--brand-primary);' : ''}">
+      <div class="tip-month">${i === current ? '▶ ' : ''}${escapeHtml(monthName(i, 'long'))}</div>
+      <div class="tip-title">${escapeHtml(I18n.t(`calendar.tips.${i}.title`))}</div>
+      <div class="tip-body">${escapeHtml(I18n.t(`calendar.tips.${i}.body`))}</div>
+    </div>`).join('');
+}
+
+document.addEventListener('DOMContentLoaded', renderCalendar);
+window.addEventListener('languageChanged', renderCalendar);
 </script>
 </body>
 </html>

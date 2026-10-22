@@ -1,0 +1,162 @@
+{
+  "en": {
+    "subtitle": "Seasonal planting guide",
+    "banner_kicker": "Reference",
+    "banner_title": "Crop calendar",
+    "banner_text": "Indicative calendar for maize, cassava and tomato in the bimodal rainfall zone (two rainy seasons: March–June and August–November).",
+    "zone_note": "Indicative calendar, based on common practice in Cameroon's bimodal forest zone (Centre, South, East, part of the Littoral and West). The North, Far North and Adamawa have a single rainy season (about May–October): adapt dates with your local agricultural services.",
+    "legend": {
+      "plant": "Planting",
+      "grow": "Growing",
+      "harvest": "Harvest",
+      "risk": "High risk"
+    },
+    "crop_activity": "Crop / activity",
+    "current": "Current month",
+    "tips_title": "Advice for each month",
+    "crops": {
+      "maize1": "Maize (season 1)",
+      "maize1_sub": "Main rainy season",
+      "maize2": "Maize (season 2)",
+      "maize2_sub": "Short rainy season",
+      "cassava": "Cassava",
+      "cassava_sub": "Planted in both seasons, cycle of 8 to 18 months",
+      "tomato1": "Tomato (season 1)",
+      "tomato1_sub": "Main rainy season",
+      "tomato2": "Tomato (season 2)",
+      "tomato2_sub": "Short rainy season",
+      "locust": "Locusts",
+      "locust_sub": "Monitoring, North and Far North"
+    },
+    "tips": {
+      "0": {
+        "title": "Prepare fields",
+        "body": "Dry season: ideal for clearing, soil preparation and organic amendments. Plan crop rotations for the coming season."
+      },
+      "1": {
+        "title": "Tomato nurseries",
+        "body": "Start tomato and pepper seedlings in nurseries. Apply basal fertiliser. Test irrigation if water is available."
+      },
+      "2": {
+        "title": "Maize planting begins",
+        "body": "First rains. Plant first-season maize and cassava cuttings. First flush of weeds: weed early. Watch for cassava mosaic."
+      },
+      "3": {
+        "title": "Transplant tomatoes",
+        "body": "Transplant tomato seedlings. Top-dress maize with nitrogen. High humidity raises the risk of mildew: inspect every week."
+      },
+      "4": {
+        "title": "Peak disease pressure",
+        "body": "Heat and humidity favour leaf spots, blights and mildews. Scout often and apply preventive treatments where recommended."
+      },
+      "5": {
+        "title": "First maize harvest",
+        "body": "Harvest first-season maize when the kernels are dented. Keep watching tomatoes for late blight. Dry grain below 13% moisture before storage."
+      },
+      "6": {
+        "title": "Short dry season",
+        "body": "A short dry spell: prepare land for the second season. Add compost to improve the soil. Weed before the next rains."
+      },
+      "7": {
+        "title": "Second-season planting",
+        "body": "Plant second-season maize and new cassava plots. Transplant second-season tomatoes. In the North, follow locust alerts."
+      },
+      "8": {
+        "title": "Watch for locusts",
+        "body": "Highest locust risk in northern Cameroon: inspect crops every 2–3 days. Late blight of tomato at its peak: protect plants preventively."
+      },
+      "9": {
+        "title": "Second disease peak",
+        "body": "Peak of the second rainy season, often the highest disease pressure of the year. Scout twice as often and analyse suspicious leaves."
+      },
+      "10": {
+        "title": "Second-season harvest",
+        "body": "Harvest second-season maize and tomatoes. Cassava from 8-month plots can be harvested selectively. Prepare storage."
+      },
+      "11": {
+        "title": "After the harvest",
+        "body": "Dry crops for storage. Review the season. Plan fertiliser and varieties for next year; a soil test is recommended."
+      }
+    }
+  },
+  "fr": {
+    "subtitle": "Guide saisonnier des cultures",
+    "banner_kicker": "Référence",
+    "banner_title": "Calendrier cultural",
+    "banner_text": "Calendrier indicatif du maïs, du manioc et de la tomate en zone à pluviométrie bimodale (deux saisons des pluies : mars–juin et août–novembre).",
+    "zone_note": "Calendrier indicatif, établi d'après les pratiques courantes de la zone forestière bimodale du Cameroun (Centre, Sud, Est, une partie du Littoral et de l'Ouest). Le Nord, l'Extrême-Nord et l'Adamaoua n'ont qu'une saison des pluies (environ mai–octobre) : adaptez les dates avec vos services agricoles locaux.",
+    "legend": {
+      "plant": "Semis / plantation",
+      "grow": "Croissance",
+      "harvest": "Récolte",
+      "risk": "Risque élevé"
+    },
+    "crop_activity": "Culture / activité",
+    "current": "Mois en cours",
+    "tips_title": "Conseils du mois",
+    "crops": {
+      "maize1": "Maïs (saison 1)",
+      "maize1_sub": "Grande saison des pluies",
+      "maize2": "Maïs (saison 2)",
+      "maize2_sub": "Petite saison des pluies",
+      "cassava": "Manioc",
+      "cassava_sub": "Planté aux deux saisons, cycle de 8 à 18 mois",
+      "tomato1": "Tomate (saison 1)",
+      "tomato1_sub": "Grande saison des pluies",
+      "tomato2": "Tomate (saison 2)",
+      "tomato2_sub": "Petite saison des pluies",
+      "locust": "Criquets",
+      "locust_sub": "Surveillance, Nord et Extrême-Nord"
+    },
+    "tips": {
+      "0": {
+        "title": "Préparer les parcelles",
+        "body": "Saison sèche : idéale pour le défrichage, la préparation du sol et les amendements organiques. Planifiez les rotations de la prochaine saison."
+      },
+      "1": {
+        "title": "Pépinières de tomate",
+        "body": "Lancez les pépinières de tomate et de piment. Apportez l'engrais de fond. Testez l'irrigation si vous avez de l'eau."
+      },
+      "2": {
+        "title": "Début des semis de maïs",
+        "body": "Premières pluies. Semez le maïs de première saison et plantez les boutures de manioc. Première levée de mauvaises herbes : désherbez tôt. Surveillez la mosaïque du manioc."
+      },
+      "3": {
+        "title": "Repiquer les tomates",
+        "body": "Repiquez les plants de tomate. Apportez l'azote de couverture au maïs. L'humidité élevée augmente le risque de mildiou : inspectez chaque semaine."
+      },
+      "4": {
+        "title": "Pression maximale des maladies",
+        "body": "Chaleur et humidité favorisent taches foliaires, brûlures et mildious. Inspectez souvent et appliquez les traitements préventifs recommandés."
+      },
+      "5": {
+        "title": "Première récolte de maïs",
+        "body": "Récoltez le maïs de première saison quand les grains sont dentés. Continuez à surveiller le mildiou de la tomate. Séchez le grain sous 13 % d'humidité avant stockage."
+      },
+      "6": {
+        "title": "Petite saison sèche",
+        "body": "Courte période sèche : préparez les terres de la seconde saison. Apportez du compost pour améliorer le sol. Désherbez avant les pluies."
+      },
+      "7": {
+        "title": "Semis de seconde saison",
+        "body": "Semez le maïs de seconde saison et de nouvelles parcelles de manioc. Repiquez les tomates de seconde saison. Dans le Nord, suivez les alertes acridiennes."
+      },
+      "8": {
+        "title": "Surveiller les criquets",
+        "body": "Risque acridien maximal dans le Nord du Cameroun : inspectez les cultures tous les 2 à 3 jours. Mildiou de la tomate à son pic : protégez préventivement."
+      },
+      "9": {
+        "title": "Second pic de maladies",
+        "body": "Pic de la seconde saison des pluies, souvent la plus forte pression de l'année. Doublez les tournées d'observation et analysez les feuilles suspectes."
+      },
+      "10": {
+        "title": "Récolte de seconde saison",
+        "body": "Récoltez le maïs et les tomates de seconde saison. Le manioc des parcelles de 8 mois peut être récolté de façon sélective. Préparez le stockage."
+      },
+      "11": {
+        "title": "Après la récolte",
+        "body": "Séchez les récoltes pour le stockage. Faites le bilan de la saison. Prévoyez engrais et variétés pour l'an prochain ; une analyse de sol est recommandée."
+      }
+    }
+  }
+}
