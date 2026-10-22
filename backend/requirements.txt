@@ -13,6 +13,7 @@ uvicorn[standard]==0.32.0
 # Database (SQLite via SQLAlchemy + PostgreSQL en production)
 sqlalchemy==2.0.35
 psycopg2-binary==2.9.10
+alembic==1.20.1        # schema migrations (cd backend && alembic upgrade head)
 
 # Authentication (JWT + Password hashing)
 python-jose[cryptography]==3.3.0

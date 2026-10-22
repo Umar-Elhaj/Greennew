@@ -18,7 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from config import APP_NAME, APP_VERSION, CORS_ORIGINS, DEBUG, MEDIA_DIR, MEDIA_URL_PREFIX
-from database import engine, Base
+from database import engine, Base, IS_SQLITE
 
 # ---- Import routers -----------------------------------------
 from routers import auth_router
@@ -33,8 +33,16 @@ from routers import diseases_router    # Disease reference database
 
 logger = logging.getLogger(__name__)
 
-# ---- Create all database tables ----------------------------
-Base.metadata.create_all(bind=engine)
+# ---- Database schema ----------------------------------------
+# SQLite (local development): tables are created directly.
+# PostgreSQL: the schema is managed by Alembic (`alembic upgrade head`
+# is a deployment step); the app only warns when it is behind.
+if IS_SQLITE:
+    import models  # noqa: F401  (registers the tables)
+    Base.metadata.create_all(bind=engine)
+else:
+    from schema_check import warn_if_schema_outdated
+    warn_if_schema_outdated(engine)
 
 
 def _warmup_models():

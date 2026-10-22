@@ -15,7 +15,9 @@ import tempfile
 import pytest
 
 _TMP = tempfile.mkdtemp(prefix="green-tests-")
-os.environ["DATABASE_URL"] = "sqlite:///" + os.path.join(_TMP, "test.db")
+# TEST_DATABASE_URL runs the whole suite on a disposable PostgreSQL
+# (its tables are dropped between tests): never point it at real data.
+os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL") or "sqlite:///" + os.path.join(_TMP, "test.db")
 os.environ["MEDIA_DIR"] = os.path.join(_TMP, "media")
 os.environ["SECRET_KEY"] = "test-secret-key"
 os.environ["DEBUG"] = "false"
