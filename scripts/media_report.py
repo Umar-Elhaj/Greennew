@@ -23,6 +23,13 @@ BACKEND = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "backen
 sys.path.insert(0, BACKEND)
 os.environ.setdefault("DEBUG", "true")  # no SECRET_KEY needed to read the DB
 
+# DEBUG is forced above only to skip SECRET_KEY: without an explicit
+# DATABASE_URL the tool would silently work on a local SQLite file.
+if not os.environ.get("DATABASE_URL", "").strip():
+    print("DATABASE_URL is not set: load the server environment first "
+          "(GUIDE_INTEGRATION_O2SWITCH.md, step 10).", file=sys.stderr)
+    sys.exit(2)
+
 import logging  # noqa: E402
 
 logging.disable(logging.CRITICAL)
