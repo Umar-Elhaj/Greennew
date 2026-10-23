@@ -12,7 +12,7 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -136,7 +136,7 @@ if CORS_ORIGINS:
         CORSMiddleware,
         allow_origins=CORS_ORIGINS,
         allow_credentials=False,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "Accept-Language"],
     )
 
@@ -268,6 +268,10 @@ async def health_check():
 
 
 # Analysed images are NOT mounted publicly: see routers/media_router.py.
+# Captures saved there by older versions must not be served either.
+@app.get("/assets/captures/{path:path}", include_in_schema=False)
+async def legacy_captures(path: str):
+    raise HTTPException(status_code=404, detail="Not Found")
 
 # ---- Mount static assets ------------------------------------
 app.mount(

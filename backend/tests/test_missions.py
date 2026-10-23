@@ -131,3 +131,33 @@ def test_full_scenario_six_analyses_heatmap(client, user, fake_model, monkeypatc
     # deleting the mission keeps the analyses, without the link
     assert client.delete(f"/api/missions/{m['id']}", headers=h).status_code == 200
     assert client.get("/api/analysis/history", headers=h).json()["total"] == 6
+
+
+def test_dev_only_camera_proxy_and_legacy_captures_are_not_served(client, user):
+    """The server never fetches an arbitrary IP outside DEBUG; old captures are not public."""
+    assert client.post("/api/camera/connect", json={"ip": "10.0.0.1", "port": 80}, headers=user["headers"]).status_code == 404
+    assert client.post("/api/camera/capture", json={"ip": "10.0.0.1", "port": 80}, headers=user["headers"]).status_code == 404
+    assert client.get("/assets/captures/old.jpg").status_code == 404
+
+
+def test_heatmap_lists_every_disease_and_filters_on_the_photo_date(client, user, fake_model, monkeypatch):
+    import rover_common
+
+    plan = iter(["Corn_Streak", "Corn_Streak", "Corn_Leaf_Blight"])     # all in cell 1: blight never dominant
+
+    def predict(_bytes):
+        code = next(plan)
+        return {"class_raw": code, "detected_disease": code, "disease_name": code, "plant_type": "Corn",
+                "confidence": 0.9, "severity": "high", "top3": []}
+
+    monkeypatch.setattr(rover_common, "predict", predict)
+    h = user["headers"]
+    m = _mission(client, h, _parcel(client, h))
+    for i in range(3):   # photographed in January, uploaded today
+        assert _upload(client, h, (i * 60, 90, 20), mission_id=m["id"], cell_index=1,
+                       captured_at="2026-01-05T10:00:00+01:00").status_code == 200
+    hm = client.get(f"/api/missions/{m['id']}/heatmap", headers=h).json()
+    assert hm["cells"][0]["dominant"] == "Corn_Streak"
+    assert hm["diseases"] == ["Corn_Leaf_Blight", "Corn_Streak"]
+    jan = client.get(f"/api/missions/{m['id']}/heatmap?date_from=2026-01-01&date_to=2026-01-31", headers=h).json()
+    assert jan["cells"][0]["analyses"] == 3

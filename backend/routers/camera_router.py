@@ -17,6 +17,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from sqlalchemy.orm import Session
 
 from auth import get_current_user
+from config import DEBUG
 from database import get_db
 from models import User
 from i18n import request_lang
@@ -32,7 +33,14 @@ from rover_common import (
 router = APIRouter(prefix="/api/camera", tags=["Camera"])
 
 
-@router.post("/connect", summary="Verify rover camera stream is reachable")
+def dev_only():
+    """/connect and /capture make the server fetch any IP:port: local development only."""
+    if not DEBUG:
+        raise HTTPException(status_code=404, detail="Not Found")
+
+
+@router.post("/connect", summary="Verify rover camera stream is reachable (DEBUG only)",
+             dependencies=[Depends(dev_only)])
 async def connect_camera(
     payload: dict,
     current_user: User = Depends(get_current_user),
@@ -58,7 +66,8 @@ async def connect_camera(
     }
 
 
-@router.post("/capture", summary="Capture a frame from MJPEG stream and analyse")
+@router.post("/capture", summary="Capture a frame from MJPEG stream and analyse (DEBUG only)",
+             dependencies=[Depends(dev_only)])
 async def capture_from_stream(
     payload: dict,
     request: Request,

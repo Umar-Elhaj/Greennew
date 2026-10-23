@@ -96,7 +96,9 @@ REGION_RAW = func.coalesce(Parcel.region, User.region)
 REGION = case((REGION_RAW.in_(geo.REGION_NAMES), REGION_RAW), else_=None)
 IS_DISEASED = and_(A.detected_disease.isnot(None), A.detected_disease != "healthy")
 DISEASED = case((IS_DISEASED, 1), else_=0)
-MONTH = extract("year", A.created_at) * 100 + extract("month", A.created_at)
+# date of the photo when known (rover / offline uploads arrive later), else of the upload
+WHEN = func.coalesce(A.captured_at, A.created_at)
+MONTH = extract("year", WHEN) * 100 + extract("month", WHEN)
 N = func.count(A.id)
 U = func.count(distinct(A.user_id))
 N_SICK = func.sum(DISEASED)
@@ -115,9 +117,9 @@ def base_query(db: Session, f: Filters, *cols):
     if not f.include_demo:
         q = q.filter(A.is_demo == False)  # noqa: E712
     if f.date_from:
-        q = q.filter(A.created_at >= datetime.combine(f.date_from, datetime.min.time()))
+        q = q.filter(WHEN >= datetime.combine(f.date_from, datetime.min.time()))
     if f.date_to:
-        q = q.filter(A.created_at < datetime.combine(f.date_to, datetime.min.time()) + timedelta(days=1))
+        q = q.filter(WHEN < datetime.combine(f.date_to, datetime.min.time()) + timedelta(days=1))
     if f.region:
         q = q.filter(REGION == f.region)
     if f.plant:
@@ -237,7 +239,7 @@ def _public_values(db: Session, f: Filters, col) -> list:
 
 @cached("meta")
 def _meta(f: Filters, db: Session) -> dict:
-    n, u, first, last = base_query(db, f, N, U, func.min(A.created_at), func.max(A.created_at)).one()
+    n, u, first, last = base_query(db, f, N, U, func.min(WHEN), func.max(WHEN)).one()
     total = masked(n, u)
     # the period is given by month, and only when the total itself is published
     period = ({"from": first.strftime("%Y-%m"), "to": last.strftime("%Y-%m")}
@@ -324,7 +326,7 @@ def _regions(f: Filters, db: Session) -> list:
 
 @cached("seasonality")
 def _seasonality(f: Filters, db: Session) -> list:
-    mon = extract("month", A.created_at)
+    mon = extract("month", WHEN)
     rows = (base_query(db, f, mon.label("mo"), A.detected_disease, N, U)
               .filter(IS_DISEASED).group_by(mon, A.detected_disease).all())
     cells = suppress([cell(n, u, month=int(m), disease=code) for m, code, n, u in rows], ("month", "disease"))
@@ -398,10 +400,10 @@ def _alerts(f: Filters, db: Session) -> dict:
     since = today - timedelta(days=span)
     f_now = Filters(None, None, f.region, f.plant, f.disease, f.source, f.model_version, f.include_demo)
     recent_from = today - timedelta(days=window)
-    is_recent = A.created_at >= recent_from
+    is_recent = WHEN >= recent_from
     rows = (base_query(db, f_now, REGION.label("r"), A.detected_disease, func.sum(case((is_recent, 1), else_=0)),
                        func.count(distinct(case((is_recent, A.user_id), else_=None))), N)
-              .filter(A.created_at >= since, IS_DISEASED)
+              .filter(WHEN >= since, IS_DISEASED)
               .group_by(REGION, A.detected_disease).all())
     periods = ALERT_RULE["baseline_weeks"] * 7 / window
     out = []

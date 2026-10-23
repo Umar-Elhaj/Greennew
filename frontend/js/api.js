@@ -318,18 +318,6 @@ const API = {
      CAMERA / ROVER
      ---------------------------------------------------------- */
   camera: {
-    /** Verify rover camera stream is reachable at given IP. */
-    connect(ip, port = 8080) {
-      return request('/api/camera/connect', 'POST', { ip, port }, true);
-    },
-
-    /** Grab one frame from the MJPEG stream and run both AI models. */
-    captureFromStream(ip, port = 8080, parcelId = null, latitude = null, longitude = null) {
-      return request('/api/camera/capture', 'POST', {
-        ip, port, parcel_id: parcelId, latitude, longitude
-      }, true);
-    },
-
     /**
      * Send a browser-captured frame (canvas blob) for analysis.
      * @param {FormData} formData - contains 'file' (JPEG blob)

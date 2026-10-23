@@ -216,15 +216,19 @@ def get_heatmap(
     m = owned_mission(db, current_user, mission_id)
     q = db.query(DiseaseAnalysis).filter(DiseaseAnalysis.mission_id == m.id, DiseaseAnalysis.user_id == current_user.id,
                                          DiseaseAnalysis.cell_index.isnot(None))
+    # every probable disease of the mission, for the filter (not only the dominant ones)
+    diseases = sorted(d for (d,) in q.with_entities(DiseaseAnalysis.detected_disease).distinct()
+                      if d and d != "healthy")
+    when = func.coalesce(DiseaseAnalysis.captured_at, DiseaseAnalysis.created_at)   # photo date when known
     if disease:
         q = q.filter(DiseaseAnalysis.detected_disease == disease)
     if date_from:
-        q = q.filter(DiseaseAnalysis.created_at >= datetime.combine(date_from, datetime.min.time()))
+        q = q.filter(when >= datetime.combine(date_from, datetime.min.time()))
     if date_to:
-        q = q.filter(DiseaseAnalysis.created_at < datetime.combine(date_to, datetime.min.time()) + timedelta(days=1))
+        q = q.filter(when < datetime.combine(date_to, datetime.min.time()) + timedelta(days=1))
 
     cells: dict = {}
-    for a in q.order_by(DiseaseAnalysis.created_at.desc()).all():
+    for a in q.order_by(when.desc()).all():
         c = cells.setdefault(a.cell_index, {"index": a.cell_index, "analyses": 0, "diseased": 0,
                                             "max_alert": "none", "_diseases": Counter(),
                                             "last_at": None, "analysis_ids": []})
@@ -236,7 +240,7 @@ def get_heatmap(
             level = a.severity if a.severity in ALERT_ORDER else "low"
             if ALERT_ORDER[level] > ALERT_ORDER[c["max_alert"]]:
                 c["max_alert"] = level
-        c["last_at"] = c["last_at"] or a.created_at.isoformat()
+        c["last_at"] = c["last_at"] or (a.captured_at or a.created_at).isoformat()
         if len(c["analysis_ids"]) < 6:
             c["analysis_ids"].append(a.id)
 
@@ -246,6 +250,5 @@ def get_heatmap(
         c["rate"] = round(c["diseased"] / c["analyses"], 4)
         c["dominant"] = counts.most_common(1)[0][0] if counts else None
         out.append(c)
-    diseases = sorted({c["dominant"] for c in out if c["dominant"]})
     return {"mission": _summary(m, _progress(db, m)), "cells": out, "diseases": diseases,
             "filters": {"disease": disease, "date_from": date_from, "date_to": date_to}}
