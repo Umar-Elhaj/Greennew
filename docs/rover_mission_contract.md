@@ -77,7 +77,7 @@ Règles côté serveur :
 
 ### Pour que la capture depuis le flux MJPEG fonctionne dans le navigateur
 
-- **Partage inter-origines.** Le rover doit répondre avec `Access-Control-Allow-Origin: *` sur le flux MJPEG. Sans cet en-tête, le navigateur affiche le flux mais refuse d'en extraire une image : la zone de dessin est marquée « tainted ».
+- **Partage inter-origines.** Le rover doit répondre avec `Access-Control-Allow-Origin: *` sur le flux MJPEG. L'application demande le flux en mode CORS (`crossorigin="anonymous"`) pour pouvoir en extraire des images : sans cet en-tête, le flux ne s'affiche pas et l'application indique que la connexion au rover est perdue.
 - **Contenu mixte.** Une page servie en HTTPS (production) ne peut pas afficher un flux `http://192.168.x.x`. En production, utilisez l'une des options suivantes :
   - le mode « Caméra » sur un téléphone fixé au rover ;
   - l'import des photos prises par le rover ;
