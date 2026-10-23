@@ -204,6 +204,12 @@ def _format_forecast(raw: dict, label: str, lang: str = "en") -> list:
 # ENDPOINTS
 # ─────────────────────────────────────────────────────────────
 
+def _describe(exc: Exception) -> str:
+    """Error type and HTTP status only: the request URL carries the API key (appid)."""
+    status = getattr(getattr(exc, "response", None), "status_code", None)
+    return f"{type(exc).__name__}" + (f" (HTTP {status})" if status else "")
+
+
 @router.get("/current", summary="Current weather for a city, a region or GPS coordinates")
 async def get_current_weather(
     request: Request,
@@ -236,7 +242,7 @@ async def get_current_weather(
             r.raise_for_status()
             return _format_current(r.json(), resolved["label"], lang)
     except httpx.HTTPError as exc:
-        logger.error(f"[Weather] OpenWeather error: {exc}")
+        logger.error("[Weather] OpenWeather error: %s", _describe(exc))
         raise HTTPException(status_code=502, detail="The weather service is unavailable.")
 
 
@@ -273,5 +279,5 @@ async def get_forecast(
                 "forecast": _format_forecast(r.json(), resolved["label"], lang),
             }
     except httpx.HTTPError as exc:
-        logger.error(f"[Weather] OpenWeather forecast error: {exc}")
+        logger.error("[Weather] OpenWeather forecast error: %s", _describe(exc))
         raise HTTPException(status_code=502, detail="The weather service is unavailable.")
