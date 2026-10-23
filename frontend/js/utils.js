@@ -345,13 +345,8 @@ function fillRegionSelect(select, selected) {
     o.textContent = regionLabel(r);
     select.appendChild(o);
   });
-  if (current && !CAMEROON_REGIONS.includes(current)) {
-    const o = document.createElement('option');  // legacy free-text value
-    o.value = current;
-    o.textContent = current;
-    select.appendChild(o);
-  }
-  select.value = current || '';
+  // a legacy free-text value is not offered again: the API only accepts the 10 regions
+  select.value = CAMEROON_REGIONS.includes(current) ? current : '';
 }
 
 /* ============================================================

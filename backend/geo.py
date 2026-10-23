@@ -5,7 +5,8 @@
 # - validate_polygon(): GeoJSON Polygon checks (closed ring, ranges,
 #   no self-intersection, sensible size, swapped lat/lng detected)
 # - geodesic area / perimeter / centroid / bbox
-# - region_of(): region of Cameroon containing a point
+# - region_of(): region of Cameroon containing a point;
+#   canonical_region(): the only region names stored (the 10 ADM1 names)
 # - build_grid(): square cells aligned with the parcel's long axis,
 #   clipped to the parcel, numbered along a serpentine (boustrophedon)
 #   path; the path never jumps between non-adjacent cells (detours
@@ -18,6 +19,7 @@
 import json
 import math
 import os
+import unicodedata
 from collections import deque
 from typing import Optional
 
@@ -214,6 +216,34 @@ def point_in_ring(pt, ring) -> bool:
 
 
 _regions = None
+
+# Official names, as in data/cameroon_regions.json; English and unaccented
+# spellings are accepted on input and mapped to these.
+REGION_NAMES = ("Adamaoua", "Centre", "Est", "Extrême-Nord", "Littoral",
+                "Nord", "Nord-Ouest", "Ouest", "Sud", "Sud-Ouest")
+_REGION_ALIASES = {"adamawa": "Adamaoua", "east": "Est", "far north": "Extrême-Nord",
+                   "far-north": "Extrême-Nord", "north": "Nord", "north west": "Nord-Ouest",
+                   "north-west": "Nord-Ouest", "northwest": "Nord-Ouest", "west": "Ouest",
+                   "south": "Sud", "south west": "Sud-Ouest", "south-west": "Sud-Ouest",
+                   "southwest": "Sud-Ouest", "center": "Centre"}
+
+
+def _fold(text: str) -> str:
+    text = unicodedata.normalize("NFKD", text)
+    return "".join(c for c in text if not unicodedata.combining(c)).strip().lower()
+
+
+def canonical_region(value: Optional[str]) -> Optional[str]:
+    """Official region name for `value`, None for empty; ValueError otherwise."""
+    if value is None or not value.strip():
+        return None
+    key = _fold(value)
+    for name in REGION_NAMES:
+        if _fold(name) == key:
+            return name
+    if key in _REGION_ALIASES:
+        return _REGION_ALIASES[key]
+    raise ValueError("Unknown region of Cameroon.")
 
 
 def region_of(lng: float, lat: float) -> Optional[str]:

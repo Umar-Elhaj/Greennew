@@ -35,6 +35,7 @@ def request_lang(request: Optional[Request]) -> str:
 
 # ---- Error messages (English source → French) ---------------
 MESSAGES_FR = {
+    "Unknown region of Cameroon.": "Région du Cameroun inconnue.",
     # auth
     "This phone number is already registered.": "Ce numéro de téléphone est déjà enregistré.",
     "This email address is already registered.": "Cette adresse e-mail est déjà enregistrée.",

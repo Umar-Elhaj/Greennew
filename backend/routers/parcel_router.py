@@ -27,7 +27,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -55,6 +55,11 @@ class ParcelCreate(BaseModel):
     longitude:   Optional[float]= Field(None, ge=-180, le=180)
     client_id:   Optional[str]  = Field(None, min_length=8, max_length=36)
 
+    @field_validator("region")
+    @classmethod
+    def validate_region(cls, v: Optional[str]) -> Optional[str]:
+        return geo.canonical_region(v)
+
 
 class ParcelUpdate(BaseModel):
     name:        Optional[str]  = Field(None, min_length=1, max_length=255)
@@ -70,6 +75,11 @@ class ParcelUpdate(BaseModel):
     # Version the client edited (its last known updated_at): older than the
     # server's → 409 conflict
     base_updated_at: Optional[datetime] = None
+
+    @field_validator("region")
+    @classmethod
+    def validate_region(cls, v: Optional[str]) -> Optional[str]:
+        return geo.canonical_region(v)
 
 
 # ---- Helpers -------------------------------------------------

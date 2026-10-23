@@ -130,3 +130,17 @@ def test_cameroonian_phone_normalised_at_register_and_login(client):
     assert client.post("/api/auth/login", json={"identifier": "+237677000111", "password": "secret123"}).status_code == 200
     assert client.post("/api/auth/register", json={"first_name": "E", "last_name": "F", "phone": "677 000 111",
                                                    "password": "secret123"}).status_code == 409
+
+
+def test_region_must_be_one_of_the_10_regions(client):
+    """Only official region names are stored (they are published by GREEN Data)."""
+    u = register(client, region="Far North")
+    assert u["user"]["region"] == "Extrême-Nord"
+    assert register(client, region="extreme-nord")["user"]["region"] == "Extrême-Nord"
+    r = client.post("/api/auth/register", headers={"Accept-Language": "fr"}, json={
+        "first_name": "A", "last_name": "B", "phone": "+237690000999", "password": "secret123",
+        "region": "Quartier Bastos, chez M. Ndongo"})
+    assert r.status_code == 422 and "Région du Cameroun inconnue" in r.json()["detail"]
+    assert client.put("/api/auth/me", json={"region": "Mars"}, headers=u["headers"]).status_code == 422
+    r = client.put("/api/auth/me", json={"region": ""}, headers=u["headers"])
+    assert r.status_code == 200 and r.json()["region"] is None

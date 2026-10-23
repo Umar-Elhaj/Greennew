@@ -101,3 +101,10 @@ def test_list_includes_analysis_stats_and_geo_route(client, user, fake_model):
     assert row["analyses_count"] == 1 and row["last_analysis_at"]
     geo_points = client.get("/api/parcels/geo/analyses", headers=h)
     assert geo_points.status_code == 200 and len(geo_points.json()) == 1   # was 422 (route order)
+
+
+def test_parcel_region_must_be_a_region_of_cameroon(client, user):
+    h = user["headers"]
+    assert client.post("/api/parcels", json={"name": "A", "region": "Tatooine"}, headers=h).status_code == 422
+    r = client.post("/api/parcels", json={"name": "B", "region": "littoral"}, headers=h)
+    assert r.status_code in (200, 201) and r.json()["region"] == "Littoral"

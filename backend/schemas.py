@@ -9,6 +9,8 @@ from typing import Optional, List, Any
 from datetime import datetime
 import re
 
+import geo
+
 
 # =============================================================
 # AUTH SCHEMAS
@@ -62,6 +64,13 @@ def _required_text(v: str) -> str:
     return v
 
 
+def _region(v: Optional[str]) -> Optional[str]:
+    """One of the 10 regions of Cameroon ("" is kept: it clears the field)."""
+    if v is not None and not v.strip():
+        return ""
+    return geo.canonical_region(v)
+
+
 class UserRegister(BaseModel):
     """Data required to create a new account."""
     first_name:   str
@@ -99,6 +108,11 @@ class UserRegister(BaseModel):
             raise ValueError(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.")
         return v
 
+    @field_validator("region")
+    @classmethod
+    def validate_region(cls, v: Optional[str]) -> Optional[str]:
+        return _region(v)
+
 
 class UserLogin(BaseModel):
     """Data required to log in (phone or email + password)."""
@@ -117,6 +131,11 @@ class UserUpdate(BaseModel):
     # Consents (Green Data dataset reuse, GPS read from photo metadata)
     dataset_consent:  Optional[bool] = None
     location_consent: Optional[bool] = None
+
+    @field_validator("region")
+    @classmethod
+    def validate_region(cls, v: Optional[str]) -> Optional[str]:
+        return _region(v)
 
     @field_validator("first_name", "last_name")
     @classmethod
