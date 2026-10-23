@@ -79,7 +79,7 @@ Ce qu'il faut obtenir avant de continuer :
    - Port **6543** (mode transaction) : l'application n'ouvre pas de pool (NullPool), ce qui convient le mieux à Passenger, qui lance plusieurs processus.
    - Port 5432 (mode session) : petit pool de 2 connexions + 2 en débordement par processus.
    - `sslmode=require` est ajouté automatiquement. Ne collez jamais cette URL dans un fichier versionné, un ticket ou un message.
-2. Sur votre poste, dans `backend/`, avec `DATABASE_URL` défini dans votre terminal uniquement, faites d'abord un **état des lieux en lecture seule** :
+2. Sur votre poste, dans `backend/`, avec `DATABASE_URL` et `SECRET_KEY` définis dans votre terminal uniquement (voir l'encadré de l'étape 5, qui vaut aussi pour SSH), faites d'abord un **état des lieux en lecture seule** :
    ```bash
    ../.venv/bin/python ../scripts/db_check.py
    ```
@@ -157,6 +157,16 @@ Mettez uniquement des valeurs, jamais dans un fichier du dépôt. La référence
 | `GEMINI_MODEL` | non | vide = `gemini-3.1-flash-lite` |
 | `WEATHER_API_KEY` | non | sans elle, la météo affiche « non activée » |
 
+**Dans un terminal SSH**, ces variables ne sont pas définies : « Setup Python App » ne les transmet qu'à l'application. Avant tout script (`alembic`, `db_check.py`, `set_role.py`, `media_report.py`), chargez-les dans la session, sans les écrire dans l'historique :
+
+```bash
+read -rsp 'DATABASE_URL: ' DATABASE_URL; echo; export DATABASE_URL
+read -rsp 'SECRET_KEY: ' SECRET_KEY; echo; export SECRET_KEY
+export MEDIA_DIR=/home/<compte>/green_media
+```
+
+Sans `DATABASE_URL`, les scripts s'arrêtent avec « DATABASE_URL is not set » au lieu de travailler sur une base SQLite locale.
+
 Créez le dossier des images, hors de `public_html` et non lisible par les autres comptes :
 
 ```bash
@@ -187,7 +197,7 @@ La réponse attendue de `/api/health` est `"status":"ok"`, avec `"inference_back
 
 ## 8. Comptes à rôle
 
-Il n'y a pas d'interface d'administration : les rôles se donnent sur le serveur, après l'inscription normale de la personne dans l'application.
+Il n'y a pas d'interface d'administration : les rôles se donnent sur le serveur, après l'inscription normale de la personne dans l'application (variables chargées comme indiqué à l'étape 5).
 
 ```bash
 source /home/<compte>/virtualenv/green/backend/3.12/bin/activate && cd ~/green

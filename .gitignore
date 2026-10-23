@@ -68,3 +68,4 @@ qa/test-results/
 qa/screenshots/
 .pytest_cache/
 .ruff_cache/
+backend/test-results/

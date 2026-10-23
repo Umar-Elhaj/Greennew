@@ -182,7 +182,7 @@ Interactive documentation is available at `/docs` when `DEBUG=true`.
 ## 9. Data, privacy and roles
 
 - **Images.** They are stored outside the web root, without metadata. A GPS position read from a photo is kept only with the *location consent*.
-- **Sharing with GREEN Data.** Only analyses whose author gave the *dataset consent* are counted. Demo rows are excluded, any figure below 5 analyses is masked, and the finest geography is the region; no names or coordinates are exported.
+- **Sharing with GREEN Data.** Only analyses whose author gave the *dataset consent*, and still gives it from an active account, are counted. Demo rows are excluded. A figure is published only if it covers at least 5 analyses from at least 5 farmers; the figures that would let a hidden one be recalculated (other cells of the same row or column, rates, alert baselines) are hidden too. The finest geography is one of the 10 regions (any other stored text is "unknown"), the period is given by month, and no names or coordinates are exported.
 - **Roles.** `farmer` is the default. `agronomist` can view images and verify labels. `partner` has access to GREEN Data. `admin` can do everything. Roles are assigned with `scripts/set_role.py`.
 - **Wording.** Every result is presented as a *probable disease*, with the mention "AI prediction, not a diagnosis".
 
@@ -205,5 +205,8 @@ The "alert level" shown with a disease is derived from the model's confidence. I
 - **Class → reference sheet mapping.** It is in `backend/knowledge.py` and must be validated by an agronomist.
 - **Pest detection (YOLO).** A trained model exists (`best.pt`) but is **not wired into the backend**. This is future work.
 - **Rover.** It cannot upload by itself yet: the device-token endpoint is specified in the rover contract but not implemented. Physical rover navigation is out of scope.
+- **Offline use.** There is no service worker: `/map` and `/camera` keep working offline only while the page stays open (no reload or navigation, no satellite tiles offline), and the camera page loads parcels and missions from the network. The queues are kept per account on the device.
+- **Photo metadata.** Imported photos larger than 1600 px or 1.5 MB are re-encoded on the device before the upload, which drops their EXIF GPS and capture date: the *location consent* then has no effect, and the capture time is the import time. Reading EXIF in the browser before re-encoding is future work.
+- **Vercel.** The committed `frontend/vercel.json` has no `/api/*` rewrite until `scripts/configure_vercel.py` is run with the API domain; deploying the frontend before that gives 404 on every API call.
 - **GreenBot.** It needs a Gemini key (`GEMINI_API_KEY`). Without one, the page explains that the assistant is not configured.
 - **Change log.** It is kept in [`MODIFICATIONS.md`](MODIFICATIONS.md) (in French).
