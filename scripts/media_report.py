@@ -6,6 +6,8 @@ Prints disk usage and file count of MEDIA_DIR, then the inconsistencies:
   - orphan files: on disk, but no disease_analyses row points to them;
   - missing files: a row points to an image that is not on disk.
 Nothing is deleted unless --apply is given, and then only orphan FILES
+named by GREEN (yyyy/mm/<uuid>[_thumb].jpg); other files are listed and left
+alone, and --apply is refused when the database has no image row at all
 (database rows are never modified by this script).
 
 Usage (from the repository root, with the production environment loaded):
@@ -67,7 +69,10 @@ def main() -> int:
         expected.add(p)
         expected.add(thumb_path(p) if MEDIA_PATH_RE.match(p) else p)
 
-    orphans = sorted(f for f in files if f not in expected)
+    # only files named by the application (yyyy/mm/<32 hex>[_thumb].jpg) can be
+    # orphans; anything else in MEDIA_DIR is reported and never touched
+    foreign = sorted(f for f in files if not MEDIA_PATH_RE.match(f))
+    orphans = sorted(f for f in files if MEDIA_PATH_RE.match(f) and f not in expected)
     missing = sorted(p for p in rows if p not in files)
     no_thumb = sum(1 for p in rows if MEDIA_PATH_RE.match(p) and p in files and thumb_path(p) not in files)
     orphan_bytes = sum(files[f] for f in orphans)
@@ -80,10 +85,17 @@ def main() -> int:
         print(f"  - {f}")
     if len(orphans) > 20:
         print(f"  … {len(orphans) - 20} more")
+    print(f"other files    : {len(foreign)} (not named by GREEN, never deleted)")
+    for f in foreign[:5]:
+        print(f"  - {f}")
     print(f"missing files  : {len(missing)} (rows whose image is not on disk)")
     for p in missing[:20]:
         print(f"  - {p}")
 
+    if args.apply and orphans and not rows:
+        # an empty table with images on disk is more likely the wrong database than real orphans
+        print("refused        : no analysis row has an image in this database; check DATABASE_URL")
+        return 2
     if args.apply and orphans:
         deleted = 0
         for f in orphans:

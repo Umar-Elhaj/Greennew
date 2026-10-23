@@ -22,6 +22,13 @@ def test_missing_secret_key_fails_in_production():
     assert "SECRET_KEY is not set" in r.stderr
 
 
+def test_missing_database_url_fails_in_production():
+    r = _import_config({"SECRET_KEY": "x", "DATABASE_URL": ""})
+    assert r.returncode != 0 and "DATABASE_URL is not set" in r.stderr
+    r = _import_config({"DEBUG": "true", "DATABASE_URL": " "})    # DEBUG: local SQLite file
+    assert r.returncode == 0, r.stderr
+
+
 def test_debug_is_false_by_default():
     r = _import_config({"SECRET_KEY": "x"})
     assert r.returncode == 0, r.stderr

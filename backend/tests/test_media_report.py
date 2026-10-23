@@ -32,3 +32,26 @@ def test_report_and_apply(client, user, fake_model):
     assert "deleted        : 1" in r.stdout
     assert not os.path.exists(orphan)
     assert "orphan files   : 0" in _run().stdout
+
+
+def test_apply_never_touches_foreign_files_nor_runs_on_an_empty_table(client):
+    foreign = os.path.join(media.MEDIA_DIR, "notes.txt")
+    open(foreign, "w").write("not an image")
+    orphan_dir = os.path.join(media.MEDIA_DIR, "2020", "01")
+    os.makedirs(orphan_dir, exist_ok=True)
+    orphan = os.path.join(orphan_dir, "1" * 32 + ".jpg")
+    open(orphan, "wb").write(b"x")
+    r = _run("--apply")                       # no analysis row has an image: wrong database?
+    assert r.returncode == 2 and "refused" in r.stdout
+    assert os.path.exists(orphan) and os.path.exists(foreign)
+    assert "other files    : 1" in r.stdout
+
+
+def test_empty_media_dir_variable_does_not_mean_the_working_directory(tmp_path):
+    env = {**os.environ, "MEDIA_DIR": "", "DATABASE_URL": os.environ["DATABASE_URL"]}
+    out = subprocess.run([sys.executable, "-c", "import config; print(config.MEDIA_DIR)"], cwd=str(tmp_path),
+                         env={**env, "PYTHONPATH": os.path.dirname(media.__file__)},
+                         capture_output=True, text=True, timeout=30)
+    assert out.returncode == 0, out.stderr
+    assert os.path.realpath(out.stdout.strip()) != os.path.realpath(tmp_path)
+    assert out.stdout.strip().endswith(os.path.join("data", "captures"))

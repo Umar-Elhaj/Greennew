@@ -37,20 +37,22 @@ ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 # ---- Database -----------------------------------------------
 # Production: Supabase PostgreSQL through the pooler (see .env.example).
 # Fallback: SQLite for local development — file stored at project root
-DATABASE_URL: str = os.getenv(
-    "DATABASE_URL",
-    "sqlite:///" + os.path.join(os.path.dirname(__file__), '..', 'green.db')
-)
+# An empty value counts as unset. Outside DEBUG the variable is mandatory, so
+# a misconfigured server never falls back silently to a local SQLite file.
+DATABASE_URL: str = os.getenv("DATABASE_URL", "").strip()
+if not DATABASE_URL:
+    if not DEBUG:
+        raise RuntimeError("DATABASE_URL is not set (see .env.example), or set DEBUG=true for local development.")
+    DATABASE_URL = "sqlite:///" + os.path.join(os.path.dirname(__file__), '..', 'green.db')
 # postgres:// → postgresql://, sslmode=require added for PostgreSQL (db_url.py)
 DATABASE_URL = normalize_database_url(DATABASE_URL)
 
 # ---- Media (Green Data images) ------------------------------
 # Analysed images are stored on the server disk, NOT in the database.
 # The DB keeps only the path relative to MEDIA_DIR (e.g. "2026/10/<uuid>.jpg").
-MEDIA_DIR: str = os.path.abspath(os.getenv(
-    "MEDIA_DIR",
-    os.path.join(os.path.dirname(__file__), '..', 'data', 'captures')
-))
+# An empty value counts as unset (an empty path would resolve to the working directory).
+MEDIA_DIR: str = os.path.abspath(
+    os.getenv("MEDIA_DIR", "").strip() or os.path.join(os.path.dirname(__file__), '..', 'data', 'captures'))
 # URL prefix of the authenticated media endpoint (under /api so the
 # Vercel rewrite proxies it too). On o2switch MEDIA_DIR must be outside
 # public_html, e.g. /home/<account>/green_media.
