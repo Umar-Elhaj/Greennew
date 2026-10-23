@@ -3,6 +3,8 @@
 Procédure reproductible pour héberger le backend FastAPI (inférence comprise) sur un hébergement mutualisé o2switch (cPanel, CloudLinux, Phusion Passenger).
 Le frontend reste sur Vercel et relaie `/api/*` vers ce domaine (décision D7). La base est Supabase PostgreSQL.
 
+> Version détaillée, clic par clic (boutons cPanel, champs, SSH, Let's Encrypt, Tiger Protect, tâches cron, sauvegardes, dépannage) : [`GUIDE_INTEGRATION_O2SWITCH.md`](../GUIDE_INTEGRATION_O2SWITCH.md). Ce document-ci en est le résumé de référence.
+
 > **Rien n'est installé ni modifié sur le serveur sans validation humaine (point de contrôle CP3).**
 > Les étapes 1 et 2 sont en lecture seule ; à partir de l'étape 3, chaque action est faite par vous, ou validée par vous.
 

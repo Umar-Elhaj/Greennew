@@ -155,7 +155,7 @@ cd qa && npm ci && npx playwright install chromium && npx playwright test
 
 ## 7. Deployment
 
-- **API on o2switch.** Follow [`docs/DEPLOY_O2SWITCH.md`](docs/DEPLOY_O2SWITCH.md): read-only diagnostic, Supabase migration, cPanel Python app, environment, Passenger, rollback. Production installs `backend/requirements-prod.txt` (ONNX Runtime, no PyTorch).
+- **API on o2switch.** The click-by-click walkthrough (in French) is [`GUIDE_INTEGRATION_O2SWITCH.md`](GUIDE_INTEGRATION_O2SWITCH.md): SSH, subdomain, Let's Encrypt, Setup Python App, Supabase, migration, Tiger Protect, Vercel, smoke test, cron jobs, backups. The condensed reference is [`docs/DEPLOY_O2SWITCH.md`](docs/DEPLOY_O2SWITCH.md): read-only diagnostic, Supabase migration, cPanel Python app, environment, Passenger, rollback. Production installs `backend/requirements-prod.txt` (ONNX Runtime, no PyTorch).
 - **Frontend on Vercel.** Run `python scripts/configure_vercel.py https://<api-domain>` to write the `/api/*` rewrite into `frontend/vercel.json`.
 - **After each deployment.** Run `scripts/smoke_prod.sh <base_url>`.
 
