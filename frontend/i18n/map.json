@@ -55,7 +55,9 @@
       "name_required": "Give the parcel a name.",
       "conflict": "This parcel was changed elsewhere: the server version is shown. Your edit is kept as a draft.",
       "apply_draft": "Apply my edit again",
-      "discard_draft": "Keep the server version"
+      "discard_draft": "Keep the server version",
+      "retry": "Send again",
+      "discard_local": "Cancel my change"
     },
     "parcel": {
       "area": "Area",
@@ -181,7 +183,9 @@
       "name_required": "Donnez un nom à la parcelle.",
       "conflict": "Cette parcelle a été modifiée ailleurs : la version du serveur est affichée. Votre modification est conservée comme brouillon.",
       "apply_draft": "Réappliquer ma modification",
-      "discard_draft": "Garder la version du serveur"
+      "discard_draft": "Garder la version du serveur",
+      "retry": "Renvoyer",
+      "discard_local": "Annuler ma modification"
     },
     "parcel": {
       "area": "Surface",

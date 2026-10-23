@@ -12,26 +12,35 @@
  *   UploadQueue.on('changed', counts => …);   // { pending, failed }
  *
  * Statuses: pending (to send) → sent (removed) | failed (rejected by the
- * server, e.g. not an image; kept until the user deletes it). Network errors
- * and 5xx keep the item pending with an exponential back-off.
+ * server, e.g. not an image; kept until the user deletes it). Network errors,
+ * 5xx, 429 and 401 (expired session) keep the item pending with an
+ * exponential back-off.
+ * One database per account (green-uploads-u<id>): on a shared device the
+ * photos of one account are never shown to, nor sent by, another.
  */
 const UploadQueue = (() => {
-  const DB_NAME = 'green-uploads';
+  const DB_PREFIX = 'green-uploads-u';
   const STORE = 'queue';
   const MAX_SIDE = 1600;          // resized before storage: small, under proxy body limits
   const JPEG_QUALITY = 0.85;
   const RETRY_MS = 30000;
 
   let dbPromise = null;
+  let dbUser = null;
   let processing = false;
   const listeners = {};
 
   function emit(type, detail) { (listeners[type] || []).forEach(fn => { try { fn(detail); } catch (e) { console.error(e); } }); }
 
+  const userId = () => { const u = Auth.getUser(); return u && u.id ? String(u.id) : null; };
+
   function open() {
+    const uid = userId();
+    if (!uid) return Promise.reject(new Error('not signed in'));
+    if (dbUser !== uid) { dbPromise = null; dbUser = uid; }
     if (!dbPromise) {
       dbPromise = new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, 1);
+        const req = indexedDB.open(DB_PREFIX + uid, 1);
         req.onupgradeneeded = () => {
           const store = req.result.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
           store.createIndex('status', 'status');
@@ -118,10 +127,11 @@ const UploadQueue = (() => {
   }
 
   async function process() {
-    if (processing || !navigator.onLine) return;
+    if (processing || !navigator.onLine || !userId()) return;
     processing = true;
     try {
       for (;;) {
+        if (userId() !== dbUser && dbUser !== null) break;   // signed out / other account
         const now = Date.now();
         const next = (await all())
           .filter(i => i.status === 'pending' && i.next_try <= now)
@@ -137,8 +147,8 @@ const UploadQueue = (() => {
         }
         next.attempts += 1;
         next.last_error = error;
-        if (status === 0 || status >= 500 || status === 429) {
-          // network or server trouble: keep it and try later
+        if (status === 0 || status >= 500 || status === 429 || status === 401) {
+          // network or server trouble, or session expired (sign in again): keep it and try later
           next.next_try = Date.now() + Math.min(10 * 60000, 5000 * 2 ** next.attempts);
           await put(next);
           emit('retry', next);

@@ -175,6 +175,30 @@ test('camera: photos imported offline are queued, then sent when back online', a
   expect((await hist.json()).total).toBe(2);
 });
 
+test('camera: photos queued by one account are neither shown to nor sent by another', async ({ browser, request }) => {
+  const context = await browser.newContext();
+  const a = await newUser(request);
+  let page = await context.newPage();
+  await signIn(page, a);
+  await page.goto('/camera');
+  await page.click('#tabPhotos');
+  await context.setOffline(true);
+  await page.setInputFiles('#uploadInput', [{ name: 'a.png', mimeType: 'image/png', buffer: solidPng('#30a040') }]);
+  await expect(page.locator('.queue-item')).toHaveCount(1);
+  await page.close();
+
+  await context.setOffline(false);
+  const b = await newUser(request);
+  page = await context.newPage();
+  await signIn(page, b);
+  await page.goto('/camera');
+  expect(await page.evaluate(() => UploadQueue.all().then((x: any[]) => x.length))).toBe(0);
+  await expect(page.locator('.queue-item')).toHaveCount(0);
+  const hist = await request.get('/api/analysis/history', { headers: { Authorization: `Bearer ${b.token}` } });
+  expect((await hist.json()).total).toBe(0);
+  await context.close();
+});
+
 test('camera: an invalid file is rejected and listed, then deletable', async ({ page, request }) => {
   const s = await newUser(request);
   await signIn(page, s);
@@ -251,6 +275,82 @@ test('GREEN Map: parcel drawn offline is kept, then synced when back online', as
   expect(list[0].area_ha).toBeGreaterThan(0.05);
   expect(list[0].region).toBe('Centre');
   await expect(page.locator('#pRegion')).toHaveText('Centre');
+});
+
+const SQUARE = { type: 'Polygon', coordinates: [[[11.5, 3.85], [11.5012, 3.85], [11.5012, 3.8512], [11.5, 3.8512], [11.5, 3.85]]] };
+
+test('GREEN Map: two edits made offline are both sent, without a false conflict', async ({ page, context, request }) => {
+  const s = await newUser(request);
+  const auth = { Authorization: `Bearer ${s.token}` };
+  const created = await (await request.post('/api/parcels', { headers: auth, data: { name: 'Avant', geometry: SQUARE } })).json();
+  await signIn(page, s);
+  await page.goto('/map');
+  await page.locator('.parcel-item', { hasText: 'Avant' }).click();
+  await context.setOffline(true);
+  for (const name of ['Edition 1', 'Edition 2']) {
+    await page.click('#editBtn');
+    await page.fill('#fName', name);
+    await page.click('#saveParcelBtn');
+    await expect(page.locator('#pSync')).toHaveText("En attente d'envoi");
+  }
+  await context.setOffline(false);
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await expect(page.locator('#pSync')).toHaveText('Enregistrée', { timeout: 15000 });
+  await expect(page.locator('#pConflict')).toBeHidden();
+  const p = await (await request.get(`/api/parcels/${created.id}`, { headers: auth })).json();
+  expect(p.name).toBe('Edition 2');
+});
+
+test('GREEN Map: an offline edit of a parcel changed elsewhere shows the conflict', async ({ page, context, request }) => {
+  const s = await newUser(request);
+  const auth = { Authorization: `Bearer ${s.token}` };
+  const created = await (await request.post('/api/parcels', { headers: auth, data: { name: 'Avant', geometry: SQUARE } })).json();
+  await signIn(page, s);
+  await page.goto('/map');
+  await page.locator('.parcel-item', { hasText: 'Avant' }).click();
+  await context.setOffline(true);
+  await page.click('#editBtn');
+  await page.fill('#fName', 'Mon edition');
+  await page.click('#saveParcelBtn');
+  await page.waitForTimeout(1100);          // the server tolerates 1 s of clock skew
+  await request.put(`/api/parcels/${created.id}`, { headers: auth, data: { name: 'Ailleurs' } });
+  await context.setOffline(false);
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await expect(page.locator('#pSync')).toHaveText('Modifiée ailleurs', { timeout: 15000 });
+  await expect(page.locator('#pConflict')).toBeVisible();
+  await page.click('#applyDraftBtn');
+  await expect(page.locator('#pSync')).toHaveText('Enregistrée', { timeout: 15000 });
+  expect((await (await request.get(`/api/parcels/${created.id}`, { headers: auth })).json()).name).toBe('Mon edition');
+});
+
+test('GREEN Map: parcels kept offline on a shared device stay with their account', async ({ browser, request }) => {
+  const context = await browser.newContext();
+  const a = await newUser(request);
+  let page = await context.newPage();
+  await signIn(page, a);
+  await page.goto('/map');
+  await page.evaluate('map.setView([3.85, 11.5], 18)');
+  await context.setOffline(true);
+  await page.click('#newParcelBtn');
+  await clickRing(page, [[200, 150], [420, 150], [420, 330], [200, 330]]);
+  await page.click('#finishDrawBtn');
+  await page.fill('#fName', 'Parcelle de A');
+  await page.click('#saveParcelBtn');
+  await expect(page.locator('#pSync')).toHaveText("En attente d'envoi");
+  await page.close();
+
+  await context.setOffline(false);
+  const b = await newUser(request);
+  page = await context.newPage();
+  await signIn(page, b);
+  await page.goto('/map');
+  await expect(page.locator('#viewList')).toBeVisible();
+  await page.evaluate('ParcelStore.sync()');
+  expect(await page.evaluate('ParcelStore.list(false).then(l => l.map(p => p.name))')).toEqual([]);
+  await expect(page.locator('#parcelList')).not.toContainText('Parcelle de A');
+  const listB = await (await request.get('/api/parcels', { headers: { Authorization: `Bearer ${b.token}` } })).json();
+  expect(listB.length).toBe(0);
+  await context.close();
 });
 
 test('GREEN Map: self-crossing outline is refused while drawing', async ({ page, request }) => {
@@ -339,7 +439,7 @@ test('GREEN Data: farmers are refused, partners see aggregates (demo data, DEBUG
   await expect(page.locator('#forbidden')).toBeVisible();
   await expect(page.locator('.nav-item[data-page="green-data"]')).toHaveCount(0);
 
-  runScript(['seed_demo.py', '--farmers-per-region', '3', '--analyses-per-farmer', '25']);
+  runScript(['seed_demo.py', '--farmers-per-region', '5', '--analyses-per-farmer', '15']);
   const partner = await newUser(request);
   runScript(['set_role.py', '--phone', partner.phone, '--role', 'partner']);
   page = await context.newPage();      // the farmer's init script stays on the first page
@@ -350,7 +450,7 @@ test('GREEN Data: farmers are refused, partners see aggregates (demo data, DEBUG
   await page.check('#fDemo');
   await page.click('#filters button[type="submit"]');
   await expect(page.locator('#mDemo')).toBeVisible();
-  await expect(page.locator('#kpis')).toContainText('750');            // 10 regions x 3 farmers x 25
+  await expect(page.locator('#kpis')).toContainText('750');            // 10 regions x 5 farmers x 15 (>= 5 farmers: published)
   await expect(page.locator('#plantsBox canvas')).toBeVisible();
   await expect(page.locator('#matrixBox td.cell').first()).toBeVisible();
   await expect(page.locator('#regionMap path.leaflet-interactive')).toHaveCount(10);

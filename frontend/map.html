@@ -128,7 +128,13 @@
                 <button type="button" class="btn" id="discardDraftBtn" data-i18n="map.form.discard_draft"></button>
               </div>
             </div>
-            <div id="pError" class="banner-err" hidden></div>
+            <div id="pError" class="banner-err" hidden>
+              <p id="pErrorText" style="margin:0 0 var(--sp-2);"></p>
+              <div class="row">
+                <button type="button" class="btn" id="retryParcelBtn" data-i18n="map.form.retry"></button>
+                <button type="button" class="btn" id="discardLocalBtn" data-i18n="map.form.discard_local"></button>
+              </div>
+            </div>
             <dl class="stats">
               <div><dt data-i18n="map.parcel.area"></dt><dd id="pArea">—</dd></div>
               <div><dt data-i18n="map.parcel.perimeter"></dt><dd id="pPerimeter">—</dd></div>
@@ -447,7 +453,7 @@ function renderParcelView() {
   $('pSync').textContent = I18n.t(`map.sync.${p.sync}`);
   $('pConflict').hidden = p.sync !== 'conflict';
   $('pError').hidden = p.sync !== 'error';
-  $('pError').textContent = p.error || '';
+  $('pErrorText').textContent = p.error || '';
   $('pArea').textContent = fmtHa(p.area_ha);
   $('pPerimeter').textContent = fmtDistance(p.perimeter_m);
   $('pCrop').textContent = cropLabel(p.crop_type);
@@ -465,6 +471,13 @@ $('editBtn').addEventListener('click', () => openForm(selected()));
 $('gridBtn').addEventListener('click', openGrid);
 $('applyDraftBtn').addEventListener('click', async () => { await ParcelStore.applyDraft(S.selectedKey); loadParcels(false); });
 $('discardDraftBtn').addEventListener('click', async () => { await ParcelStore.discardDraft(S.selectedKey); loadParcels(false); });
+$('retryParcelBtn').addEventListener('click', async () => { await ParcelStore.retry(S.selectedKey); loadParcels(false); });
+$('discardLocalBtn').addEventListener('click', async () => {
+  const key = S.selectedKey;
+  await ParcelStore.discard(key);
+  if (await ParcelStore.get(key)) loadParcels(false);
+  else document.querySelector('[data-back="list"]').click();   // never reached the server: gone
+});
 
 /* ---- Drawing --------------------------------------------------- */
 $('newParcelBtn').addEventListener('click', () => startDraw(null));
