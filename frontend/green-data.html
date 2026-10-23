@@ -180,7 +180,9 @@ const mv = m => !m ? '—' : m.masked ? gt('masked', { k: K }) : I18n.number(m.v
 const mr = m => !m ? '—' : m.masked ? gt('masked', { k: K }) : I18n.percent(m.value, 1);
 const val = m => (m && !m.masked ? m.value : null);
 const plantName = p => p === 'unknown' ? I18n.t('common.unknown') : plantLabel(p);
-const empty = n => `<p class="gd-empty">${escapeHtml(gt('not_enough', { n: I18n.number(n || 0) }))}</p>`;
+const empty = () => `<p class="gd-empty">${escapeHtml(gt('not_enough'))}</p>`;
+// the period is published by month ("YYYY-MM"), only with the total
+const monthLabel = ym => { const [y, m] = ym.split('-'); return I18n.date(new Date(+y, +m - 1, 15), { month: 'long', year: 'numeric' }); };
 
 function table(headers, rows, numeric = []) {
   return `<div class="table-scroll"><table class="gd-table"><thead><tr>${headers.map((h, i) =>
@@ -241,8 +243,8 @@ function renderAll() {
   $('demoBox').hidden = !meta.demo_available;
   $('mDemo').hidden = !meta.include_demo;
   $('mKanon').textContent = gt('method.kanon', { k: K });
-  $('mPeriod').textContent = meta.n
-    ? gt('method.period', { from: I18n.date(meta.period.from), to: I18n.date(meta.period.to), n: I18n.number(meta.n) })
+  $('mPeriod').textContent = !meta.n.masked && meta.n.value && meta.period.from
+    ? gt('method.period', { from: monthLabel(meta.period.from), to: monthLabel(meta.period.to), n: I18n.number(meta.n.value) })
     : gt('method.period_empty');
   $('exportNote').textContent = gt('export.note', { k: K });
   renderKpis();
@@ -274,7 +276,7 @@ function renderVolume() {
   const o = D.overview;
   const box = $('volumeBox'), rbox = $('rateBox');
   box.innerHTML = ''; rbox.innerHTML = '';
-  if (!o || !o.series.length || D.meta.n < K) { box.innerHTML = empty(D.meta.n); rbox.innerHTML = empty(D.meta.n); return; }
+  if (!o || !o.series.length || D.meta.n.masked) { box.innerHTML = empty(); rbox.innerHTML = empty(); return; }
   const labels = o.series.map(s => { const [y, m] = s.month.split('-'); return I18n.date(new Date(+y, +m - 1, 15), { month: 'short', year: '2-digit' }); });
   const base = VIZ.baseOptions();
   base.plugins.legend.display = false;
@@ -306,7 +308,7 @@ function renderPlants() {
   const box = $('plantsBox');
   box.innerHTML = '';
   const rows = (D.plants || []).filter(p => !p.analyses.masked);
-  if (!rows.length) { box.innerHTML = empty(D.meta.n); return; }
+  if (!rows.length) { box.innerHTML = empty(); return; }
   const base = VIZ.baseOptions({ indexAxis: 'y' });
   base.scales.x.stacked = true; base.scales.y.stacked = true;
   chart('plantsChart', box, {
@@ -326,7 +328,7 @@ function renderDiseases() {
   const box = $('diseasesBox');
   box.innerHTML = '';
   const top = (D.diseases ? D.diseases.top : []).filter(d => !d.analyses.masked).slice(0, 8);
-  if (!top.length) { box.innerHTML = empty(D.meta.n); } else {
+  if (!top.length) { box.innerHTML = empty(); } else {
     const base = VIZ.baseOptions({ indexAxis: 'y' });
     base.plugins.legend.display = false;
     chart('diseaseChart', box, {
@@ -343,7 +345,7 @@ function renderDiseases() {
   // plant x disease matrix (sequential cells, masked cells textured)
   const mbox = $('matrixBox');
   const m = D.diseases && D.diseases.matrix;
-  if (!m || !m.cells.length) { mbox.innerHTML = empty(D.meta.n); return; }
+  if (!m || !m.cells.length) { mbox.innerHTML = empty(); return; }
   const cell = {};
   let max = 0;
   m.cells.forEach(c => { cell[`${c.plant}|${c.disease}`] = c.analyses; if (!c.analyses.masked) max = Math.max(max, c.analyses.value); });
@@ -363,7 +365,7 @@ function renderRegions() {
   const byRegion = Object.fromEntries(rows.map(r => [r.region, r]));
   $('regionsBox').innerHTML = rows.length ? table([gt('regions.region'), gt('volume.analyses'), gt('plants.rate'), gt('regions.top')],
     rows.map(r => [escapeHtml(r.region === 'unknown' ? I18n.t('common.unknown') : regionLabel(r.region)), escapeHtml(mv(r.analyses)),
-      escapeHtml(mr(r.disease_rate)), escapeHtml(r.top_disease ? classLabel(r.top_disease) : '—')]), [1, 2]) : empty(D.meta.n);
+      escapeHtml(mr(r.disease_rate)), escapeHtml(r.top_disease ? classLabel(r.top_disease) : '—')]), [1, 2]) : empty();
 
   if (!regionMap) {
     regionMap = L.map('regionMap', { zoomControl: false, attributionControl: true, scrollWheelZoom: false }).setView([7.3, 12.5], 5);
@@ -396,9 +398,10 @@ function renderAlerts() {
   const a = D.alerts;
   const box = $('alertsBox');
   if (!a) { box.innerHTML = ''; return; }
-  const items = a.alerts.map(x => `<div class="gd-alert">${escapeHtml(gt('alerts.item', {
+  const items = a.alerts.map(x => `<div class="gd-alert">${escapeHtml(gt(x.baseline_masked ? 'alerts.item_masked' : 'alerts.item', {
     disease: classLabel(x.disease), region: x.region === 'unknown' ? I18n.t('common.unknown') : regionLabel(x.region),
-    recent: x.recent_cases, baseline: I18n.number(x.baseline_per_period, { maximumFractionDigits: 1 }) }))}</div>`).join('');
+    recent: x.recent_cases, k: K,
+    baseline: x.baseline_masked ? '' : I18n.number(x.baseline_per_period, { maximumFractionDigits: 1 }) }))}</div>`).join('');
   box.innerHTML = (items || `<p class="gd-empty">${escapeHtml(gt('alerts.none'))}</p>`)
     + `<p class="gd-note">${escapeHtml(a.rule[I18n.lang === 'fr' ? 'text_fr' : 'text_en'])}</p>`
     + `<p class="gd-note">${escapeHtml(gt('alerts.as_of', { date: I18n.date(a.as_of) }))}</p>`;
@@ -407,7 +410,7 @@ function renderAlerts() {
 function renderSeason() {
   const rows = D.seasonality || [];
   const box = $('seasonBox');
-  if (!rows.length) { box.innerHTML = empty(D.meta.n); return; }
+  if (!rows.length) { box.innerHTML = empty(); return; }
   const diseases = [...new Set(rows.map(r => r.disease))].sort();
   const cell = {};
   let max = 0;
@@ -428,7 +431,7 @@ function renderConfidence() {
   const c = D.confidence;
   const box = $('confidenceBox');
   box.innerHTML = '';
-  if (!c || D.meta.n < K) { box.innerHTML = empty(D.meta.n); return; }
+  if (!c || D.meta.n.masked) { box.innerHTML = empty(); return; }
   const base = VIZ.baseOptions();
   base.plugins.legend.display = false;
   box.innerHTML = `<h3>${escapeHtml(gt('confidence.histogram'))}</h3><div id="histBox"></div>
@@ -474,7 +477,7 @@ function renderQuality() {
 function renderDataset() {
   const rows = D.dataset || [];
   $('datasetBox').innerHTML = rows.length ? table([gt('dataset.class'), gt('dataset.images'), gt('dataset.verified')],
-    rows.map(r => [escapeHtml(classLabel(r.class)), escapeHtml(mv(r.images)), escapeHtml(mv(r.verified))]), [1, 2]) : empty(D.meta.n);
+    rows.map(r => [escapeHtml(classLabel(r.class)), escapeHtml(mv(r.images)), escapeHtml(mv(r.verified))]), [1, 2]) : empty();
 }
 
 /* ---- wiring --------------------------------------------------- */

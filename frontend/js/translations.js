@@ -616,15 +616,15 @@ window.GREEN_I18N_DICT = {
    "method": {
     "title": "Method and limits",
     "consent": "Only analyses whose author agreed to share them are counted.",
-    "kanon": "Any figure based on fewer than {{k}} analyses is hidden and shown as “< {{k}}”.",
+    "kanon": "A figure is published only if it covers at least {{k}} analyses from at least {{k}} different farmers. Otherwise it is shown as “hidden”, together with any figure that would let it be recalculated.",
     "geo": "The finest geography is the region of Cameroon (region of the parcel, otherwise of the farmer). No name and no coordinates are shown or exported.",
     "prediction": "Results are AI predictions (probable diseases), not diagnoses; their quality is measured below when agronomists have verified images.",
     "period": "Period covered: {{from}} to {{to}} · n = {{n}} analyses.",
-    "period_empty": "No analysis matches these filters yet.",
+    "period_empty": "Too few analyses match these filters to publish the period and the total.",
     "demo": "Demo data is included: these figures are not real."
    },
-   "masked": "< {{k}}",
-   "not_enough": "Not enough data yet (n = {{n}}).",
+   "masked": "hidden",
+   "not_enough": "Not enough data yet to publish this view.",
    "table_view": "Show the data as a table",
    "kpi": {
     "analyses": "Analyses",
@@ -689,7 +689,8 @@ window.GREEN_I18N_DICT = {
     "title": "Emerging alerts",
     "none": "No emerging alert at the moment.",
     "item": "{{disease}} in {{region}}: {{recent}} cases over the last 14 days (usual: {{baseline}} per 14 days).",
-    "as_of": "Computed on {{date}}, regardless of the period filter."
+    "as_of": "Computed on {{date}}, regardless of the period filter.",
+    "item_masked": "{{disease}} in {{region}}: {{recent}} cases over the last 14 days (usual level hidden: fewer than {{k}} cases)."
    },
    "dataset": {
     "title": "Dataset maturity (for retraining)",
@@ -701,7 +702,7 @@ window.GREEN_I18N_DICT = {
     "title": "Exports",
     "csv": "Aggregated table (CSV)",
     "geojson": "Regions (GeoJSON)",
-    "note": "Exports contain only aggregates (region × month × plant × result), with the same “< {{k}}” masking."
+    "note": "Exports contain only aggregates (region × month × plant × result), hidden by the same rule (at least {{k}} analyses and {{k}} farmers)."
    },
    "sources": {
     "camera": "Camera",
@@ -1849,15 +1850,15 @@ window.GREEN_I18N_DICT = {
    "method": {
     "title": "Méthode et limites",
     "consent": "Seules les analyses dont l'auteur a accepté le partage sont comptées.",
-    "kanon": "Tout chiffre fondé sur moins de {{k}} analyses est masqué et affiché « < {{k}} ».",
+    "kanon": "Un chiffre n'est publié que s'il porte sur au moins {{k}} analyses d'au moins {{k}} exploitants différents. Sinon il est affiché « masqué », de même que tout chiffre qui permettrait de le recalculer.",
     "geo": "La géographie la plus fine est la région du Cameroun (région de la parcelle, sinon de l'exploitant). Aucun nom ni aucune coordonnée n'est affiché ou exporté.",
     "prediction": "Les résultats sont des prédictions de l'IA (maladies probables), pas des diagnostics ; leur qualité est mesurée plus bas lorsque des agronomes ont vérifié des images.",
     "period": "Période couverte : du {{from}} au {{to}} · n = {{n}} analyses.",
-    "period_empty": "Aucune analyse ne correspond encore à ces filtres.",
+    "period_empty": "Trop peu d'analyses correspondent à ces filtres pour publier la période et le total.",
     "demo": "Les données de démonstration sont incluses : ces chiffres ne sont pas réels."
    },
-   "masked": "< {{k}}",
-   "not_enough": "Pas encore assez de données (n = {{n}}).",
+   "masked": "masqué",
+   "not_enough": "Pas encore assez de données pour publier cette vue.",
    "table_view": "Afficher les données sous forme de tableau",
    "kpi": {
     "analyses": "Analyses",
@@ -1922,7 +1923,8 @@ window.GREEN_I18N_DICT = {
     "title": "Alertes émergentes",
     "none": "Aucune alerte émergente pour le moment.",
     "item": "{{disease}} — {{region}} : {{recent}} cas sur les 14 derniers jours (habituellement {{baseline}} par période de 14 jours).",
-    "as_of": "Calculé le {{date}}, indépendamment du filtre de période."
+    "as_of": "Calculé le {{date}}, indépendamment du filtre de période.",
+    "item_masked": "{{disease}} — {{region}} : {{recent}} cas sur les 14 derniers jours (niveau habituel masqué : moins de {{k}} cas)."
    },
    "dataset": {
     "title": "Maturité du jeu de données (pour le réentraînement)",
@@ -1934,7 +1936,7 @@ window.GREEN_I18N_DICT = {
     "title": "Exports",
     "csv": "Tableau agrégé (CSV)",
     "geojson": "Régions (GeoJSON)",
-    "note": "Les exports ne contiennent que des agrégats (région × mois × plante × résultat), avec le même masquage « < {{k}} »."
+    "note": "Les exports ne contiennent que des agrégats (région × mois × plante × résultat), masqués selon la même règle (au moins {{k}} analyses et {{k}} exploitants)."
    },
    "sources": {
     "camera": "Caméra",
