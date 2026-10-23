@@ -91,7 +91,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 
 - [x] 8.1 Parcours de référence Playwright FR + EN — `qa/journey.spec.ts` : 2 passed (deux exécutions) ; a révélé le bug de normalisation du téléphone (corrigé)
 - [x] 8.2 Cohérence (navigation, en-tête, langue, thème, liens, états, 390 px, contraste AA) — `qa/consistency.spec.ts` (30 : 15 pages × clair/sombre, axe-core color-contrast), balayage à 390 px ; Playwright total 105 + 2 parcours
-- [ ] 8.3 Sous-agent relecteur indépendant → corrections → seconde passe
+- [ ] 8.3 Sous-agent relecteur indépendant → corrections → seconde passe — 1re passe : 3 bloquants (confidentialité GREEN Data), 7 majeurs, 12 mineurs. Corrigés : B1–B3 (`b86de9e`, `d21bfc8`), M1 `d8b394a`, M2 `6297e1b`, M3–M5 `8803f1a`, M6 faux positif (attribut présent dans le HTML ; doc corrigée `e6cc218`), M7 `9ec2c0c`, mineurs m1/m2/m4–m7/m9/m11/m12 `6132af3` `a497601`, m3/m8/m10 documentés (README §11). Harnais : pytest 140 + 2 lents, PG 143, Playwright 111, ruff et i18n propres. Seconde passe : en cours
 - [x] 8.4 `README.md` + entrée datée dans `MODIFICATIONS.md` — README réécrit (architecture réelle, variables, lancement, tests, déploiement, limites) ; « Modification 2 » datée du 22/10/2026
 
 ---
@@ -130,6 +130,11 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 | D30 | Base SQLite de développement migrée par Alembic au démarrage (et non `create_all`) | Un `green.db` existant recevait sinon le nouveau code sans les nouvelles colonnes. |
 | D31 | Pas de préchargement du modèle sous Passenger (lifespan non exécuté par a2wsgi) ; chargement paresseux protégé par un verrou ; `WARMUP=1` pour précharger | Chaque processus Passenger coûterait ~180 Mo ; limites LVE. |
 | D32 | `vercel.json` généré par `scripts/configure_vercel.py <origine-api>` (réécriture `/api/*`, redirections `/drone`, en-têtes de sécurité) | Le domaine o2switch n'est pas encore connu ; pas de valeur fictive dans un fichier de production. |
+| D33 | Contrôle de divulgation GREEN Data : publication si ≥ 5 analyses **et** ≥ 5 exploitants ; suppression secondaire (une cellule masquée seule dans une ligne ou colonne masque la plus petite visible) ; taux masqué si le total ou l'un des deux côtés l'est ; les zéros sont publics | Revue 8.3 (B1/B2) : un seuil sur les seules analyses laissait recalculer les cellules masquées par différence. |
+| D34 | Régions : uniquement les 10 noms officiels (alias anglais et sans accents acceptés), toute autre valeur stockée est publiée « unknown » | Revue 8.3 (B3) : du texte libre (adresses, noms) était publié. |
+| D35 | Retrait du consentement ou compte désactivé : les analyses passées sortent aussi des statistiques (filtre à la lecture, aucune donnée modifiée) | Cohérent avec « modifiable à tout moment » de l'inscription ; pas de requête destructive. |
+| D36 | Files hors ligne : une base IndexedDB par compte (`green-parcels-u<id>`, `green-uploads-u<id>`) | Appareils partagés : rien n'est montré ni envoyé au nom d'un autre compte. |
+| D37 | `/api/camera/connect` et `/capture` (le serveur récupère une IP quelconque) limités à DEBUG | SSRF sur l'hébergement mutualisé ; aucun appelant dans le frontend. |
 | D2 | Dépendances de dev dans `backend/requirements-dev.txt` (pytest, ruff, onnx) | Ne pas alourdir le serveur de production. |
 | D1 | Clone de `Umar-Elhaj/Greennew` dans `Greennew/` (et non `TCHOUANANG-dimitri/GREEN`) | Le prompt maître cible ce dépôt ; HEAD distant = `36d4768`, identique au contexte vérifié. |
 
@@ -147,6 +152,8 @@ _Aucun pour l'instant._
 - Le balayage Playwright dépend de CDN externes (Google Fonts, Chart.js) : une coupure réseau donne un faux échec (`ERR_CONNECTION_RESET`), relancer.
 - Le cache des navigateurs Playwright (`~/.cache/ms-playwright`) a disparu une fois pendant la session : `npx playwright install chromium` le rétablit.
 - GreenBot avec une vraie clé n'est testé que côté backend (LLM simulé) ; aucune clé n'est disponible ici.
+- Les tests Postgres exigent `?sslmode=disable` (le conteneur local n'a pas TLS ; `sslmode=require` est ajouté sinon).
+- La suppression d'artefact `backend/test-results/.last-run.json` est entrée dans le commit `6132af3` (et non `a497601`).
 
 ## Écarts constatés par rapport au contexte fourni
 
