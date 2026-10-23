@@ -59,6 +59,7 @@ MESSAGES_FR = {
     "Empty file.": "Fichier vide.",
     "Unsupported image format (JPEG, PNG or WebP).": "Format d'image non pris en charge (JPEG, PNG ou WebP).",
     "The file is not a valid image.": "Le fichier n'est pas une image valide.",
+    "The image is too large (50 megapixels at most).": "L'image est trop grande (50 mégapixels au maximum).",
     "Expired or invalid image link.": "Lien d'image expiré ou invalide.",
     "You do not have access to this image.": "Vous n'avez pas accès à cette image.",
     # camera / rover

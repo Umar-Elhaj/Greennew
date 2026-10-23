@@ -179,3 +179,10 @@ def test_dedup_is_per_user(client, user, other_user, fake_model):
     b = _upload(client, other_user["headers"], content=img).json()
     assert a["analysis_id"] != b["analysis_id"]
     assert len(fake_model) == 2
+
+
+def test_pixel_limit_checked_before_decoding(client, user, fake_model, monkeypatch):
+    monkeypatch.setattr(media, "MAX_PIXELS", 32 * 32 - 1)
+    r = client.post("/api/camera/upload", files={"file": ("a.jpg", jpeg_bytes(), "image/jpeg")},
+                    headers={**user["headers"], "Accept-Language": "fr"})
+    assert r.status_code == 413 and "50 mégapixels" in r.json()["detail"]

@@ -95,17 +95,23 @@ def process_image(raw: bytes) -> ProcessedImage:
     """
     Image.MAX_IMAGE_PIXELS = MAX_PIXELS
     try:
-        with Image.open(io.BytesIO(raw)) as probe:
+        with Image.open(io.BytesIO(raw)) as probe:     # reads the header only
             fmt = probe.format
+            if probe.size[0] * probe.size[1] > MAX_PIXELS:
+                raise Image.DecompressionBombError(probe.size)
             probe.verify()
         if fmt not in ACCEPTED_FORMATS:
             raise HTTPException(status_code=415, detail="Unsupported image format (JPEG, PNG or WebP).")
         img = Image.open(io.BytesIO(raw))
+        if fmt == "JPEG":
+            img.draft("RGB", (MAX_STORED_SIDE, MAX_STORED_SIDE))   # decode at a reduced scale when possible
         gps = _gps_from_exif(img)
         img = ImageOps.exif_transpose(img).convert("RGB")
     except HTTPException:
         raise
-    except (UnidentifiedImageError, Image.DecompressionBombError, OSError, SyntaxError, ValueError):
+    except Image.DecompressionBombError:
+        raise HTTPException(status_code=413, detail="The image is too large (50 megapixels at most).") from None
+    except (UnidentifiedImageError, OSError, SyntaxError, ValueError):
         raise HTTPException(status_code=415, detail="The file is not a valid image.")
 
     img.thumbnail((MAX_STORED_SIDE, MAX_STORED_SIDE))
