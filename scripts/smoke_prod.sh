@@ -7,7 +7,8 @@
 #
 # Credentials of a dedicated test account come from the environment and
 # are never printed. The test image defaults to a generated 64x48 JPEG.
-# Checks: health, login, parcels list, analysis of one image, read-back of
+# Checks: health, frontend pages and assets (private files refused), login,
+# parcels list, analysis of one image, read-back of
 # the stored image (authenticated, and refused without token), one
 # GREEN Data endpoint (only if the account has the partner/admin role).
 # Exit code = number of failed checks.
@@ -33,6 +34,18 @@ echo "GREEN smoke test → $BASE"
 code=$(curl -s -o "$TMP/health.json" -w '%{http_code}' "$BASE/api/health")
 [ "$code" = 200 ] && [ "$(json x "d['status']" "$TMP/health.json")" = ok ] \
   && pass "GET /api/health" || fail "GET /api/health (HTTP $code)"
+
+# 1b. frontend served by the same domain (pages, scripts, vendored libraries),
+#     and no private file reachable
+for path in / /register /dashboard /map /js/api.js /js/translations.js /css/main.css \
+            /vendor/leaflet-1.9.4/leaflet.js; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE$path")
+  [ "$code" = 200 ] && pass "GET $path" || fail "GET $path (HTTP $code)"
+done
+for path in /.env /passenger_wsgi.py /green.db; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE$path")
+  [ "$code" != 200 ] && pass "GET $path → $code (not served)" || fail "GET $path is served (HTTP 200)"
+done
 
 # 2. login (credentials sent in the body via a file, never on the command line)
 python3 - "$TMP/login.json" <<'PY'
