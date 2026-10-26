@@ -94,6 +94,18 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 - [ ] 8.3 Sous-agent relecteur indépendant → corrections → seconde passe — 1re passe : 3 bloquants (confidentialité GREEN Data), 7 majeurs, 12 mineurs. Corrigés : B1–B3 (`b86de9e`, `d21bfc8`), M1 `d8b394a`, M2 `6297e1b`, M3–M5 `8803f1a`, M6 faux positif (attribut présent dans le HTML ; doc corrigée `e6cc218`), M7 `9ec2c0c`, mineurs m1/m2/m4–m7/m9/m11/m12 `6132af3` `a497601`, m3/m8/m10 documentés (README §11). Harnais : pytest 140 + 2 lents, PG 143, Playwright 111, ruff et i18n propres. Seconde passe : en cours
 - [x] 8.4 `README.md` + entrée datée dans `MODIFICATIONS.md` — README réécrit (architecture réelle, variables, lancement, tests, déploiement, limites) ; « Modification 2 » datée du 22/10/2026
 
+## LOT 9 — Tout sur o2switch : base MySQL/MariaDB, backend, frontend (26/10/2026, sur `main`)
+
+- [x] 9.1 `git pull` de `origin/main` (déjà à `a0f4ca7`) ; modification locale du guide (valeurs du compte o2switch) conservée et intégrée
+- [x] 9.2 Connexion MySQL : `mysql://`/`mariadb://` → `mysql+pymysql` + `utf8mb4`, session UTC + mode strict, pool 2 + 2 recyclé à 280 s, socket Unix accepté — `test_db_url.py` (13)
+- [x] 9.3 Types portables (`db_types.py`) dans les modèles et les migrations ; tables InnoDB/utf8mb4 — `compare_metadata` = [] sur MariaDB 10.6 et 11.4
+- [x] 9.4 `backend/sql/mysql_schema.sql` (import dans une base vide, `alembic_version` renseignée) — `test_mysql_reference_sql_matches_models` ; import double sans erreur avec le client `mariadb`
+- [x] 9.5 `scripts/copy_database.py` (Supabase → MySQL, une transaction, essai à blanc) — `test_copy_database.py` (SQLite + MySQL) ; essai réel PostgreSQL 16 (schéma 36d4768) → MariaDB 10.6
+- [x] 9.6 Frontend servi par Apache : `deploy/o2switch/publish_frontend.sh` (liens symboliques) + `htaccess-snippet.conf` (site complet) — vérifié dans un Apache 2.4 local ; `smoke_prod.sh` contrôle aussi pages, fichiers statiques et fichiers privés
+- [x] 9.7 Guide d'intégration réécrit (préparation → base → backend → frontend → exploitation), `docs/DEPLOY_O2SWITCH.md`, `README.md`, `MODIFICATIONS.md` (Modification 3)
+- [x] 9.8 Vérifications : SQLite 149 passed ; MariaDB 10.6 et 11.4 : 152 passed chacune (suite complète + tests `mysql`) ; PostgreSQL 16 : 152 passed (suite + tests `postgres`) ; ruff propre
+- [ ] CP2/CP3 — création de la base et de l'application sur o2switch par l'humain, en suivant le guide
+
 ---
 
 ## Décisions
@@ -104,7 +116,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 | D4 | P2 : `mission_id` + `cell_index` sur chaque analyse, GPS facultatif, rattachement serveur par point-dans-polygone | Défaut accepté (pas de GPS garanti sur le rover). |
 | D5 | P3 : IndexedDB = copie hors ligne ; le serveur reste la source de vérité | Défaut accepté. |
 | D6 | P4 : ONNX Runtime en production, PyTorch en dev seulement, après test de parité | Défaut accepté (limites LVE du mutualisé). |
-| D7 | P5 : **frontend conservé sur Vercel** ; `vercel.json` réécrit `/api/*` vers le domaine o2switch (même origine vue du navigateur, donc pas de CORS nécessaire) ; `CORS_ORIGINS` limité au domaine Vercel en secours ; images compressées côté client avant envoi (limite de corps des proxys) ; images affichées via `fetch` + jeton → `blob:` (une balise `<img>` ne porte pas l'en-tête `Authorization`) | Choix humain au CP1. |
+| D7 | *(remplacée par D38 le 26/10/2026)* P5 : **frontend conservé sur Vercel** ; `vercel.json` réécrit `/api/*` vers le domaine o2switch (même origine vue du navigateur, donc pas de CORS nécessaire) ; `CORS_ORIGINS` limité au domaine Vercel en secours ; images compressées côté client avant envoi (limite de corps des proxys) ; images affichées via `fetch` + jeton → `blob:` (une balise `<img>` ne porte pas l'en-tête `Authorization`) | Choix humain au CP1. |
 | D8 | Contenu inventé retiré (notes, badges « vérifié », marques réelles, moyennes régionales, chiffres marketing) ; catalogue marqué « aperçu, prix indicatifs » ; benchmark comparé à l'historique propre de l'utilisateur. YOLO retiré du README (travail futur, `best.pt` conservé) | Choix humain au CP1. |
 | D9 | CP2 présenté une seule fois, quand les révisions additives des lots 2, 5 et 6 existent ; en production, la seule opération sera `alembic stamp 0001_baseline` puis `alembic upgrade head` | La production est déjà au niveau de la baseline (vérifié : `models.py` ⇄ SQL de `36d4768` sans écart sur Postgres 16) ; une seule fenêtre de migration validée. |
 | D10 | `models.py` aligné sur le schéma Supabase réel (identity, jsonb, `ON DELETE CASCADE`, `NOT NULL`, noms d'index) | Sans ça, Alembic aurait généré des différences parasites ; `compare_metadata` = [] est maintenant testé. |
@@ -135,6 +147,13 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait (preuve en face) · `[
 | D35 | Retrait du consentement ou compte désactivé : les analyses passées sortent aussi des statistiques (filtre à la lecture, aucune donnée modifiée) | Cohérent avec « modifiable à tout moment » de l'inscription ; pas de requête destructive. |
 | D36 | Files hors ligne : une base IndexedDB par compte (`green-parcels-u<id>`, `green-uploads-u<id>`) | Appareils partagés : rien n'est montré ni envoyé au nom d'un autre compte. |
 | D37 | `/api/camera/connect` et `/capture` (le serveur récupère une IP quelconque) limités à DEBUG | SSRF sur l'hébergement mutualisé ; aucun appelant dans le frontend. |
+| D38 | Tout sur o2switch, un seul domaine (`api-green.gitingeniering.com`) : base MySQL/MariaDB d'o2switch, API sous Passenger, pages servies par Apache ; Vercel abandonné (fichiers gardés) | Décision humaine du 26/10/2026 ; PostgreSQL exclu sur o2switch. |
+| D39 | Pilote PyMySQL (et non mysqlclient) | 100 % Python : le compilateur est bloqué par défaut sur o2switch. |
+| D40 | Sur MySQL : `DOUBLE`, `DATETIME(6)`, `MEDIUMTEXT`, InnoDB `utf8mb4_unicode_ci` via `with_variant` (`db_types.py`) ; SQL inchangé sur SQLite/PostgreSQL | `FLOAT` simple précision (GPS), perte des microsecondes (ordre du chat), `TEXT` limité à 64 Ko. |
+| D41 | Session MySQL en UTC et en mode SQL strict explicite (`init_command`) | Même comportement quelle que soit la configuration du serveur (MariaDB ou MySQL 8). |
+| D42 | Migrations existantes modifiées seulement pour MySQL (aucune base MySQL déployée) plutôt qu'une nouvelle révision | Le SQL PostgreSQL/SQLite est identique (tests) ; une base MySQL neuve passe 0001 → 0004. |
+| D43 | Frontend publié par **liens symboliques** dans la racine du domaine, FastAPI en secours | Apache sert les fichiers statiques sans processus Passenger (limites LVE) ; un `git pull` suffit. |
+| D44 | Reprise des données Supabase par script (`copy_database.py`), base cible vide et à jour, une transaction ; facultative | Pas de conversion de dump PostgreSQL → MySQL à la main ; identifiants et chemins d'images conservés. |
 | D2 | Dépendances de dev dans `backend/requirements-dev.txt` (pytest, ruff, onnx) | Ne pas alourdir le serveur de production. |
 | D1 | Clone de `Umar-Elhaj/Greennew` dans `Greennew/` (et non `TCHOUANANG-dimitri/GREEN`) | Le prompt maître cible ce dépôt ; HEAD distant = `36d4768`, identique au contexte vérifié. |
 
@@ -144,8 +163,9 @@ _Aucun pour l'instant._
 
 ## Actions humaines en attente
 
-1. Fournir le domaine public de l'API sur o2switch (pour la réécriture `/api/*` de `vercel.json`, lot 7).
-2. T16 : faire valider par un agronome la correspondance classe du modèle → fiche maladie (lot 4).
+1. Suivre `GUIDE_INTEGRATION_O2SWITCH.md` : base MySQL (étapes 7 à 10), application Python (11 à 19), frontend (20), puis supprimer ou rediriger le projet Vercel (21).
+2. Décider si les données de l'ancienne base Supabase sont reprises (étape 15) ; si oui, reprendre aussi l'ancienne `SECRET_KEY` et les images.
+3. T16 : faire valider par un agronome la correspondance classe du modèle → fiche maladie (lot 4).
 
 ## Risques et notes de vérification
 
@@ -170,6 +190,11 @@ _Aucun pour l'instant._
 # depuis la racine du dépôt
 .venv/bin/pytest backend/tests -q
 .venv/bin/ruff check --config backend/pyproject.toml backend scripts
+# MariaDB jetable (Docker) — base de production :
+#   docker run -d --rm --name green-maria-test -e MARIADB_ROOT_PASSWORD=test -e MARIADB_DATABASE=green_suite -p 53306:3306 mariadb:10.6
+#   TEST_DATABASE_URL=mysql://root:test@127.0.0.1:53306/green_suite \
+#   TEST_MYSQL_URL=mysql://root:test@127.0.0.1:53306/green_suite \
+#     .venv/bin/pytest backend/tests -m "not slow and not postgres"
 # Postgres jetable (Docker) :
 #   docker run -d --rm --name green-pg-test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=green_test -p 55432:5432 postgres:16-alpine
 #   TEST_POSTGRES_URL=postgresql://postgres:test@localhost:55432/green_test?sslmode=disable \

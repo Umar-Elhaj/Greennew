@@ -45,8 +45,8 @@ The interface is fully bilingual **French / English**.
 Browser (HTML + vanilla JS, Leaflet, Chart.js, Turf — vendored)
   │  i18n.js (fr/en, applied before first paint) · IndexedDB queues (images, parcels)
   │
-  │  /api/*   (same origin: FastAPI serves the pages locally;
-  │            on Vercel, vercel.json rewrites /api/* to the API host)
+  │  one origin on o2switch: Apache serves the pages and static files
+  │  (linked into the domain's document root), /api/* goes to FastAPI
   ▼
 FastAPI (backend/main.py) ── Passenger + a2wsgi on o2switch (backend/passenger_wsgi.py)
   ├─ auth (JWT HS256, bcrypt), roles farmer / agronomist / partner / admin
@@ -58,7 +58,7 @@ FastAPI (backend/main.py) ── Passenger + a2wsgi on o2switch (backend/passeng
   ├─ chatbot (TF-IDF retrieval over rag/ + Gemini), weather (OpenWeather proxy)
   └─ i18n.py (server messages per Accept-Language / ?lang)
   │
-  ├─ PostgreSQL (Supabase, via the pooler) — schema managed by Alembic
+  ├─ MySQL/MariaDB of o2switch (localhost, PyMySQL) — schema managed by Alembic
   └─ MEDIA_DIR on disk (outside the web root) — images served only by
      GET /api/media/{path} with a Bearer token or a short-lived signed URL
 ```
@@ -74,8 +74,11 @@ backend/
   main.py                FastAPI app, page routes, security headers, schema check
   passenger_wsgi.py      Passenger entry point (a2wsgi)
   config.py              environment (DATABASE_URL, SECRET_KEY, …)
-  db_url.py, database.py DATABASE_URL normalisation, pooler-aware engine
-  models.py              SQLAlchemy models   ·  migrations/ (Alembic)  ·  sql/supabase_schema.sql (reference)
+  db_url.py, database.py DATABASE_URL normalisation, engine settings per database
+  db_types.py            column types that behave the same on MySQL, SQLite and PostgreSQL
+  models.py              SQLAlchemy models   ·  migrations/ (Alembic)
+  sql/mysql_schema.sql   production schema (reference, importable in an empty database)
+  sql/supabase_schema.sql  schema of the former Supabase database (history)
   auth.py, schemas.py    JWT, roles, validation (phone +237, password ≥ 8)
   media.py               image storage and signed URLs
   inference.py           EfficientNet-B0 (ONNX / PyTorch)
@@ -85,14 +88,15 @@ backend/
   routers/               auth, dashboard, analysis, camera, media, parcels, missions,
                          green_data, chatbot, weather, diseases
   data/cameroon_regions.json   region boundaries (geoBoundaries, CC BY 3.0)
-  tests/                 pytest (SQLite; whole suite also on PostgreSQL)
+  tests/                 pytest (SQLite; whole suite also on MariaDB/MySQL and PostgreSQL)
 frontend/
   *.html                 15 pages        ·  i18n/*.json → js/translations.js (generated)
   js/                    i18n, api, layout, utils, fiche, charts, upload-queue, parcel-store, theme-init
   vendor/                Leaflet 1.9.4, Chart.js 4.4.0, Turf 7.1.0 (+ licences, hashes)
 qa/                      Playwright: e2e (pages), flows, consistency (a11y), journey
-scripts/                 check_i18n, build_i18n, db_check, media_report, seed_demo,
-                         set_role, onnx_parity, smoke_prod.sh, configure_vercel
+scripts/                 check_i18n, build_i18n, db_check, copy_database, media_report,
+                         seed_demo, set_role, onnx_parity, smoke_prod.sh, configure_vercel
+deploy/o2switch/         .htaccess snippet, publish_frontend.sh
 docs/                    DEPLOY_O2SWITCH.md, rover_mission_contract.md, i18n_glossary.md
 Models/                  best_efficientnet.onnx (production), .pth (development)
 diseases.json            knowledge base (fr/en)   ·  rag/  GreenBot corpus
@@ -129,21 +133,22 @@ Only `DATABASE_URL` and `SECRET_KEY` are required in production. Every other var
 
 `DATABASE_URL`, `SECRET_KEY`, `DEBUG`, `CORS_ORIGINS`, `MEDIA_DIR`, `MAX_UPLOAD_MB`, `INFERENCE_BACKEND`, `MODEL_PATH`, `MODEL_VERSION`, `WARMUP`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `WEATHER_API_KEY`.
 
-- **Supabase.** Use the **pooler** URL (port 6543 → no app-side pool; port 5432 → small pool). `sslmode=require` is added and the password is masked in logs.
-- **Schema.** It is managed by Alembic: `cd backend && alembic upgrade head`. On a database created before Alembic, first run `alembic stamp 0001_baseline`. Every revision is additive.
+- **Database.** Production uses the MySQL/MariaDB database of the o2switch account: `mysql://<user>:<password>@localhost/<database>?unix_socket=<socket>` (or `@localhost:3306`). The PyMySQL driver and `charset=utf8mb4` are added automatically, each session runs in UTC with a strict SQL mode, and the password is masked in logs. On MySQL, floats are `DOUBLE`, dates `DATETIME(6)` and long texts `MEDIUMTEXT` (`backend/db_types.py`), so behaviour matches SQLite and PostgreSQL. PostgreSQL URLs are still accepted (former Supabase database, data copy with `scripts/copy_database.py`).
+- **Schema.** It is managed by Alembic: `cd backend && alembic upgrade head` creates every table in an empty database; `backend/sql/mysql_schema.sql` is the same schema as a file (phpMyAdmin import), checked against the models by a test. On a PostgreSQL database created before Alembic, first run `alembic stamp 0001_baseline`. Every revision is additive.
 
 ---
 
 ## 6. Tests and quality checks
 
 ```bash
-.venv/bin/pytest backend/tests                         # 124 tests (SQLite)
+.venv/bin/pytest backend/tests                         # 149 tests (SQLite)
 .venv/bin/pytest backend/tests -m slow                 # real model: ONNX ⇄ PyTorch parity
 .venv/bin/ruff check --config backend/pyproject.toml backend scripts
 .venv/bin/python scripts/check_i18n.py                 # keys, empty values, untranslated text
 cd qa && npm ci && npx playwright install chromium && npx playwright test
 ```
 
+- **MySQL/MariaDB (production database).** Start a disposable server (`docker run -d --rm -p 53306:3306 -e MARIADB_ROOT_PASSWORD=test -e MARIADB_DATABASE=green_suite mariadb:10.6`), then run `TEST_DATABASE_URL=mysql://root:test@127.0.0.1:53306/green_suite TEST_MYSQL_URL=mysql://root:test@127.0.0.1:53306/green_suite .venv/bin/pytest backend/tests -m "not slow and not postgres"` (whole suite on MariaDB, plus Alembic ⇄ models ⇄ `mysql_schema.sql` and the data copy). Checked on MariaDB 10.6 and 11.4.
 - **PostgreSQL.** Start a disposable server (`docker run -d --rm -p 55432:5432 -e POSTGRES_PASSWORD=test -e POSTGRES_DB=green_test postgres:16-alpine`), then set `TEST_POSTGRES_URL` / `TEST_DATABASE_URL` to `postgresql://postgres:test@localhost:55432/<db>?sslmode=disable`.
 - **Playwright** covers:
   - every page in French and English at 1366×768 and 390×844 (console errors, HTTP errors, text left in the wrong language, horizontal overflow);
@@ -155,9 +160,14 @@ cd qa && npm ci && npx playwright install chromium && npx playwright test
 
 ## 7. Deployment
 
-- **API on o2switch.** The click-by-click walkthrough (in French) is [`GUIDE_INTEGRATION_O2SWITCH.md`](GUIDE_INTEGRATION_O2SWITCH.md): SSH, subdomain, Let's Encrypt, Setup Python App, Supabase, migration, Tiger Protect, Vercel, smoke test, cron jobs, backups. The condensed reference is [`docs/DEPLOY_O2SWITCH.md`](docs/DEPLOY_O2SWITCH.md): read-only diagnostic, Supabase migration, cPanel Python app, environment, Passenger, rollback. Production installs `backend/requirements-prod.txt` (ONNX Runtime, no PyTorch).
-- **Frontend on Vercel.** Run `python scripts/configure_vercel.py https://<api-domain>` to write the `/api/*` rewrite into `frontend/vercel.json`.
-- **After each deployment.** Run `scripts/smoke_prod.sh <base_url>`.
+Everything runs on **o2switch**, on one domain, set up in this order:
+1. **Database**: MySQL/MariaDB database and user created in cPanel, tables from `backend/sql/mysql_schema.sql` (or `alembic upgrade head`).
+2. **Backend**: cPanel *Setup Python App* (Passenger, `backend/passenger_wsgi.py`), `backend/requirements-prod.txt` (ONNX Runtime and PyMySQL, no PyTorch, nothing to compile).
+3. **Frontend**: `deploy/o2switch/publish_frontend.sh <document root>` links the pages and static files into the domain, where Apache serves them; `/api/*` goes to Passenger.
+
+- The click-by-click walkthrough (in French) is [`GUIDE_INTEGRATION_O2SWITCH.md`](GUIDE_INTEGRATION_O2SWITCH.md): SSH, subdomain, Let's Encrypt, MySQL database, Setup Python App, optional copy of the former Supabase data (`scripts/copy_database.py`), `.htaccess`, Tiger Protect, frontend, smoke test, cron jobs and `mysqldump` backups, updates. The condensed reference is [`docs/DEPLOY_O2SWITCH.md`](docs/DEPLOY_O2SWITCH.md).
+- **After each deployment.** Run `scripts/smoke_prod.sh <base_url>` (API, pages, private files refused, analysis, images, GREEN Data).
+- Vercel is no longer used; `frontend/vercel.json` and `scripts/configure_vercel.py` are kept only for a possible return to it.
 
 ---
 
@@ -207,6 +217,5 @@ The "alert level" shown with a disease is derived from the model's confidence. I
 - **Rover.** It cannot upload by itself yet: the device-token endpoint is specified in the rover contract but not implemented. Physical rover navigation is out of scope.
 - **Offline use.** There is no service worker: `/map` and `/camera` keep working offline only while the page stays open (no reload or navigation, no satellite tiles offline), and the camera page loads parcels and missions from the network. The queues are kept per account on the device.
 - **Photo metadata.** Imported photos larger than 1600 px or 1.5 MB are re-encoded on the device before the upload, which drops their EXIF GPS and capture date: the *location consent* then has no effect, and the capture time is the import time. Reading EXIF in the browser before re-encoding is future work.
-- **Vercel.** The committed `frontend/vercel.json` has no `/api/*` rewrite until `scripts/configure_vercel.py` is run with the API domain; deploying the frontend before that gives 404 on every API call.
 - **GreenBot.** It needs a Gemini key (`GEMINI_API_KEY`). Without one, the page explains that the assistant is not configured.
 - **Change log.** It is kept in [`MODIFICATIONS.md`](MODIFICATIONS.md) (in French).

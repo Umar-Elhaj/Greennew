@@ -5,6 +5,75 @@ Les entrées sont classées de la plus récente à la plus ancienne.
 
 ---
 
+## Modification 3 — Tout sur o2switch : base MySQL/MariaDB, backend et frontend
+
+**Date :** 26/10/2026 · **Branche :** `main` · Suivi : `PROGRESS.md` (lot 9, décisions D38 à D44).
+
+### Contexte et raison
+
+L'hébergement change de décision : **tout est désormais hébergé chez o2switch** (offre Pro), sur un seul domaine (`api-green.gitingeniering.com`) :
+- **base de données** : la base MySQL/MariaDB fournie par o2switch. PostgreSQL n'est pas utilisé sur o2switch, et Supabase n'est plus la base de production ;
+- **backend** : l'API FastAPI sous Passenger (inchangé dans son principe) ;
+- **frontend** : les pages ne sont plus sur Vercel ; Apache les sert depuis la racine du domaine.
+
+Une seule origine, une seule facture, et la base ne quitte plus la machine de l'application (plus de dépendance au port sortant du *pooler* Supabase, qui risquait d'être fermé).
+
+### Ce qui change pour les utilisateurs
+
+- **Adresse.** L'application s'ouvre sur `https://api-green.gitingeniering.com` ; l'ancienne adresse Vercel doit être supprimée ou redirigée (guide, étape 21).
+- **Données.** Les comptes, parcelles, analyses et conversations existants peuvent être repris tels quels (mêmes identifiants, mêmes liens d'images) avec `scripts/copy_database.py`. Aucune fonction ne change.
+
+### Base de données
+
+- **Connexion.** `DATABASE_URL` accepte `mysql://` (et `mariadb://`) : l'application utilise le pilote **PyMySQL** (100 % Python, rien à compiler sur le mutualisé), ajoute `charset=utf8mb4`, ouvre chaque session en **UTC** et en **mode SQL strict**, garde un petit pool (2 + 2 par processus Passenger) recyclé toutes les 280 s. Connexion recommandée par le **socket Unix** du serveur (`?unix_socket=…`).
+- **Types.** Pour que MySQL se comporte comme SQLite et PostgreSQL : `DOUBLE` au lieu de `FLOAT` (simple précision : les positions GPS perdaient des décimètres), `DATETIME(6)` (sinon les microsecondes disparaissent et deux messages du chat enregistrés dans la même seconde ne se trient plus), `MEDIUMTEXT` (`TEXT` s'arrête à 64 Ko), tables InnoDB en `utf8mb4_unicode_ci` (accents et emojis). Ces types sont regroupés dans `backend/db_types.py` et utilisés par les modèles et les migrations. Sur SQLite et PostgreSQL, le SQL produit est inchangé.
+- **Schéma.** Les migrations Alembic créent la base MySQL complète (`alembic upgrade head`). Le même schéma est livré en SQL commenté, importable dans une base vide (`mysql` ou phpMyAdmin) : `backend/sql/mysql_schema.sql`. Il renseigne `alembic_version`, si bien que les mises à jour suivantes passent par Alembic.
+- **Reprise des données.** `scripts/copy_database.py` copie l'ancienne base (Supabase, lue seulement) vers la base MySQL : base cible à jour et vide obligatoire, une seule transaction, identifiants conservés, colonnes absentes de la source à leur valeur par défaut, essai à blanc par défaut. Les URL viennent de l'environnement et ne sont jamais affichées.
+- **Outils.** `scripts/db_check.py` reconnaît MySQL (version, comptage des tables avec la bonne syntaxe de noms).
+
+### Frontend
+
+- `deploy/o2switch/publish_frontend.sh` lie les fichiers de `frontend/` dans la racine du domaine : Apache les sert lui-même, seuls `/api/*` et les adresses de pages passent par Python (moins de processus Passenger consommés). Ce sont des liens : un `git pull` met le site à jour. L'API continue de servir les mêmes fichiers en secours.
+- `deploy/o2switch/htaccess-snippet.conf` couvre maintenant le site entier : pas de liste des dossiers, en-têtes de sécurité aussi sur les fichiers statiques, pages et scripts revalidés à chaque visite (`no-cache`, une mise à jour est visible tout de suite), images en cache une semaine, `noindex` réservé à `/api/`, compression, fichiers privés refusés. Vérifié dans un Apache 2.4 local.
+- `frontend/vercel.json` et `scripts/configure_vercel.py` sont conservés pour un éventuel retour à Vercel, mais ne servent plus.
+
+### Fichiers ajoutés
+
+| Fichier | Rôle |
+|---|---|
+| `backend/db_types.py` | Types de colonnes communs (JSON, DOUBLE, DATETIME(6), MEDIUMTEXT) et options des tables MySQL |
+| `backend/sql/mysql_schema.sql` | Schéma de production MySQL/MariaDB, importable dans une base vide |
+| `scripts/copy_database.py` | Reprise unique des données de Supabase vers MySQL |
+| `deploy/o2switch/publish_frontend.sh` | Publication du frontend dans la racine du domaine |
+| `backend/tests/test_copy_database.py` | Tests de la reprise des données (SQLite, et MySQL avec `TEST_MYSQL_URL`) |
+
+### Fichiers modifiés
+
+| Fichier | Modification |
+|---|---|
+| `backend/db_url.py` | URL MySQL (`mysql+pymysql`, `utf8mb4`), session UTC et stricte, pool, avertissement si l'hôte MySQL est distant |
+| `backend/models.py`, `backend/migrations/versions/0001_baseline.py`, `0003_map_missions.py` | Types de `db_types.py`, options InnoDB/utf8mb4, `CURRENT_TIMESTAMP(6)` sur MySQL |
+| `backend/config.py`, `backend/database.py`, `backend/main.py`, `.env.example` | Commentaires et exemple de `DATABASE_URL` pour o2switch ; `CORS_ORIGINS` vide (une seule origine) |
+| `backend/requirements-prod.txt` | `PyMySQL` remplace `psycopg2-binary` |
+| `backend/requirements.txt` | `PyMySQL` ajouté (`psycopg2-binary` conservé pour la reprise et les tests PostgreSQL) |
+| `backend/tests/*`, `backend/pyproject.toml` | Tests MySQL (URL, migrations ⇄ modèles, fichier SQL de référence, SQL hors ligne), marqueur `mysql` |
+| `backend/sql/supabase_schema.sql` | En-tête : ancienne base |
+| `scripts/db_check.py` | Prise en charge de MySQL |
+| `scripts/smoke_prod.sh` | Vérifie aussi les pages, les fichiers statiques et le refus des fichiers privés |
+| `deploy/o2switch/htaccess-snippet.conf` | Règles pour le site complet |
+| `GUIDE_INTEGRATION_O2SWITCH.md` | Réécrit : préparation, puis **base de données → backend → frontend**, puis mise en service et exploitation (sauvegardes `mysqldump`, mises à jour, dépannage MySQL) |
+| `docs/DEPLOY_O2SWITCH.md`, `README.md`, `PROGRESS.md` | Nouvelle architecture |
+
+### À savoir pour la suite
+
+1. **Ordre d'installation.** Base de données, puis backend, puis frontend : l'API refuse de démarrer sans base, et les pages appellent l'API du même domaine.
+2. **Évolutions du schéma.** Une nouvelle révision Alembic doit mettre à jour `backend/sql/mysql_schema.sql` (y compris la ligne `alembic_version`) ; le test `test_mysql_reference_sql_matches_models` le vérifie quand `TEST_MYSQL_URL` est défini. En production, les mises à jour passent toujours par `alembic upgrade head`, jamais par un nouvel import.
+3. **Tests sur MariaDB.** `docker run -d --rm -p 53306:3306 -e MARIADB_ROOT_PASSWORD=test -e MARIADB_DATABASE=green_suite mariadb:10.6`, puis `TEST_DATABASE_URL` et `TEST_MYSQL_URL` = `mysql://root:test@127.0.0.1:53306/green_suite`.
+4. **Vérifications.** SQLite : 149 tests ; MariaDB 10.6 et 11.4 : suite complète + tests `mysql` (152) ; PostgreSQL : suite complète + tests `postgres` (non-régression) ; ruff sans erreur. Copie Supabase → MariaDB essayée sur une base PostgreSQL au schéma de 36d4768 (accents, emojis, JSON, microsecondes, `AUTO_INCREMENT` repris).
+5. **À faire par un humain.** Créer la base et l'application sur o2switch en suivant le guide ; décider si les données de Supabase sont reprises (étape 15) ; supprimer ou rediriger le projet Vercel.
+
+---
+
 ## Modification 2 — Traduction intégrale, GREEN Map, GREEN Data, images privées, Supabase, déploiement o2switch
 
 **Date :** 22/10/2026 · **Branche :** `feat/green-map-data-o2switch` · Suivi détaillé : `PROGRESS.md` (décisions D1 à D32), état des lieux : `AUDIT.md`.
