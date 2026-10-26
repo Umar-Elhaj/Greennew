@@ -35,7 +35,8 @@ ALGORITHM: str = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
 # ---- Database -----------------------------------------------
-# Production: Supabase PostgreSQL through the pooler (see .env.example).
+# Production: MySQL/MariaDB database of the o2switch account (cPanel), on
+# localhost, through PyMySQL (see .env.example).
 # Fallback: SQLite for local development — file stored at project root
 # An empty value counts as unset. Outside DEBUG the variable is mandatory, so
 # a misconfigured server never falls back silently to a local SQLite file.
@@ -44,7 +45,7 @@ if not DATABASE_URL:
     if not DEBUG:
         raise RuntimeError("DATABASE_URL is not set (see .env.example), or set DEBUG=true for local development.")
     DATABASE_URL = "sqlite:///" + os.path.join(os.path.dirname(__file__), '..', 'green.db')
-# postgres:// → postgresql://, sslmode=require added for PostgreSQL (db_url.py)
+# mysql:// → mysql+pymysql:// with charset=utf8mb4; postgres:// → postgresql:// with sslmode=require (db_url.py)
 DATABASE_URL = normalize_database_url(DATABASE_URL)
 
 # ---- Media (Green Data images) ------------------------------

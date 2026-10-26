@@ -1,6 +1,6 @@
 # ============================================================
 # GREEN App — Database Setup
-# PostgreSQL (Supabase) or SQLite + SQLAlchemy ORM configuration.
+# MySQL/MariaDB (o2switch) or SQLite + SQLAlchemy ORM configuration.
 # Creates the engine, session factory, and declarative base.
 # The schema itself is managed by Alembic (backend/migrations).
 # ============================================================
@@ -15,8 +15,8 @@ from db_url import database_warnings, engine_kwargs, mask_database_url
 logger = logging.getLogger(__name__)
 
 # ---- Engine -------------------------------------------------
-# Pool choice depends on the URL (NullPool behind the Supabase
-# transaction pooler, a small pool otherwise): see db_url.engine_kwargs.
+# Pool and session settings depend on the URL (small pool, UTC session and
+# strict SQL mode on MySQL): see db_url.engine_kwargs.
 engine = create_engine(DATABASE_URL, echo=False, **engine_kwargs(DATABASE_URL))
 IS_SQLITE = engine.dialect.name == "sqlite"
 

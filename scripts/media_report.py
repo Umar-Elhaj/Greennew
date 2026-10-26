@@ -27,7 +27,7 @@ os.environ.setdefault("DEBUG", "true")  # no SECRET_KEY needed to read the DB
 # DATABASE_URL the tool would silently work on a local SQLite file.
 if not os.environ.get("DATABASE_URL", "").strip():
     print("DATABASE_URL is not set: load the server environment first "
-          "(GUIDE_INTEGRATION_O2SWITCH.md, step 10).", file=sys.stderr)
+          "(GUIDE_INTEGRATION_O2SWITCH.md, step 12).", file=sys.stderr)
     sys.exit(2)
 
 import logging  # noqa: E402

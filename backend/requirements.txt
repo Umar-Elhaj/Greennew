@@ -11,8 +11,10 @@
 fastapi==0.115.0
 uvicorn[standard]==0.32.0
 
-# Database (SQLite via SQLAlchemy + PostgreSQL en production)
+# Database (SQLite via SQLAlchemy in development, MySQL/MariaDB on o2switch;
+# psycopg2 reads the former Supabase PostgreSQL: copy_database.py, PG tests)
 sqlalchemy==2.0.35
+PyMySQL==1.1.1
 psycopg2-binary==2.9.10
 alembic==1.20.1        # schema migrations (cd backend && alembic upgrade head)
 

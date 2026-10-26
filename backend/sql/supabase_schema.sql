@@ -1,6 +1,9 @@
 -- ============================================================
--- GREEN App — Schéma PostgreSQL (Supabase)
--- RÉFÉRENCE de l'état final du schéma. La voie normale est Alembic :
+-- GREEN App — Schéma PostgreSQL (Supabase) — ANCIENNE BASE
+-- La production est désormais sur MySQL/MariaDB (o2switch) : voir
+-- mysql_schema.sql. Ce fichier décrit l'ancienne base Supabase, dont les
+-- données peuvent être reprises avec scripts/copy_database.py.
+-- État final du schéma PostgreSQL. La voie normale est Alembic :
 --   cd backend && alembic upgrade head
 -- Si ce fichier est exécuté à la main (Supabase > SQL Editor) sur une base
 -- vide, marquez ensuite la base comme à jour : alembic stamp head

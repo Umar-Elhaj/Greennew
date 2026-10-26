@@ -4,8 +4,9 @@ pythonpath = [".", "tests"]
 markers = [
     "slow: real model inference (needs Models/ and torch or onnxruntime)",
     "postgres: needs TEST_POSTGRES_URL pointing at a disposable PostgreSQL",
+    "mysql: needs TEST_MYSQL_URL pointing at a disposable MySQL/MariaDB server",
 ]
-addopts = "-m 'not slow and not postgres'"
+addopts = "-m 'not slow and not postgres and not mysql'"
 filterwarnings = ["ignore::DeprecationWarning"]
 
 [tool.ruff]

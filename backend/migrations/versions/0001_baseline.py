@@ -1,5 +1,8 @@
 """baseline: schema as deployed on Supabase before Alembic (commit 36d4768)
 
+On a new, empty database (MySQL/MariaDB on o2switch, SQLite) it simply runs
+first: `alembic upgrade head` creates every table.
+
 On a database created from backend/sql/supabase_schema.sql (or by the old
 create_all), do NOT run this revision: mark it as applied instead with
     alembic stamp 0001_baseline
@@ -11,7 +14,9 @@ Create Date: 2026-10-22
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB
+
+# JSONB/DOUBLE/DATETIME(6)/MEDIUMTEXT per dialect (backend/db_types.py)
+from db_types import DateTimeType, FloatType, JSONType, MYSQL_TABLE_OPTIONS, TextType
 
 revision = "0001_baseline"
 down_revision = None
@@ -26,11 +31,14 @@ def _is_pg() -> bool:
 
 
 def _now():
-    return sa.text("(now() at time zone 'utc')") if _is_pg() else sa.text("CURRENT_TIMESTAMP")
-
-
-def _json():
-    return JSONB() if _is_pg() else sa.JSON()
+    dialect = op.get_context().dialect.name
+    if dialect == "postgresql":
+        return sa.text("(now() at time zone 'utc')")
+    if dialect == "mysql":
+        # DATETIME(6) needs a default of the same precision; the session
+        # time zone is UTC (db_url.engine_kwargs)
+        return sa.text("CURRENT_TIMESTAMP(6)")
+    return sa.text("CURRENT_TIMESTAMP")
 
 
 def _id():
@@ -38,9 +46,9 @@ def _id():
 
 
 def _timestamps(updated=True):
-    cols = [sa.Column("created_at", sa.DateTime(), nullable=False, server_default=_now())]
+    cols = [sa.Column("created_at", DateTimeType, nullable=False, server_default=_now())]
     if updated:
-        cols.append(sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=_now()))
+        cols.append(sa.Column("updated_at", DateTimeType, nullable=False, server_default=_now()))
     return cols
 
 
@@ -59,6 +67,7 @@ def upgrade() -> None:
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
         sa.Column("dataset_consent", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         *_timestamps(),
+        **MYSQL_TABLE_OPTIONS,
     )
 
     op.create_table(
@@ -67,14 +76,15 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("crop_type", sa.String(100)),
-        sa.Column("area_ha", sa.Float()),
+        sa.Column("area_ha", FloatType),
         sa.Column("region", sa.String(100)),
-        sa.Column("description", sa.Text()),
-        sa.Column("geometry", _json()),
-        sa.Column("latitude", sa.Float()),
-        sa.Column("longitude", sa.Float()),
+        sa.Column("description", TextType),
+        sa.Column("geometry", JSONType),
+        sa.Column("latitude", FloatType),
+        sa.Column("longitude", FloatType),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
         *_timestamps(),
+        **MYSQL_TABLE_OPTIONS,
     )
     op.create_index("ix_parcels_user_id", "parcels", ["user_id"])
 
@@ -88,21 +98,22 @@ def upgrade() -> None:
         sa.Column("image_sha256", sa.CHAR(64)),
         sa.Column("detected_disease", sa.String(255)),
         sa.Column("disease_name", sa.String(255)),
-        sa.Column("confidence", sa.Float()),
+        sa.Column("confidence", FloatType),
         sa.Column("severity", sa.String(50)),
         sa.Column("plant_type", sa.String(100)),
-        sa.Column("predictions", _json()),
+        sa.Column("predictions", JSONType),
         sa.Column("model_version", sa.String(100)),
-        sa.Column("latitude", sa.Float()),
-        sa.Column("longitude", sa.Float()),
-        sa.Column("fiche_terrain", _json()),
-        sa.Column("notes", sa.Text()),
+        sa.Column("latitude", FloatType),
+        sa.Column("longitude", FloatType),
+        sa.Column("fiche_terrain", JSONType),
+        sa.Column("notes", TextType),
         sa.Column("consent_dataset", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("verified_label", sa.String(255)),
         sa.Column("verified_by", sa.Integer(), sa.ForeignKey("users.id", ondelete="SET NULL")),
-        sa.Column("verified_at", sa.DateTime()),
+        sa.Column("verified_at", DateTimeType),
         *_timestamps(updated=False),
         sa.CheckConstraint("confidence between 0 and 1", name="disease_analyses_confidence_check"),
+        **MYSQL_TABLE_OPTIONS,
     )
     op.create_index("ix_disease_analyses_user_id", "disease_analyses", ["user_id"])
     op.create_index("ix_disease_analyses_parcel_id", "disease_analyses", ["parcel_id"])
@@ -120,6 +131,7 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
         sa.Column("title", sa.String(255)),
         *_timestamps(),
+        **MYSQL_TABLE_OPTIONS,
     )
     op.create_index("ix_chat_sessions_user_id", "chat_sessions", ["user_id"])
 
@@ -128,10 +140,11 @@ def upgrade() -> None:
         _id(),
         sa.Column("session_id", sa.Integer(), sa.ForeignKey("chat_sessions.id", ondelete="CASCADE"), nullable=False),
         sa.Column("role", sa.String(20), nullable=False),
-        sa.Column("content", sa.Text(), nullable=False),
+        sa.Column("content", TextType, nullable=False),
         sa.Column("analysis_id", sa.Integer(), sa.ForeignKey("disease_analyses.id", ondelete="SET NULL")),
         *_timestamps(updated=False),
         sa.CheckConstraint("role in ('user', 'assistant')", name="chat_messages_role_check"),
+        **MYSQL_TABLE_OPTIONS,
     )
     op.create_index("ix_chat_messages_session_id", "chat_messages", ["session_id"])
 

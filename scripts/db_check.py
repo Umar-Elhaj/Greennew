@@ -22,7 +22,7 @@ os.environ.setdefault("DEBUG", "true")  # db_check never needs SECRET_KEY
 # DATABASE_URL the tool would silently work on a local SQLite file.
 if not os.environ.get("DATABASE_URL", "").strip():
     print("DATABASE_URL is not set: load the server environment first "
-          "(GUIDE_INTEGRATION_O2SWITCH.md, step 10).", file=sys.stderr)
+          "(GUIDE_INTEGRATION_O2SWITCH.md, step 12).", file=sys.stderr)
     sys.exit(2)
 
 import logging  # noqa: E402
@@ -44,6 +44,8 @@ def main() -> int:
         with engine.connect() as conn:
             if dialect == "postgresql":
                 version = conn.execute(text("show server_version")).scalar()
+            elif dialect == "mysql":
+                version = conn.execute(text("select version()")).scalar()   # e.g. 10.6.x-MariaDB
             else:
                 version = conn.execute(text("select sqlite_version()")).scalar()
             print(f"version : {version}")
@@ -54,7 +56,8 @@ def main() -> int:
             tables = sorted(t for t in inspect(conn).get_table_names() if t != "alembic_version")
             print("rows    :")
             for t in tables:
-                n = conn.execute(text(f'select count(*) from "{t}"')).scalar()  # noqa: S608 (names from the catalog)
+                quoted = conn.dialect.identifier_preparer.quote(t)   # "t" or `t` (MySQL)
+                n = conn.execute(text(f"select count(*) from {quoted}")).scalar()  # noqa: S608 (names from the catalog)
                 print(f"  {t:<20} {n}")
     except Exception as e:
         # The exception text can contain the host: print the type only.

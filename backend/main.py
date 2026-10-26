@@ -37,8 +37,8 @@ logger = logging.getLogger(__name__)
 
 # ---- Database schema ----------------------------------------
 # SQLite (local development): migrated to the latest revision at startup.
-# PostgreSQL: `alembic upgrade head` is a deployment step; the app only
-# warns when the schema is behind.
+# MySQL/MariaDB (production): `alembic upgrade head` is a deployment step;
+# the app only warns when the schema is behind.
 if IS_SQLITE:
     from schema_check import migrate_sqlite
     migrate_sqlite(engine)

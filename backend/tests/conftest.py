@@ -4,7 +4,7 @@ Shared pytest fixtures.
 The environment is configured BEFORE any backend module is imported:
 config.py reads it at import time. Each test session gets its own
 temporary SQLite database and MEDIA_DIR, so a developer's .env (which may
-point at Supabase) is never used: real env vars win over .env.
+point at a real database) is never used: real env vars win over .env.
 """
 
 import io
@@ -16,8 +16,8 @@ import tempfile
 import pytest
 
 _TMP = tempfile.mkdtemp(prefix="green-tests-")
-# TEST_DATABASE_URL runs the whole suite on a disposable PostgreSQL
-# (its tables are dropped between tests): never point it at real data.
+# TEST_DATABASE_URL runs the whole suite on a disposable MySQL/MariaDB or
+# PostgreSQL (its tables are dropped between tests): never point it at real data.
 os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL") or "sqlite:///" + os.path.join(_TMP, "test.db")
 os.environ["MEDIA_DIR"] = os.path.join(_TMP, "media")
 os.environ["SECRET_KEY"] = "test-secret-key"
@@ -61,6 +61,30 @@ def _fresh_db():
     shutil.rmtree(os.environ["MEDIA_DIR"], ignore_errors=True)
     os.makedirs(os.environ["MEDIA_DIR"], exist_ok=True)
     yield
+
+
+@pytest.fixture
+def mysql_url():
+    """A new, empty database on the disposable server of TEST_MYSQL_URL, dropped afterwards."""
+    import uuid
+
+    from sqlalchemy import create_engine, text
+    from sqlalchemy.engine import make_url
+
+    from db_url import normalize_database_url
+
+    base = os.environ.get("TEST_MYSQL_URL")
+    if not base:
+        pytest.skip("TEST_MYSQL_URL not set")
+    base = normalize_database_url(base)
+    admin = create_engine(base)
+    name = "green_mig_" + uuid.uuid4().hex[:8]
+    with admin.connect() as c:
+        c.execute(text(f"create database `{name}` character set utf8mb4 collate utf8mb4_unicode_ci"))
+    yield make_url(base).set(database=name).render_as_string(hide_password=False)
+    with admin.connect() as c:
+        c.execute(text(f"drop database `{name}`"))
+    admin.dispose()
 
 
 @pytest.fixture

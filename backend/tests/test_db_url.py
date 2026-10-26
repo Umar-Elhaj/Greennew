@@ -53,3 +53,37 @@ def test_startup_log_hides_password():
                        env=env, capture_output=True, text=True, timeout=60)
     assert "s3cr3t-pw" not in r.stdout + r.stderr
     assert "Database: postgresql://postgres.abcd:***@" in r.stderr
+
+
+# ---- MySQL / MariaDB (o2switch) ------------------------------
+O2SWITCH = "mysql://sc1jsgw2086_green:s3cr3t-pw@localhost:3306/sc1jsgw2086_green"
+
+
+def test_mysql_driver_and_charset_added():
+    url = normalize_database_url(O2SWITCH)
+    assert url.startswith("mysql+pymysql://")
+    assert url.endswith("?charset=utf8mb4")
+    assert normalize_database_url(O2SWITCH.replace("mysql://", "mariadb://")) == url
+
+
+def test_mysql_existing_charset_kept():
+    url = normalize_database_url("mysql+pymysql://u:p@localhost/db?charset=utf8")
+    assert "charset=utf8" in url and "utf8mb4" not in url
+
+
+def test_mysql_small_pool_utc_and_strict_mode():
+    kw = engine_kwargs(normalize_database_url(O2SWITCH))
+    assert "poolclass" not in kw and kw["pool_pre_ping"]
+    assert kw["pool_size"] == 2 and kw["max_overflow"] == 2 and kw["pool_recycle"] < 300
+    init = kw["connect_args"]["init_command"]
+    assert "time_zone = '+00:00'" in init and "STRICT_TRANS_TABLES" in init
+
+
+def test_mysql_password_never_in_masked_url():
+    masked = mask_database_url(normalize_database_url(O2SWITCH))
+    assert "s3cr3t-pw" not in masked and "***" in masked
+
+
+def test_mysql_remote_host_warns():
+    assert database_warnings(normalize_database_url("mysql://u:p@db.example.org/green"))
+    assert not database_warnings(normalize_database_url(O2SWITCH))

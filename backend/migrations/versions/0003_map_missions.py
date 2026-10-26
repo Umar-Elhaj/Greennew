@@ -6,7 +6,9 @@ Create Date: 2026-10-22
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB
+
+# JSONB/DOUBLE/DATETIME(6)/MEDIUMTEXT per dialect (backend/db_types.py)
+from db_types import DateTimeType, FloatType, JSONType, MYSQL_TABLE_OPTIONS
 
 revision = "0003_map_missions"
 down_revision = "0002_media_and_roles"
@@ -18,17 +20,20 @@ def _is_pg() -> bool:
     return op.get_context().dialect.name == "postgresql"
 
 
-def _json():
-    return JSONB() if _is_pg() else sa.JSON()
-
-
 def _now():
-    return sa.text("(now() at time zone 'utc')") if _is_pg() else sa.text("CURRENT_TIMESTAMP")
+    dialect = op.get_context().dialect.name
+    if dialect == "postgresql":
+        return sa.text("(now() at time zone 'utc')")
+    if dialect == "mysql":
+        # DATETIME(6) needs a default of the same precision; the session
+        # time zone is UTC (db_url.engine_kwargs)
+        return sa.text("CURRENT_TIMESTAMP(6)")
+    return sa.text("CURRENT_TIMESTAMP")
 
 
 def upgrade() -> None:
     with op.batch_alter_table("parcels") as b:
-        b.add_column(sa.Column("perimeter_m", sa.Float()))
+        b.add_column(sa.Column("perimeter_m", FloatType))
         b.add_column(sa.Column("sowing_date", sa.Date()))
         b.add_column(sa.Column("client_id", sa.String(36)))
         b.create_unique_constraint("uq_parcels_user_client_id", ["user_id", "client_id"])
@@ -40,19 +45,20 @@ def upgrade() -> None:
         sa.Column("parcel_id", sa.Integer(), sa.ForeignKey("parcels.id", ondelete="CASCADE"), nullable=False),
         sa.Column("name", sa.String(255)),
         sa.Column("status", sa.String(20), nullable=False, server_default="draft"),
-        sa.Column("cell_size_m", sa.Float(), nullable=False),
-        sa.Column("speed_mps", sa.Float(), nullable=False, server_default=sa.text("0.5")),
-        sa.Column("start_lat", sa.Float()),
-        sa.Column("start_lng", sa.Float()),
-        sa.Column("angle_deg", sa.Float()),
+        sa.Column("cell_size_m", FloatType, nullable=False),
+        sa.Column("speed_mps", FloatType, nullable=False, server_default=sa.text("0.5")),
+        sa.Column("start_lat", FloatType),
+        sa.Column("start_lng", FloatType),
+        sa.Column("angle_deg", FloatType),
         sa.Column("cells_total", sa.Integer(), nullable=False),
-        sa.Column("distance_m", sa.Float(), nullable=False),
+        sa.Column("distance_m", FloatType, nullable=False),
         sa.Column("duration_s", sa.Integer(), nullable=False),
-        sa.Column("grid", _json(), nullable=False),
-        sa.Column("waypoints", _json(), nullable=False),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=_now()),
-        sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=_now()),
+        sa.Column("grid", JSONType, nullable=False),
+        sa.Column("waypoints", JSONType, nullable=False),
+        sa.Column("created_at", DateTimeType, nullable=False, server_default=_now()),
+        sa.Column("updated_at", DateTimeType, nullable=False, server_default=_now()),
         sa.CheckConstraint("status in ('draft', 'ready', 'running', 'done')", name="missions_status_check"),
+        **MYSQL_TABLE_OPTIONS,
     )
     op.create_index("ix_missions_user_id", "missions", ["user_id"])
     op.create_index("ix_missions_parcel_id", "missions", ["parcel_id"])
@@ -62,7 +68,7 @@ def upgrade() -> None:
     with op.batch_alter_table("disease_analyses") as b:
         b.add_column(sa.Column("mission_id", sa.Integer()))
         b.add_column(sa.Column("cell_index", sa.Integer()))
-        b.add_column(sa.Column("captured_at", sa.DateTime()))
+        b.add_column(sa.Column("captured_at", DateTimeType))
         b.create_foreign_key("disease_analyses_mission_id_fkey", "missions", ["mission_id"], ["id"],
                              ondelete="SET NULL")
     op.create_index("ix_disease_analyses_mission_cell", "disease_analyses", ["mission_id", "cell_index"])
