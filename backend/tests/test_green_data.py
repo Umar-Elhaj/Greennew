@@ -254,5 +254,7 @@ def test_verify_endpoint_roles(client, user, fake_model):
     agro = register(client)
     _role(agro["user"]["id"], "agronomist")
     assert client.post(f"/api/analysis/{aid}/verify", json={"label": "Nope"}, headers=agro["headers"]).status_code == 422
-    r = client.post(f"/api/analysis/{aid}/verify", json={"label": "Corn_Streak"}, headers=agro["headers"])
-    assert r.status_code == 200 and r.json()["verified_label"] == "Corn_Streak"
+    # a class of the former model is no longer a valid label
+    assert client.post(f"/api/analysis/{aid}/verify", json={"label": "Corn_Streak"}, headers=agro["headers"]).status_code == 422
+    r = client.post(f"/api/analysis/{aid}/verify", json={"label": "Corn_Yellowing"}, headers=agro["headers"])
+    assert r.status_code == 200 and r.json()["verified_label"] == "Corn_Yellowing"

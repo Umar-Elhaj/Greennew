@@ -1,11 +1,8 @@
 # ============================================================
 # GREEN App — Backend Dependencies (development, includes PyTorch)
 # Install with: pip install -r requirements.txt
-# Production (o2switch) uses requirements-prod.txt: ONNX Runtime, no torch.
+# Production (o2switch) uses requirements-prod.txt.
 # ============================================================
-
-# PyTorch CPU-only wheel index (avoids downloading ~1.4 GB of CUDA libs on CPU-only servers)
---extra-index-url https://download.pytorch.org/whl/cpu
 
 # Web Framework
 fastapi==0.115.0
@@ -34,13 +31,9 @@ httpx==0.28.1
 # Image processing (for AI inference on drone frames)
 Pillow==11.1.0
 
-# AI model inference: ONNX Runtime (default, INFERENCE_BACKEND=onnx) and
-# PyTorch for INFERENCE_BACKEND=torch / the parity check
-onnxruntime==1.31.0
+# Disease classifier: TFLite model run with LiteRT
+ai-edge-litert==2.3.0
 a2wsgi==1.10.10
-torch==2.13.0+cpu
-torchvision==0.28.0+cpu
-timm==1.0.27
 
 # Numpy (for embeddings / RAG)
 numpy==2.2.6

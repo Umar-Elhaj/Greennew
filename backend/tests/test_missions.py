@@ -2,7 +2,7 @@
 
 import math
 
-from conftest import jpeg_bytes
+from conftest import jpeg_bytes, ok_result
 
 LAT0, LNG0 = 3.85, 11.50
 M_LAT = 1 / 111195.0
@@ -104,10 +104,9 @@ def test_full_scenario_six_analyses_heatmap(client, user, fake_model, monkeypatc
         ("healthy", "none", 0.90),                                          # cell 5: 0 of 1
     ])
 
-    def predict(_bytes):
+    def predict(_bytes, _crop=None):
         code, sev, conf = next(plan)
-        return {"class_raw": code if code != "healthy" else "Corn_Healthy", "detected_disease": code,
-                "disease_name": code, "plant_type": "Corn", "confidence": conf, "severity": sev, "top3": []}
+        return ok_result(code, conf, sev)
 
     monkeypatch.setattr(rover_common, "predict", predict)
     h = user["headers"]
@@ -145,10 +144,8 @@ def test_heatmap_lists_every_disease_and_filters_on_the_photo_date(client, user,
 
     plan = iter(["Corn_Streak", "Corn_Streak", "Corn_Leaf_Blight"])     # all in cell 1: blight never dominant
 
-    def predict(_bytes):
-        code = next(plan)
-        return {"class_raw": code, "detected_disease": code, "disease_name": code, "plant_type": "Corn",
-                "confidence": 0.9, "severity": "high", "top3": []}
+    def predict(_bytes, _crop=None):
+        return ok_result(next(plan), 0.9, "high")
 
     monkeypatch.setattr(rover_common, "predict", predict)
     h = user["headers"]

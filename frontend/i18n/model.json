@@ -1,18 +1,24 @@
 {
   "en": {
-    "plants": { "Cassava": "Cassava", "Corn": "Maize", "Tomato": "Tomato" },
+    "plants": {
+      "Cassava": "Cassava",
+      "Corn": "Maize",
+      "Tomato": "Tomato"
+    },
     "classes": {
+      "Cassava_Brown_Leaf_Spot": "Cassava brown leaf spot",
+      "Cassava_Healthy": "Healthy cassava",
       "Cassava_Mosaic": "Cassava mosaic",
-      "Corn_Brown_Spots": "Maize brown spots",
       "Corn_Healthy": "Healthy maize",
-      "Corn_Leaf_Blight": "Maize leaf blight",
-      "Corn_Mildew": "Maize mildew",
-      "Corn_Streak": "Maize streak",
-      "Corn_Stripe": "Maize stripe",
       "Corn_Yellowing": "Maize yellowing",
+      "Corn_Leaf_Blight": "Maize leaf blight",
       "Tomato_Brown_Spots": "Tomato brown spots",
       "Tomato_Blight_Leaf": "Tomato leaf blight",
       "Tomato_Healthy": "Healthy tomato",
+      "Corn_Brown_Spots": "Maize brown spots",
+      "Corn_Mildew": "Maize mildew",
+      "Corn_Streak": "Maize streak",
+      "Corn_Stripe": "Maize stripe",
       "healthy": "Healthy plant"
     },
     "alert": {
@@ -30,19 +36,25 @@
     }
   },
   "fr": {
-    "plants": { "Cassava": "Manioc", "Corn": "Maïs", "Tomato": "Tomate" },
+    "plants": {
+      "Cassava": "Manioc",
+      "Corn": "Maïs",
+      "Tomato": "Tomate"
+    },
     "classes": {
+      "Cassava_Brown_Leaf_Spot": "Taches brunes du manioc",
+      "Cassava_Healthy": "Manioc sain",
       "Cassava_Mosaic": "Mosaïque du manioc",
-      "Corn_Brown_Spots": "Taches brunes du maïs",
       "Corn_Healthy": "Maïs sain",
-      "Corn_Leaf_Blight": "Brûlure des feuilles du maïs",
-      "Corn_Mildew": "Mildiou du maïs",
-      "Corn_Streak": "Striure du maïs",
-      "Corn_Stripe": "Rayure du maïs",
       "Corn_Yellowing": "Jaunissement du maïs",
+      "Corn_Leaf_Blight": "Brûlure des feuilles du maïs",
       "Tomato_Brown_Spots": "Taches brunes de la tomate",
       "Tomato_Blight_Leaf": "Brûlure des feuilles de la tomate",
       "Tomato_Healthy": "Tomate saine",
+      "Corn_Brown_Spots": "Taches brunes du maïs",
+      "Corn_Mildew": "Mildiou du maïs",
+      "Corn_Streak": "Striure du maïs",
+      "Corn_Stripe": "Rayure du maïs",
       "healthy": "Plante saine"
     },
     "alert": {

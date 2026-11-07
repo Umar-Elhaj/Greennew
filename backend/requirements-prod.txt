@@ -1,8 +1,6 @@
 # ============================================================
 # GREEN — production dependencies (o2switch, Passenger / WSGI)
-# No PyTorch: inference uses ONNX Runtime (INFERENCE_BACKEND=onnx), whose
-# results match the PyTorch model (scripts/onnx_parity.py: 24/24 top-1,
-# max |Δp| 3e-6) with ~180 MB peak RSS instead of ~440 MB.
+# Inference: TFLite model run with LiteRT (ai-edge-litert), no TensorFlow.
 # Install in the cPanel virtualenv:  pip install -r backend/requirements-prod.txt
 # ============================================================
 
@@ -29,7 +27,7 @@ httpx==0.28.1
 # Images and inference
 Pillow==11.1.0
 numpy==2.2.6
-onnxruntime==1.31.0
+ai-edge-litert==2.3.0
 
 # GreenBot: TF-IDF retrieval + Gemini
 scikit-learn==1.6.1

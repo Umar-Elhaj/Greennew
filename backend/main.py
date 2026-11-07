@@ -48,17 +48,17 @@ else:
 
 
 def _warmup_models():
-    """Load EfficientNet in a background thread."""
+    """Load the disease classifier in a background thread."""
     import time
     import threading
 
-    def load_efficientnet():
+    def load_classifier():
         try:
             from inference import load
             load()
-            logger.info("[Warmup] EfficientNet ready.")
+            logger.info("[Warmup] Disease classifier ready.")
         except Exception as e:
-            logger.error(f"[Warmup] EfficientNet FAILED to load: {e}")
+            logger.error(f"[Warmup] Disease classifier FAILED to load: {e}")
 
     def load_rag():
         try:
@@ -70,9 +70,9 @@ def _warmup_models():
 
     # Brief pause so the ASGI loop finishes binding before we hit the CPU hard
     time.sleep(1)
-    logger.info("[Warmup] Loading EfficientNet in background...")
+    logger.info("[Warmup] Loading the disease classifier in background...")
 
-    t1 = threading.Thread(target=load_efficientnet, daemon=True)
+    t1 = threading.Thread(target=load_classifier, daemon=True)
     t1.start()
     t1.join()
 
@@ -246,7 +246,7 @@ async def benchmark_page():
 @app.get("/api/health", tags=["Health"])
 async def health_check():
     """Returns server status and which models are already loaded."""
-    from config import GEMINI_API_KEY, INFERENCE_BACKEND, MODEL_VERSION, WEATHER_API_KEY
+    from config import CONFIDENCE_THRESHOLD, GEMINI_API_KEY, MODEL_VERSION, WEATHER_API_KEY
     from inference import is_loaded
     from routers.chatbot_router import _chunks
     return {
@@ -254,9 +254,9 @@ async def health_check():
         "app":               APP_NAME,
         "version":           APP_VERSION,
         "model_version":     MODEL_VERSION,
+        "threshold":         CONFIDENCE_THRESHOLD,
         "models": {
-            "efficientnet":  "ready" if is_loaded() else "lazy",
-            "inference_backend": INFERENCE_BACKEND,
+            "classifier":    "ready" if is_loaded() else "lazy",
             "rag_index":     "ready" if len(_chunks) > 0             else "lazy",
         },
         # Optional services: false = feature disabled with a clear message in the UI

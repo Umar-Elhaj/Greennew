@@ -191,7 +191,7 @@ def get_fiche(
 
 # ---- POST /api/analysis/{id}/verify --------------------------
 class VerifyIn(BaseModel):
-    label: str = Field(min_length=1, max_length=255)   # model class code, e.g. "Corn_Streak" or "Corn_Healthy"
+    label: str = Field(min_length=1, max_length=255)   # class code of the current model, e.g. "Corn_Leaf_Blight" or "Corn_Healthy"
 
 
 @router.post("/{analysis_id}/verify", summary="Agronomist label for an analysis (model quality, dataset)")

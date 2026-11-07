@@ -412,7 +412,7 @@ function renderHealth() {
     el.textContent = I18n.t(health ? (on ? 'settings.status_on' : 'settings.status_off') : 'settings.status_offline');
   };
   if (health) {
-    chip.textContent = health.model_version || 'efficientnet';
+    chip.textContent = health.model_version || 'classifier';
     chip.className   = 'model-chip online';
     document.getElementById('appVersion').textContent = `v${health.version}`;
   } else {

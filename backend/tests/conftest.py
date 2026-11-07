@@ -20,6 +20,8 @@ _TMP = tempfile.mkdtemp(prefix="green-tests-")
 # PostgreSQL (its tables are dropped between tests): never point it at real data.
 os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL") or "sqlite:///" + os.path.join(_TMP, "test.db")
 os.environ["MEDIA_DIR"] = os.path.join(_TMP, "media")
+os.environ["PREDICTION_LOG_PATH"] = os.path.join(_TMP, "predictions.jsonl")
+os.environ.pop("CONFIDENCE_THRESHOLD", None)   # the configured default (0.70) is tested
 os.environ["SECRET_KEY"] = "test-secret-key"
 os.environ["DEBUG"] = "false"
 os.environ.pop("GEMINI_API_KEY", None)
@@ -37,19 +39,29 @@ from routers import green_data_router  # noqa: E402
 from database import Base, engine  # noqa: E402
 
 
-FAKE_PREDICTION = {
-    "class_raw":        "Corn_Leaf_Blight",
-    "detected_disease": "Corn_Leaf_Blight",
-    "disease_name":     "Corn Leaf Blight",
-    "plant_type":       "Corn",
-    "confidence":       0.91,
-    "severity":         "high",
-    "top3": [
-        {"class": "Corn Leaf Blight", "confidence": 91.0},
-        {"class": "Corn Brown Spots", "confidence": 5.0},
-        {"class": "Corn Healthy",     "confidence": 2.0},
-    ],
-}
+def fake_probs(label="Corn leaf blight", p=0.91):
+    """9 probabilities summing to 1, `label` getting `p` (labels.txt order)."""
+    import numpy as np
+
+    import inference
+
+    probs = np.full(len(inference.LABELS), (1.0 - p) / (len(inference.LABELS) - 1), dtype=np.float32)
+    probs[inference.LABELS.index(label)] = p
+    return probs
+
+
+def ok_result(code="Corn_Leaf_Blight", confidence=0.91, severity="high", plant="Corn") -> dict:
+    """A stored-shape "ok" result for tests that only need an analysis row (any class code)."""
+    import inference
+
+    healthy = code in ("healthy", f"{plant}_Healthy")
+    return {
+        "status": "ok", "disease": code.replace("_", " "), "confidence": confidence, "chosen_crop": None,
+        "model_version": inference.MODEL_VERSION, "threshold": inference.CONFIDENCE_THRESHOLD,
+        "best": code.replace("_", " "), "probabilities": {},
+        "class_raw": f"{plant}_Healthy" if healthy else code, "detected_disease": "healthy" if healthy else code,
+        "disease_name": code, "plant_type": plant, "severity": severity, "top3": [],
+    }
 
 
 @pytest.fixture(autouse=True)
@@ -94,14 +106,28 @@ def client():
     return TestClient(main.app)
 
 
+class FakeModel(list):
+    """Calls made to the model (len = number of inferences); `probs` = next output."""
+    probs = None
+    crops: list
+
+
 @pytest.fixture
 def fake_model(monkeypatch):
-    """Replace the EfficientNet forward pass with a fixed prediction."""
-    calls = []
+    """
+    Replace the classifier's forward pass with fixed probabilities (Corn leaf
+    blight 0.91 by default); the real decision rule still runs on them.
+    """
+    import inference
 
-    def _predict(image_bytes):
+    calls = FakeModel()
+    calls.probs = fake_probs()
+    calls.crops = []
+
+    def _predict(image_bytes, chosen_crop=None):
         calls.append(len(image_bytes))
-        return dict(FAKE_PREDICTION)
+        calls.crops.append(chosen_crop)
+        return inference.build_result(calls.probs, chosen_crop)
 
     monkeypatch.setattr(rover_common, "predict", _predict)
     return calls

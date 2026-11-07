@@ -2,7 +2,7 @@
 testpaths = ["tests"]
 pythonpath = [".", "tests"]
 markers = [
-    "slow: real model inference (needs Models/ and torch or onnxruntime)",
+    "slow: real model inference (needs Models/ and ai-edge-litert or tensorflow)",
     "postgres: needs TEST_POSTGRES_URL pointing at a disposable PostgreSQL",
     "mysql: needs TEST_MYSQL_URL pointing at a disposable MySQL/MariaDB server",
 ]

@@ -15,7 +15,8 @@ def test_upload_runs_model_and_stores_analysis(client, user, fake_model, endpoin
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["success"] is True
-    assert body["disease"]["detected_disease"] == "Corn_Leaf_Blight"
+    assert body["status"] == "ok" and body["disease"] == "Corn leaf blight"
+    assert body["prediction"]["detected_disease"] == "Corn_Leaf_Blight"
     assert body["fiche_terrain"]["winner"]["type"] == "disease"
     assert len(fake_model) == 1
 

@@ -1,411 +1,277 @@
 # ============================================================
-# GREEN App — EfficientNet Disease Inference Engine
+# GREEN App — Plant disease classifier (TFLite, 9 classes)
 #
-# Loads the best_efficientnet.pth model once at startup and
-# exposes a single `predict(image_bytes)` function used by
-# the drone router and upload endpoint.
+#   Models/plant_classifier_float32.tflite   the model
+#   Models/labels.txt                         class names, output order
 #
-# Architecture: timm EfficientNet-B0 (1280-d features → 11 classes)
+# Preprocessing matches training exactly:
+#   decode as RGB (alpha dropped) → resize to 224x224, bilinear with
+#   antialiasing, stretched (no aspect ratio, no crop) → float32 pixels in
+#   0–255, NOT normalized (the model normalizes internally) → [1, 224, 224, 3].
+# Reference: tf.image.resize(image, (224, 224), method="bilinear", antialias=True).
+# EXIF orientation is ignored on purpose: the model was trained with rotations.
 #
-# ⚠️  CLASS ORDER — MUST MATCH TRAINING
-# The list below maps output index → class label.
-# If predictions look wrong, reorder this list to match the
-# alphabetical order of your training dataset folders.
+# The output is already 9 probabilities summing to 1: no softmax here.
+#
+# Decision rule (one global threshold, never per class):
+#   best = argmax over the 9 classes, confidence = its probability
+#   crop of best ≠ chosen crop    → "wrong_crop"
+#   confidence < threshold        → "unknown"
+#   otherwise                     → "ok"
+# Never renormalize over the chosen crop's 3 classes and never take the
+# maximum over those 3 only: it inflates confidence on off-topic images
+# (soil, hands, walls) and would hide the wrong_crop case.
+# With no chosen crop, the crop check is skipped (analysis on all crops).
 # ============================================================
 
 import io
+import json
 import logging
+import os
 import threading
+from datetime import UTC, datetime
+from typing import Optional
 
 import numpy as np
 from PIL import Image
 
-from config import E2E_FAKE_MODEL, INFERENCE_BACKEND, MODEL_PATH
+from config import CONFIDENCE_THRESHOLD, E2E_FAKE_MODEL, LABELS_PATH, MODEL_PATH, MODEL_VERSION, PREDICTION_LOG_PATH
 
 logger = logging.getLogger(__name__)
 
-# torch and torchvision are imported lazily inside functions so that
-# importing this module does not block the server startup.
+INPUT_SIZE = 224
+CROPS = ("Cassava", "Corn", "Tomato")
+
+STATUS_OK = "ok"
+STATUS_UNKNOWN = "unknown"
+STATUS_WRONG_CROP = "wrong_crop"
 
 
 # ============================================================
-# CLASS NAMES  (index → label)
-# 11 classes — must match the EXACT training folder order.
-#
-# ⚠️  ORDER WARNING
-# PyTorch ImageFolder sorts folder names with Python's built-in
-# sort(), which is case-sensitive (uppercase A–Z before lowercase).
-# The order below assumes Linux case-sensitive alphabetical sort
-# of the original training folder names:
-#   "Cassava mosaic", "Corn brown spots", "Corn healthy",
-#   "Corn leaf blight", "Corn mildew", "Corn streak",
-#   "Corn stripe", "Corn yellowing", "Tomato Brown Spots",
-#   "Tomato blight leaf", "Tomato healthy"
-# If predictions look wrong, reorder this list to match your
-# training folder alphabetical order exactly.
+# LABELS  (index → class name; the crop is the first word)
 # ============================================================
-CLASS_NAMES = [
-    "Cassava_Mosaic",       # 0  ← "Cassava mosaic"
-    "Corn_Brown_Spots",     # 1  ← "Corn brown spots"
-    "Corn_Healthy",         # 2  ← "Corn healthy"
-    "Corn_Leaf_Blight",     # 3  ← "Corn leaf blight"
-    "Corn_Mildew",          # 4  ← "Corn mildew"
-    "Corn_Streak",          # 5  ← "Corn streak"
-    "Corn_Stripe",          # 6  ← "Corn stripe"
-    "Corn_Yellowing",       # 7  ← "Corn yellowing"
-    "Tomato_Brown_Spots",   # 8  ← "Tomato Brown Spots"
-    "Tomato_Blight_Leaf",   # 9  ← "Tomato blight leaf"
-    "Tomato_Healthy",       # 10 ← "Tomato healthy"
-]
+def _load_labels(path: str) -> list:
+    with open(path, encoding="utf-8") as f:
+        labels = [line.strip() for line in f if line.strip()]
+    for label in labels:
+        if label.split()[0] not in CROPS:
+            raise RuntimeError(f"{path}: the first word of '{label}' is not one of {CROPS}.")
+    return labels
 
-# "Healthy" class names — used to set detected_disease = "healthy" in the DB
-HEALTHY_CLASSES = {"Corn_Healthy", "Tomato_Healthy"}
 
-# Maps class name prefix → plant type stored in DB (English)
-PLANT_TYPE_MAP = {
-    "Cassava": "Cassava",
-    "Corn":    "Corn",
-    "Tomato":  "Tomato",
-}
+LABELS: list = _load_labels(LABELS_PATH)
 
-# Human-readable English display names for each class (API response)
-CLASS_EN_NAMES: dict[str, str] = {
-    "Cassava_Mosaic":     "Cassava Mosaic",
-    "Corn_Brown_Spots":   "Corn Brown Spots",
-    "Corn_Healthy":       "Healthy Corn",
-    "Corn_Leaf_Blight":   "Corn Leaf Blight",
-    "Corn_Mildew":        "Corn Mildew",
-    "Corn_Streak":        "Corn Streak",
-    "Corn_Stripe":        "Corn Stripe",
-    "Corn_Yellowing":     "Corn Yellowing",
-    "Tomato_Brown_Spots": "Tomato Brown Spots",
-    "Tomato_Blight_Leaf": "Tomato Blight Leaf",
-    "Tomato_Healthy":     "Healthy Tomato",
-}
 
-# Human-readable French display names for each class (for reference/translation)
-CLASS_FR_NAMES: dict[str, str] = {
-    "Cassava_Mosaic":     "Mosaïque du manioc",
-    "Corn_Brown_Spots":   "Taches brunes du maïs",
-    "Corn_Healthy":       "Maïs sain",
-    "Corn_Leaf_Blight":   "Brûlure foliaire du maïs",
-    "Corn_Mildew":        "Mildiou du maïs",
-    "Corn_Streak":        "Stries du maïs",
-    "Corn_Stripe":        "Rayures du maïs",
-    "Corn_Yellowing":     "Jaunissement du maïs",
-    "Tomato_Brown_Spots": "Taches brunes de la tomate",
-    "Tomato_Blight_Leaf": "Brûlure foliaire de la tomate",
-    "Tomato_Healthy":     "Tomate saine",
-}
+def crop_of(label: str) -> str:
+    return label.split()[0]
 
-# Alert level of a DISEASE prediction, derived from the model confidence.
-# It is not a measure of damage: the classifier cannot estimate that.
-# Healthy predictions always get "none". The UI labels it accordingly.
-SEVERITY_THRESHOLDS = {
-    "high":   0.80,   # ≥ 80 %
-    "medium": 0.55,   # 55–79 %
-    "low":    0.0,    # < 55 %
-}
+
+def is_healthy(label: str) -> bool:
+    return label.split()[-1].lower() == "healthy"
+
+
+def class_code(label: str) -> str:
+    """Code used by the database and the knowledge base: "Corn leaf blight" → "Corn_Leaf_Blight"."""
+    return "_".join(w.capitalize() for w in label.split())
+
+
+CLASS_CODES: list = [class_code(label) for label in LABELS]
+LABEL_BY_CODE: dict = dict(zip(CLASS_CODES, LABELS, strict=True))
+
+
+def normalize_crop(value: Optional[str]) -> Optional[str]:
+    """Crop sent with the request: Cassava, Corn or Tomato (any case). None if invalid."""
+    v = (value or "").strip().capitalize()
+    return v if v in CROPS else None
 
 
 # ============================================================
-# IMAGE PRE-PROCESSING
-# The ONNX path reproduces torchvision's PIL pipeline with PIL + numpy:
-# Resize(256) (shorter side, bilinear) → CenterCrop(224) → ToTensor →
-# Normalize(ImageNet). Parity is checked by scripts/onnx_parity.py.
+# PREPROCESSING
 # ============================================================
-IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(3, 1, 1)
-IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32).reshape(3, 1, 1)
-
-
-def preprocess_np(image: Image.Image) -> np.ndarray:
-    """(1, 3, 224, 224) float32, identical to the torchvision transform below."""
-    w, h = image.size
-    short, long_ = (w, h) if w <= h else (h, w)
-    new_short, new_long = 256, int(256 * long_ / short)
-    size = (new_short, new_long) if w <= h else (new_long, new_short)
-    img = image.resize(size, Image.BILINEAR)
-    w, h = img.size
-    top, left = int(round((h - 224) / 2.0)), int(round((w - 224) / 2.0))
-    img = img.crop((left, top, left + 224, top + 224))
-    x = np.asarray(img, dtype=np.float32).transpose(2, 0, 1) / 255.0
-    return ((x - IMAGENET_MEAN) / IMAGENET_STD)[None].astype(np.float32)
-
-
-_transform = None
-
-def _get_transform():
-    """Return the torchvision transform pipeline, building it on first call."""
-    global _transform
-    if _transform is None:
-        from torchvision import transforms  # lazy import
-        _transform = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std =[0.229, 0.224, 0.225],
-            ),
-        ])
-    return _transform
+def preprocess(image_bytes: bytes) -> np.ndarray:
+    """Raw image bytes → float32 array [1, 224, 224, 3], RGB, values 0–255."""
+    try:
+        with Image.open(io.BytesIO(image_bytes)) as img:
+            rgb = img.convert("RGB")             # 3 channels, alpha dropped
+    except Exception as exc:
+        raise ValueError(f"Cannot decode image: {exc}") from exc
+    # Each channel is resized in 32-bit float ("F" mode) so the result is not
+    # rounded to integers, as with tf.image.resize. Pillow's BILINEAR resize
+    # widens the kernel when downscaling: that is the antialiasing.
+    planes = [
+        np.asarray(band.convert("F").resize((INPUT_SIZE, INPUT_SIZE), Image.BILINEAR), dtype=np.float32)
+        for band in rgb.split()
+    ]
+    return np.stack(planes, axis=-1)[None]
 
 
 # ============================================================
-# MODEL LOADER  (singleton — loaded once at first call)
-# Under Passenger (a2wsgi) the ASGI lifespan does not run, so the warm-up
-# thread may not exist: loading is lazy and guarded by a lock so that two
-# first requests never load the model twice.
+# INTERPRETER  (one per process, created once, guarded by a lock)
+# The TFLite interpreter is not thread-safe: loading and every
+# set_tensor / invoke / get_tensor sequence run under _lock.
+# Under Passenger each worker process has its own interpreter.
 # ============================================================
-_model = None   # type: ignore[assignment]
-_session = None
-_load_lock = threading.Lock()
+_interpreter = None
+_lock = threading.Lock()
 
 
-def _onnx_session():
-    global _session
-    if _session is None:
-        with _load_lock:
-            if _session is None:
-                import onnxruntime as ort  # lazy import
+def _interpreter_class():
+    try:
+        from ai_edge_litert.interpreter import Interpreter   # LiteRT (light)
+        return Interpreter
+    except ImportError:
+        pass
+    try:
+        from tflite_runtime.interpreter import Interpreter    # former name of LiteRT
+        return Interpreter
+    except ImportError:
+        pass
+    try:
+        import tensorflow as tf
+        return tf.lite.Interpreter
+    except ImportError:
+        raise RuntimeError("No TFLite runtime: install ai-edge-litert (or tensorflow).") from None
 
-                opts = ort.SessionOptions()
-                opts.intra_op_num_threads = 2   # shared hosting: stay within the CPU quota
-                opts.inter_op_num_threads = 1
-                logger.info(f"Loading ONNX model from {MODEL_PATH}")
-                _session = ort.InferenceSession(MODEL_PATH, sess_options=opts, providers=["CPUExecutionProvider"])
-    return _session
+
+def _load_locked():
+    global _interpreter
+    if _interpreter is None:
+        logger.info("Loading TFLite model from %s", MODEL_PATH)
+        interp = _interpreter_class()(model_path=MODEL_PATH, num_threads=2)  # shared hosting CPU quota
+        interp.allocate_tensors()
+        inp = interp.get_input_details()[0]
+        out = interp.get_output_details()[0]
+        if list(inp["shape"]) != [1, INPUT_SIZE, INPUT_SIZE, 3] or inp["dtype"] != np.float32:
+            raise RuntimeError(f"Unexpected model input {list(inp['shape'])} {inp['dtype']}.")
+        if int(np.prod(out["shape"])) != len(LABELS):
+            raise RuntimeError(f"Model has {int(np.prod(out['shape']))} outputs, labels.txt has {len(LABELS)}.")
+        _interpreter = interp
+        logger.info("Model %s loaded: %d classes, threshold %.2f.", MODEL_VERSION, len(LABELS), CONFIDENCE_THRESHOLD)
+    return _interpreter
 
 
 def is_loaded() -> bool:
-    return (_session if INFERENCE_BACKEND == "onnx" else _model) is not None
+    return _interpreter is not None
 
 
 def load() -> None:
-    """Load the configured engine now (warm-up)."""
-    if INFERENCE_BACKEND == "onnx":
-        _onnx_session()
-    else:
-        get_model()
+    """Create the interpreter now (warm-up)."""
+    with _lock:
+        _load_locked()
 
 
-def _build_efficientnet(num_classes: int, state_dict_keys: list):
-    """
-    Reconstruct the exact EfficientNet-B0 architecture used during training
-    by inspecting the saved state-dict keys.
-
-    Three possible formats:
-    ┌──────────────────────────────────────────────────────────────┐
-    │ Format A — timm backbone + Sequential head (custom training) │
-    │   Keys: conv_stem.*, blocks.*, classifier.1.*               │
-    │   Build: timm backbone, replace classifier with             │
-    │           nn.Sequential(Dropout, Linear)                    │
-    ├──────────────────────────────────────────────────────────────┤
-    │ Format B — standard timm (direct Linear head)               │
-    │   Keys: conv_stem.*, classifier.weight                      │
-    │   Build: timm.create_model(num_classes=N)                   │
-    ├──────────────────────────────────────────────────────────────┤
-    │ Format C — torchvision                                       │
-    │   Keys: features.*, classifier.1.*                          │
-    │   Build: torchvision efficientnet_b0, replace head          │
-    └──────────────────────────────────────────────────────────────┘
-    """
-    has_conv_stem  = any("conv_stem" in k for k in state_dict_keys)
-    has_cls1       = any("classifier.1" in k for k in state_dict_keys)
-
-    import torch  # lazy import
-
-    # ── Format A: timm backbone + manual Sequential head ──────
-    if has_conv_stem and has_cls1:
-        try:
-            import timm  # type: ignore
-            model = timm.create_model("efficientnet_b0", pretrained=False, num_classes=num_classes)
-            in_features = model.classifier.in_features
-            model.classifier = torch.nn.Sequential(
-                torch.nn.Dropout(p=0.2, inplace=True),
-                torch.nn.Linear(in_features, num_classes),
-            )
-            logger.info("Model built: timm backbone + Sequential head (Format A).")
-            return model
-        except ImportError:
-            pass
-
-    # ── Format B: standard timm ───────────────────────────────
-    if has_conv_stem and not has_cls1:
-        try:
-            import timm  # type: ignore
-            model = timm.create_model("efficientnet_b0", pretrained=False, num_classes=num_classes)
-            logger.info("Model built: standard timm efficientnet_b0 (Format B).")
-            return model
-        except ImportError:
-            pass
-
-    # ── Format C: torchvision (fallback) ──────────────────────
-    from torchvision.models import efficientnet_b0
-    model = efficientnet_b0(weights=None)
-    in_features = model.classifier[1].in_features
-    model.classifier[1] = torch.nn.Linear(in_features, num_classes)
-    logger.info("Model built: torchvision efficientnet_b0 (Format C).")
-    return model
-
-
-def get_model():
-    """Return the loaded PyTorch model (lazy singleton — imports torch on first call)."""
-    global _model
-    if _model is not None:
-        return _model
-    with _load_lock:
-        return _load_torch()
-
-
-def _load_torch():
-    global _model
-    if _model is None:
-        import torch  # lazy import
-        # Limit CPU threads to prevent CPU context-switch thrashing
-        if getattr(torch, "set_num_threads", None):
-            torch.set_num_threads(2)
-            
-        logger.info(f"Loading EfficientNet model from {MODEL_PATH}")
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        state_dict = torch.load(MODEL_PATH, map_location=device)
-
-        # Unwrap checkpoint wrappers
-        if isinstance(state_dict, dict) and "state_dict" in state_dict:
-            state_dict = state_dict["state_dict"]
-        elif isinstance(state_dict, dict) and "model_state_dict" in state_dict:
-            state_dict = state_dict["model_state_dict"]
-
-        model = _build_efficientnet(
-            num_classes=len(CLASS_NAMES),
-            state_dict_keys=list(state_dict.keys()),
-        )
-        model.load_state_dict(state_dict, strict=True)
-        model.to(device)
-        model.eval()
-        _model = model
-        logger.info(f"Model loaded on {device} — {len(CLASS_NAMES)} classes.")
-
-    return _model
+def forward(x: np.ndarray) -> np.ndarray:
+    """Preprocessed input → the 9 probabilities, as returned by the model."""
+    with _lock:
+        interp = _load_locked()
+        interp.set_tensor(interp.get_input_details()[0]["index"], x)
+        interp.invoke()
+        probs = interp.get_tensor(interp.get_output_details()[0]["index"])
+    return np.asarray(probs, dtype=np.float32).reshape(-1).copy()
 
 
 # ============================================================
-# INFERENCE FUNCTION
+# DECISION RULE
 # ============================================================
-def _get_severity(confidence: float, is_healthy: bool = False) -> str:
-    if is_healthy:
+SEVERITY_THRESHOLDS = {"high": 0.80, "medium": 0.55}   # UI alert level of a disease, not damage
+
+
+def _severity(confidence: float, healthy: bool) -> str:
+    if healthy:
         return "none"
     if confidence >= SEVERITY_THRESHOLDS["high"]:
         return "high"
-    if confidence >= SEVERITY_THRESHOLDS["medium"]:
-        return "medium"
-    return "low"
+    return "medium" if confidence >= SEVERITY_THRESHOLDS["medium"] else "low"
 
 
-def _softmax(logits: np.ndarray) -> np.ndarray:
-    z = logits - logits.max()
-    e = np.exp(z)
-    return e / e.sum()
+def decide(probs: np.ndarray, chosen_crop: Optional[str], threshold: float = CONFIDENCE_THRESHOLD) -> tuple:
+    """(status, best index, confidence) from the 9 probabilities, unchanged."""
+    best = int(np.argmax(probs))
+    confidence = float(probs[best])
+    if chosen_crop is not None and crop_of(LABELS[best]) != chosen_crop:
+        return STATUS_WRONG_CROP, best, confidence
+    if confidence < threshold:
+        return STATUS_UNKNOWN, best, confidence
+    return STATUS_OK, best, confidence
 
 
-def forward_probs(image: Image.Image, backend: str = None) -> np.ndarray:
-    """Class probabilities (11,) for a PIL RGB image with the given engine."""
-    backend = backend or INFERENCE_BACKEND
-    if backend == "onnx":
-        session = _onnx_session()
-        logits = session.run(None, {session.get_inputs()[0].name: preprocess_np(image)})[0][0]
-        return _softmax(logits.astype(np.float64)).astype(np.float32)
+def build_result(probs: np.ndarray, chosen_crop: Optional[str]) -> dict:
+    from knowledge import class_name   # display names (FR/EN) live in the knowledge base
 
-    import torch                    # lazy — already cached by Python after first import
-    import torch.nn.functional as F
-
-    model = get_model()
-    device = next(model.parameters()).device
-    tensor = _get_transform()(image).unsqueeze(0).to(device)
-    with torch.inference_mode():   # fully disables autograd (faster than no_grad)
-        return F.softmax(model(tensor), dim=1)[0].cpu().numpy()
-
-
-def predict(image_bytes: bytes) -> dict:
-    """
-    Run EfficientNet inference on raw image bytes.
-
-    Returns:
-        {
-            "class_raw":       str,    # e.g. "Corn_Leaf_Blight"
-            "detected_disease": str,   # disease ID for the DB ("healthy" if healthy)
-            "disease_name":    str,    # human-readable label
-            "plant_type":      str,    # "tomate" | "maïs" | "manioc"
-            "confidence":      float,  # 0.0 – 1.0
-            "severity":        str,    # "none" (healthy) | "low" | "medium" | "high" (alert level)
-            "top3":            list,   # [{class, confidence}, ...] for display
-        }
-    """
-    if E2E_FAKE_MODEL:
-        return _fake_predict(image_bytes)
-
-    try:
-        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    except Exception as exc:
-        raise ValueError(f"Cannot decode image: {exc}") from exc
-
-    probs = forward_probs(image)
-    # Top-1 prediction
-    class_idx = int(np.argmax(probs))
-    confidence = float(probs[class_idx])
-    class_raw  = CLASS_NAMES[class_idx]
-
-    # Derive plant type and disease ID
-    prefix     = class_raw.split("_")[0]            # "Cassava" | "Corn" | "Tomato"
-    plant_type = PLANT_TYPE_MAP.get(prefix, prefix.lower())
-    is_healthy = class_raw in HEALTHY_CLASSES
-
-    # Build a human-readable disease name
-    if is_healthy:
-        disease_name     = CLASS_EN_NAMES.get(class_raw, "Healthy")
-        detected_disease = "healthy"
-    else:
-        disease_name     = CLASS_EN_NAMES.get(class_raw, class_raw.replace("_", " "))
-        detected_disease = class_raw  # used as disease ID in the DB
-
-    # Top-3 for the fiche terrain display
-    top3_indices = np.argsort(-probs)[:3].tolist()
+    status, best, confidence = decide(probs, chosen_crop)
+    label = LABELS[best]
+    code = CLASS_CODES[best]
+    healthy = is_healthy(label)
     top3 = [
-        {
-            "code":       CLASS_NAMES[i],
-            "class":      CLASS_NAMES[i].replace("_", " "),
-            "confidence": round(float(probs[i]) * 100, 1),
-        }
-        for i in top3_indices
+        {"code": CLASS_CODES[i], "class": LABELS[i], "confidence": round(float(probs[i]) * 100, 1)}
+        for i in np.argsort(-probs)[:3].tolist()
     ]
-
     return {
-        "class_raw":        class_raw,
-        "detected_disease": detected_disease,
-        "disease_name":     disease_name,
-        "plant_type":       plant_type,
+        # Traceable result (API contract)
+        "status":           status,
+        "disease":          label if status == STATUS_OK else None,
         "confidence":       round(confidence, 4),
-        "severity":         _get_severity(confidence, is_healthy),
+        "chosen_crop":      chosen_crop,
+        "model_version":    MODEL_VERSION,
+        "threshold":        CONFIDENCE_THRESHOLD,
+        # Details: best class among the 9 whatever the status, all probabilities
+        "best":             label,
+        "probabilities":    {LABELS[i]: round(float(p), 6) for i, p in enumerate(probs)},
+        # Fields stored with an "ok" analysis
+        "class_raw":        code,
+        "detected_disease": "healthy" if healthy else code,
+        "disease_name":     class_name(code, "en"),
+        "plant_type":       crop_of(label),
+        "severity":         _severity(confidence, healthy),
         "top3":             top3,
     }
 
 
-def _fake_predict(image_bytes: bytes) -> dict:
-    """E2E tests (DEBUG + E2E_FAKE_MODEL=1): class chosen from the image colour."""
+def predict(image_bytes: bytes, chosen_crop: Optional[str] = None) -> dict:
+    """Run the classifier on raw image bytes and apply the decision rule."""
+    if E2E_FAKE_MODEL:
+        return build_result(_fake_probs(image_bytes), chosen_crop)
+    return build_result(forward(preprocess(image_bytes)), chosen_crop)
+
+
+def _fake_probs(image_bytes: bytes) -> np.ndarray:
+    """E2E tests (DEBUG + E2E_FAKE_MODEL=1): probabilities chosen from the image colour."""
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB").resize((8, 8))
-    r, g, b = (sum(c) / len(c) for c in zip(*image.getdata(), strict=True))
-    class_raw = CLASS_NAMES[int(r + 2 * g + 3 * b) % len(CLASS_NAMES)]
-    is_healthy = class_raw in HEALTHY_CLASSES
-    confidence = 0.6 + (int(r) % 40) / 100
-    return {
-        "class_raw":        class_raw,
-        "detected_disease": "healthy" if is_healthy else class_raw,
-        "disease_name":     CLASS_EN_NAMES[class_raw],
-        "plant_type":       PLANT_TYPE_MAP[class_raw.split("_")[0]],
-        "confidence":       round(confidence, 4),
-        "severity":         _get_severity(confidence, is_healthy),
-        "top3": [
-            {"code": class_raw, "class": class_raw.replace("_", " "), "confidence": round(confidence * 100, 1)},
-        ],
+    r, g, b = (float(np.mean(c)) for c in np.asarray(image, dtype=np.float32).reshape(-1, 3).T)
+    probs = np.full(len(LABELS), 0.0, dtype=np.float32)
+    top = int(r + 2 * g + 3 * b) % len(LABELS)
+    probs[top] = 0.71 + (int(r) % 29) / 100       # always above the 0.70 default: E2E flows get an answer
+    probs[(top + 1) % len(LABELS)] = 1.0 - probs[top]
+    return probs
+
+
+# ============================================================
+# PREDICTION LOG  (JSON lines, used to retune the threshold)
+# Never contains the image.
+# ============================================================
+_log_lock = threading.Lock()
+
+
+def log_prediction(result: dict, *, source: Optional[str] = None, crop_source: Optional[str] = None) -> None:
+    entry = {
+        "timestamp":     datetime.now(UTC).isoformat(timespec="milliseconds"),
+        "chosen_crop":   result["chosen_crop"],
+        "crop_source":   crop_source,          # "request" | "parcel" | None (all crops)
+        "source":        source,               # camera | rover | upload
+        "probabilities": result["probabilities"],
+        "best":          result["best"],
+        "confidence":    result["confidence"],
+        "status":        result["status"],
+        "model_version": result["model_version"],
+        "threshold":     result["threshold"],
     }
+    logger.info("prediction status=%s best=%s conf=%.4f crop=%s", entry["status"], entry["best"],
+                entry["confidence"], entry["chosen_crop"])
+    try:
+        line = json.dumps(entry, ensure_ascii=False)
+        with _log_lock:
+            os.makedirs(os.path.dirname(PREDICTION_LOG_PATH), exist_ok=True)
+            with open(PREDICTION_LOG_PATH, "a", encoding="utf-8") as f:
+                f.write(line + "\n")
+    except OSError as exc:   # the log must never break an analysis
+        logger.error("Cannot write the prediction log %s: %s", PREDICTION_LOG_PATH, exc)

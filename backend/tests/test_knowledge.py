@@ -4,7 +4,7 @@ import json
 
 import knowledge
 from conftest import jpeg_bytes
-from inference import CLASS_NAMES
+from inference import CLASS_CODES
 
 
 def test_every_entry_is_complete_in_both_languages():
@@ -19,11 +19,18 @@ def test_every_entry_is_complete_in_both_languages():
         assert len(e["actions"]["fr"]) == len(e["actions"]["en"]) > 0
 
 
+# Classes of the model with no diseases.json entry yet (to be written with an agronomist)
+NO_ENTRY_YET = {"Cassava_Brown_Leaf_Spot"}
+
+
 def test_every_model_class_maps_to_an_entry():
-    for code in CLASS_NAMES:
-        entry = knowledge.get_entry(knowledge.CLASS_TO_DISEASE_ID[code])
-        assert entry is not None, code
+    assert set(knowledge.CLASS_TO_DISEASE_ID) == set(CLASS_CODES)
+    for code in CLASS_CODES:
         assert code in knowledge.CLASS_NAMES_I18N
+        if code in NO_ENTRY_YET:
+            assert knowledge.CLASS_TO_DISEASE_ID[code] is None
+            continue
+        assert knowledge.get_entry(knowledge.CLASS_TO_DISEASE_ID[code]) is not None, code
 
 
 def test_former_duplicate_ids_still_resolve():

@@ -15,10 +15,11 @@ const VIZ = (() => {
   const SLOTS_DARK  = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'];
   const OTHER = { light: '#8a8986', dark: '#9b9a95' };
 
-  // Fixed class → slot mapping. A 9th class shares the neutral "other" colour.
+  // Fixed class → slot mapping (disease classes of the current model).
+  // Classes of the former model, still in old history, share the neutral "other" colour.
   const CLASS_SLOT = {
-    Corn_Streak: 0, Corn_Leaf_Blight: 1, Cassava_Mosaic: 2, Tomato_Blight_Leaf: 3,
-    Tomato_Brown_Spots: 4, Corn_Brown_Spots: 5, Corn_Yellowing: 6, Corn_Mildew: 7,
+    Cassava_Brown_Leaf_Spot: 0, Corn_Leaf_Blight: 1, Cassava_Mosaic: 2, Tomato_Blight_Leaf: 3,
+    Tomato_Brown_Spots: 4, Corn_Yellowing: 6,
   };
   const PLANT_SLOT = { Corn: 0, Cassava: 2, Tomato: 1 };
 

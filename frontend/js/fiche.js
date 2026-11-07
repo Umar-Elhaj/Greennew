@@ -9,9 +9,9 @@
  * the server in the request language, labels from I18n.
  */
 const Fiche = {
-  /** Upload/analyze response → the same shape as /api/analysis/{id}. */
+  /** Upload/analyze response with status "ok" → the same shape as /api/analysis/{id}. */
   fromUpload(res) {
-    const d = res.disease || {};
+    const d = res.prediction || {};
     return {
       id: res.analysis_id,
       detected_disease: d.detected_disease,
@@ -24,6 +24,21 @@ const Fiche = {
       created_at: new Date().toISOString(),
       duplicate: !!res.duplicate,
     };
+  },
+
+  /**
+   * Upload/analyze response without an answer (status "unknown": confidence
+   * below the threshold, or "wrong_crop": the leaf is not the chosen crop).
+   */
+  noAnswerHtml(res) {
+    const t = (k, p) => escapeHtml(I18n.t(k, p));
+    const wrong = res.status === 'wrong_crop';
+    const crop = res.chosen_crop ? I18n.t(`model.plants.${res.chosen_crop}`).toLowerCase() : '';
+    return `
+      <div class="empty-state" role="status">
+        <div class="empty-state-title">${wrong ? t('camera.no_answer.wrong_crop_title', { crop }) : t('camera.no_answer.unknown_title')}</div>
+        <p class="empty-state-description">${t(wrong ? 'camera.no_answer.wrong_crop_hint' : 'camera.no_answer.unknown_hint')}</p>
+      </div>`;
   },
 
   html(a, opts = {}) {

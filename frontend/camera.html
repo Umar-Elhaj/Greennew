@@ -322,7 +322,8 @@ document.addEventListener('DOMContentLoaded', () => {
   UploadQueue.on('sending', () => $('analysingOverlay').classList.add('active'));
   UploadQueue.on('uploaded', ({ response }) => {
     $('analysingOverlay').classList.remove('active');
-    S.lastResult = Fiche.fromUpload(response);
+    // No answer (unknown / wrong_crop): a message, no field sheet, nothing saved
+    S.lastResult = response.status && response.status !== 'ok' ? { noAnswer: response } : Fiche.fromUpload(response);
     renderResult();
     $('statLast').textContent = I18n.dateTime(new Date());
     loadRecent();
@@ -678,6 +679,11 @@ function queueFiles(files) {
 /* ---- Results --------------------------------------------------- */
 function renderResult() {
   if (!S.lastResult) return;
+  if (S.lastResult.noAnswer) {
+    $('resultBody').innerHTML = Fiche.noAnswerHtml(S.lastResult.noAnswer);
+    $('resultHistoryLink').href = '/history';
+    return;
+  }
   $('resultBody').innerHTML = Fiche.html(S.lastResult);
   $('resultHistoryLink').href = `/history?id=${encodeURIComponent(S.lastResult.id)}`;
 }

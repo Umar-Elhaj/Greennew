@@ -77,7 +77,7 @@ code=$(curl -s -o "$TMP/analysis.json" -w '%{http_code}' "${AUTH[@]}" \
   -F "file=@$IMAGE;type=image/jpeg" "$BASE/api/camera/upload")
 secs=$(python3 -c "print(round($(date +%s.%N) - $start, 2))")
 if [ "$code" = 200 ]; then
-  pass "POST /api/camera/upload → $(json x "d['disease']['disease_name']" "$TMP/analysis.json") (${secs}s)"
+  pass "POST /api/camera/upload → $(json x "d['status'] + ' ' + str(d['disease']) + ' (threshold ' + str(d['threshold']) + ')'" "$TMP/analysis.json") (${secs}s)"
 else
   fail "POST /api/camera/upload (HTTP $code, ${secs}s): $(head -c 200 "$TMP/analysis.json")"
 fi

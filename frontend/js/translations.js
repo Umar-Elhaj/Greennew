@@ -241,6 +241,12 @@ window.GREEN_I18N_DICT = {
    "sending": "Sending an image…",
    "result_title": "Field sheet",
    "result_empty": "Results appear here after the first analysis.",
+   "no_answer": {
+    "unknown_title": "Image not recognized",
+    "unknown_hint": "Take a closer photo of a single leaf.",
+    "wrong_crop_title": "This leaf does not look like {{crop}}",
+    "wrong_crop_hint": "Check the selected crop or retake the photo."
+   },
    "queue": {
     "title": "Images on this device",
     "empty": "No image waiting.",
@@ -1060,17 +1066,19 @@ window.GREEN_I18N_DICT = {
     "Tomato": "Tomato"
    },
    "classes": {
+    "Cassava_Brown_Leaf_Spot": "Cassava brown leaf spot",
+    "Cassava_Healthy": "Healthy cassava",
     "Cassava_Mosaic": "Cassava mosaic",
-    "Corn_Brown_Spots": "Maize brown spots",
     "Corn_Healthy": "Healthy maize",
-    "Corn_Leaf_Blight": "Maize leaf blight",
-    "Corn_Mildew": "Maize mildew",
-    "Corn_Streak": "Maize streak",
-    "Corn_Stripe": "Maize stripe",
     "Corn_Yellowing": "Maize yellowing",
+    "Corn_Leaf_Blight": "Maize leaf blight",
     "Tomato_Brown_Spots": "Tomato brown spots",
     "Tomato_Blight_Leaf": "Tomato leaf blight",
     "Tomato_Healthy": "Healthy tomato",
+    "Corn_Brown_Spots": "Maize brown spots",
+    "Corn_Mildew": "Maize mildew",
+    "Corn_Streak": "Maize streak",
+    "Corn_Stripe": "Maize stripe",
     "healthy": "Healthy plant"
    },
    "alert": {
@@ -1186,7 +1194,7 @@ window.GREEN_I18N_DICT = {
    "version": "Version",
    "version_help": "Agricultural AI platform",
    "model": "Disease detection model",
-   "model_help": "EfficientNet-B0: cassava, maize, tomato (11 classes)",
+   "model_help": "Image classifier: cassava, maize, tomato (9 classes)",
    "services": "Optional services",
    "service_greenbot": "GreenBot",
    "service_weather": "Weather",
@@ -1456,6 +1464,12 @@ window.GREEN_I18N_DICT = {
    "sending": "Envoi d'une image…",
    "result_title": "Fiche terrain",
    "result_empty": "Les résultats s'affichent ici après la première analyse.",
+   "no_answer": {
+    "unknown_title": "Image non reconnue",
+    "unknown_hint": "Prenez une photo plus rapprochée d'une seule feuille.",
+    "wrong_crop_title": "Cette feuille ne ressemble pas à une feuille de {{crop}}",
+    "wrong_crop_hint": "Vérifiez la culture choisie ou reprenez la photo."
+   },
    "queue": {
     "title": "Images sur cet appareil",
     "empty": "Aucune image en attente.",
@@ -2275,17 +2289,19 @@ window.GREEN_I18N_DICT = {
     "Tomato": "Tomate"
    },
    "classes": {
+    "Cassava_Brown_Leaf_Spot": "Taches brunes du manioc",
+    "Cassava_Healthy": "Manioc sain",
     "Cassava_Mosaic": "Mosaïque du manioc",
-    "Corn_Brown_Spots": "Taches brunes du maïs",
     "Corn_Healthy": "Maïs sain",
-    "Corn_Leaf_Blight": "Brûlure des feuilles du maïs",
-    "Corn_Mildew": "Mildiou du maïs",
-    "Corn_Streak": "Striure du maïs",
-    "Corn_Stripe": "Rayure du maïs",
     "Corn_Yellowing": "Jaunissement du maïs",
+    "Corn_Leaf_Blight": "Brûlure des feuilles du maïs",
     "Tomato_Brown_Spots": "Taches brunes de la tomate",
     "Tomato_Blight_Leaf": "Brûlure des feuilles de la tomate",
     "Tomato_Healthy": "Tomate saine",
+    "Corn_Brown_Spots": "Taches brunes du maïs",
+    "Corn_Mildew": "Mildiou du maïs",
+    "Corn_Streak": "Striure du maïs",
+    "Corn_Stripe": "Rayure du maïs",
     "healthy": "Plante saine"
    },
    "alert": {
@@ -2401,7 +2417,7 @@ window.GREEN_I18N_DICT = {
    "version": "Version",
    "version_help": "Plateforme agricole d'IA",
    "model": "Modèle de détection des maladies",
-   "model_help": "EfficientNet-B0 : manioc, maïs, tomate (11 classes)",
+   "model_help": "Classifieur d'images : manioc, maïs, tomate (9 classes)",
    "services": "Services facultatifs",
    "service_greenbot": "GreenBot",
    "service_weather": "Météo",

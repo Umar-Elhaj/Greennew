@@ -118,7 +118,7 @@ class DiseaseAnalysis(Base):
     image_width     = Column(Integer, nullable=True)
     image_height    = Column(Integer, nullable=True)
 
-    # Detection output — Disease model (EfficientNet)
+    # Detection output — disease classifier (TFLite, classifier_v1)
     detected_disease= Column(String(255), nullable=True)   # Disease class ID or "healthy"
     disease_name    = Column(String(255), nullable=True)   # Human-readable name
     confidence      = Column(FloatType, nullable=True)         # 0.0 – 1.0

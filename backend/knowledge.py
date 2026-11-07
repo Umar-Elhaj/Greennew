@@ -16,39 +16,53 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from config import DISEASES_DB_PATH
+from config import CONFIDENCE_THRESHOLD, DISEASES_DB_PATH
 
 logger = logging.getLogger(__name__)
 
 # Model class → knowledge-base entry. Validated against the symptoms the
 # classes describe; to be confirmed by an agronomist (PROGRESS.md, T16).
+# Cassava_Brown_Leaf_Spot has no entry in diseases.json yet.
 CLASS_TO_DISEASE_ID = {
-    "Cassava_Mosaic":     "cassava-mosaic",
-    "Corn_Brown_Spots":   "leaf-spot-fungi",
-    "Corn_Healthy":       "healthy",
-    "Corn_Leaf_Blight":   "northern-leaf-blight",
-    "Corn_Mildew":        "maize-downy-mildew",
-    "Corn_Streak":        "maize-streak",
-    "Corn_Stripe":        "maize-stripe",
-    "Corn_Yellowing":     "maize-yellowing",
-    "Tomato_Brown_Spots": "early-blight",
-    "Tomato_Blight_Leaf": "mildiou",
-    "Tomato_Healthy":     "healthy",
+    "Cassava_Brown_Leaf_Spot": None,
+    "Cassava_Healthy":         "healthy",
+    "Cassava_Mosaic":          "cassava-mosaic",
+    "Corn_Healthy":            "healthy",
+    "Corn_Yellowing":          "maize-yellowing",
+    "Corn_Leaf_Blight":        "northern-leaf-blight",
+    "Tomato_Brown_Spots":      "early-blight",
+    "Tomato_Blight_Leaf":      "mildiou",
+    "Tomato_Healthy":          "healthy",
 }
 
+# Classes of the current model (classifier_v1, Models/labels.txt) + generic "healthy".
+# Agronomist labels (POST /api/analysis/{id}/verify) must be one of these.
 CLASS_NAMES_I18N = {
-    "Cassava_Mosaic":     {"fr": "Mosaïque du manioc", "en": "Cassava mosaic"},
-    "Corn_Brown_Spots":   {"fr": "Taches brunes du maïs", "en": "Maize brown spots"},
-    "Corn_Healthy":       {"fr": "Maïs sain", "en": "Healthy maize"},
-    "Corn_Leaf_Blight":   {"fr": "Brûlure des feuilles du maïs", "en": "Maize leaf blight"},
-    "Corn_Mildew":        {"fr": "Mildiou du maïs", "en": "Maize mildew"},
-    "Corn_Streak":        {"fr": "Striure du maïs", "en": "Maize streak"},
-    "Corn_Stripe":        {"fr": "Rayure du maïs", "en": "Maize stripe"},
-    "Corn_Yellowing":     {"fr": "Jaunissement du maïs", "en": "Maize yellowing"},
-    "Tomato_Brown_Spots": {"fr": "Taches brunes de la tomate", "en": "Tomato brown spots"},
-    "Tomato_Blight_Leaf": {"fr": "Brûlure des feuilles de la tomate", "en": "Tomato leaf blight"},
-    "Tomato_Healthy":     {"fr": "Tomate saine", "en": "Healthy tomato"},
-    "healthy":            {"fr": "Plante saine", "en": "Healthy plant"},
+    "Cassava_Brown_Leaf_Spot": {"fr": "Taches brunes du manioc", "en": "Cassava brown leaf spot"},
+    "Cassava_Healthy":         {"fr": "Manioc sain", "en": "Healthy cassava"},
+    "Cassava_Mosaic":          {"fr": "Mosaïque du manioc", "en": "Cassava mosaic"},
+    "Corn_Healthy":            {"fr": "Maïs sain", "en": "Healthy maize"},
+    "Corn_Yellowing":          {"fr": "Jaunissement du maïs", "en": "Maize yellowing"},
+    "Corn_Leaf_Blight":        {"fr": "Brûlure des feuilles du maïs", "en": "Maize leaf blight"},
+    "Tomato_Brown_Spots":      {"fr": "Taches brunes de la tomate", "en": "Tomato brown spots"},
+    "Tomato_Blight_Leaf":      {"fr": "Brûlure des feuilles de la tomate", "en": "Tomato leaf blight"},
+    "Tomato_Healthy":          {"fr": "Tomate saine", "en": "Healthy tomato"},
+    "healthy":                 {"fr": "Plante saine", "en": "Healthy plant"},
+}
+
+# Display only: classes of the former 11-class model, still present in the
+# history of past analyses. Never predicted or accepted as a label any more.
+LEGACY_CLASS_TO_DISEASE_ID = {
+    "Corn_Brown_Spots": "leaf-spot-fungi",
+    "Corn_Mildew":      "maize-downy-mildew",
+    "Corn_Streak":      "maize-streak",
+    "Corn_Stripe":      "maize-stripe",
+}
+LEGACY_CLASS_NAMES_I18N = {
+    "Corn_Brown_Spots": {"fr": "Taches brunes du maïs", "en": "Maize brown spots"},
+    "Corn_Mildew":      {"fr": "Mildiou du maïs", "en": "Maize mildew"},
+    "Corn_Streak":      {"fr": "Striure du maïs", "en": "Maize streak"},
+    "Corn_Stripe":      {"fr": "Rayure du maïs", "en": "Maize stripe"},
 }
 
 PLANT_NAMES_I18N = {
@@ -57,7 +71,20 @@ PLANT_NAMES_I18N = {
     "Tomato":  {"fr": "Tomate", "en": "Tomato"},
 }
 
-LOW_CONFIDENCE_PCT = 70.0
+# Below the global confidence threshold, a stored result is flagged as uncertain
+LOW_CONFIDENCE_PCT = round(CONFIDENCE_THRESHOLD * 100, 1)
+
+# Messages returned when the model gives no answer (status unknown / wrong_crop)
+STATUS_MESSAGES = {
+    "unknown": {
+        "fr": "Image non reconnue : prenez une photo plus rapprochée d'une seule feuille.",
+        "en": "Image not recognized: take a closer photo of a single leaf.",
+    },
+    "wrong_crop": {
+        "fr": "Cette feuille ne ressemble pas à une feuille de {crop} : vérifiez la culture choisie ou reprenez la photo.",
+        "en": "This leaf does not look like {crop}: check the selected crop or retake the photo.",
+    },
+}
 
 DISCLAIMER = {
     "fr": "Prédiction de l'IA (maladie probable), pas un diagnostic. Faites-la confirmer par un agronome "
@@ -143,13 +170,23 @@ def class_code(detected_disease: Optional[str], plant_type: Optional[str]) -> st
 
 
 def class_name(code: str, lang: str) -> str:
-    names = CLASS_NAMES_I18N.get((code or "").replace(" ", "_"))
+    key = (code or "").replace(" ", "_")
+    names = CLASS_NAMES_I18N.get(key) or LEGACY_CLASS_NAMES_I18N.get(key)
     return names[_lang(lang)] if names else (code or "").replace("_", " ")
 
 
 def plant_name(plant: Optional[str], lang: str) -> Optional[str]:
     names = PLANT_NAMES_I18N.get((plant or "").capitalize())
     return names[_lang(lang)] if names else plant
+
+
+def status_message(status: str, chosen_crop: Optional[str], lang: str) -> Optional[str]:
+    """User message for a result without an answer (unknown / wrong_crop), else None."""
+    texts = STATUS_MESSAGES.get(status)
+    if not texts:
+        return None
+    crop = (plant_name(chosen_crop, lang) or "").lower()
+    return texts[_lang(lang)].format(crop=crop)
 
 
 def build_fiche(
@@ -170,7 +207,8 @@ def build_fiche(
     lg = _lang(lang)
     code = class_code(detected_disease, plant_type)
     healthy = code.endswith("_Healthy") or code == "healthy"
-    entry = get_entry(CLASS_TO_DISEASE_ID.get(code, code))
+    ref = CLASS_TO_DISEASE_ID[code] if code in CLASS_TO_DISEASE_ID else LEGACY_CLASS_TO_DISEASE_ID.get(code, code)
+    entry = get_entry(ref)
     info = localize(entry, lg) if entry else localize({"id": code}, lg)
     confidence_pct = round((confidence or 0) * 100, 1)
     low_confidence = confidence_pct < LOW_CONFIDENCE_PCT

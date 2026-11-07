@@ -69,6 +69,12 @@
     "sending": "Sending an image…",
     "result_title": "Field sheet",
     "result_empty": "Results appear here after the first analysis.",
+    "no_answer": {
+      "unknown_title": "Image not recognized",
+      "unknown_hint": "Take a closer photo of a single leaf.",
+      "wrong_crop_title": "This leaf does not look like {{crop}}",
+      "wrong_crop_hint": "Check the selected crop or retake the photo."
+    },
     "queue": {
       "title": "Images on this device",
       "empty": "No image waiting.",
@@ -158,6 +164,12 @@
     "sending": "Envoi d'une image…",
     "result_title": "Fiche terrain",
     "result_empty": "Les résultats s'affichent ici après la première analyse.",
+    "no_answer": {
+      "unknown_title": "Image non reconnue",
+      "unknown_hint": "Prenez une photo plus rapprochée d'une seule feuille.",
+      "wrong_crop_title": "Cette feuille ne ressemble pas à une feuille de {{crop}}",
+      "wrong_crop_hint": "Vérifiez la culture choisie ou reprenez la photo."
+    },
     "queue": {
       "title": "Images sur cet appareil",
       "empty": "Aucune image en attente.",

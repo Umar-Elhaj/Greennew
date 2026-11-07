@@ -79,21 +79,27 @@ DEFAULT_CAMERA_IP          = DEFAULT_DRONE_IP
 DEFAULT_CAMERA_PORT        = DEFAULT_DRONE_STREAM_PORT
 
 # ---- Models -------------------------------------------------
-# Inference engine: "onnx" (production: onnxruntime, ~16 MB model, no
-# PyTorch) or "torch" (development: needs torch + timm, see requirements.txt).
-INFERENCE_BACKEND: str = os.getenv("INFERENCE_BACKEND", "onnx").strip().lower()
-if INFERENCE_BACKEND not in ("onnx", "torch"):
-    raise RuntimeError("INFERENCE_BACKEND must be 'onnx' or 'torch'.")
-# Disease detection model (EfficientNet-B0 — cassava / maize / tomato)
-_DEFAULT_MODEL = "best_efficientnet.onnx" if INFERENCE_BACKEND == "onnx" else "best_efficientnet.pth"
-MODEL_PATH: str = os.getenv("MODEL_PATH", "").strip() or os.path.join(
-    os.path.dirname(__file__), '..', 'Models', _DEFAULT_MODEL
-)
+# Disease classifier: TFLite, 9 classes (cassava / maize / tomato), run with
+# LiteRT (ai-edge-litert) or TensorFlow's tf.lite.Interpreter.
+_MODELS_DIR = os.path.join(os.path.dirname(__file__), '..', 'Models')
+MODEL_PATH: str = os.getenv("MODEL_PATH", "").strip() or os.path.join(_MODELS_DIR, 'plant_classifier_float32.tflite')
+# Class names, one per line, in the model's output order
+LABELS_PATH: str = os.getenv("LABELS_PATH", "").strip() or os.path.join(_MODELS_DIR, 'labels.txt')
 # End-to-end tests only: deterministic fake predictions without loading the
 # model. Honoured only when DEBUG is on, never in production.
 E2E_FAKE_MODEL: bool = DEBUG and os.getenv("E2E_FAKE_MODEL", "") == "1"
-# Stored with every analysis so the dataset knows which model predicted what
-MODEL_VERSION: str = os.getenv("MODEL_VERSION", "efficientnet-v1")
+# Stored with every analysis and prediction log so each result can be traced
+MODEL_VERSION: str = os.getenv("MODEL_VERSION", "").strip() or "classifier_v1"
+# Global confidence threshold (one value for all classes). PROVISIONAL: to be
+# retuned once off-topic photos are collected. The mobile app uses the same value.
+CONFIDENCE_THRESHOLD: float = float(os.getenv("CONFIDENCE_THRESHOLD", "").strip() or "0.70")
+if not 0.0 <= CONFIDENCE_THRESHOLD <= 1.0:
+    raise RuntimeError("CONFIDENCE_THRESHOLD must be between 0 and 1.")
+# One JSON line per prediction (probabilities, status, threshold) for retuning
+# the threshold. Never contains the image.
+PREDICTION_LOG_PATH: str = os.path.abspath(
+    os.getenv("PREDICTION_LOG_PATH", "").strip()
+    or os.path.join(os.path.dirname(__file__), '..', 'data', 'predictions.jsonl'))
 
 # ---- RAG ----------------------------------------------------
 RAG_CHUNKS_PATH: str = os.path.join(os.path.dirname(__file__), '..', 'rag', 'chunks.json')

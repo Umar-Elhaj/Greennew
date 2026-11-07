@@ -1,0 +1,24 @@
+{
+  "classes": [
+    "Cassava Brown Leaf Spot",
+    "Cassava Healthy",
+    "Cassava Mosaic",
+    "Corn Healthy",
+    "Corn Yellowing",
+    "Corn leaf blight",
+    "Tomato Brown Spots",
+    "Tomato blight leaf",
+    "Tomato healthy"
+  ],
+  "input_shape": [
+    1,
+    224,
+    224,
+    3
+  ],
+  "input_type": "float32",
+  "input_pixels": "RGB, 0-255, not normalized",
+  "resize": "bilinear to 224x224",
+  "output": "9 probabilities in labels.txt order",
+  "file": "plant_classifier_float32.tflite"
+}

@@ -7,7 +7,7 @@
 # a2wsgi does not run the ASGI lifespan, so the model warm-up thread does
 # not start; models load lazily on first use, guarded by a lock
 # (inference.load). WARMUP=1 loads them when the process starts instead
-# (≈180 MB per Passenger process with ONNX — mind the LVE memory limit).
+# (one TFLite interpreter per Passenger process — mind the LVE memory limit).
 # ============================================================
 
 import os

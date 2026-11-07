@@ -58,6 +58,7 @@ MESSAGES_FR = {
     "Not found.": "Introuvable.",
     # media / upload
     "Empty file.": "Fichier vide.",
+    "Invalid crop: choose Cassava, Corn or Tomato.": "Culture invalide : choisissez Cassava (manioc), Corn (maïs) ou Tomato (tomate).",
     "Unsupported image format (JPEG, PNG or WebP).": "Format d'image non pris en charge (JPEG, PNG ou WebP).",
     "The file is not a valid image.": "Le fichier n'est pas une image valide.",
     "The image is too large (50 megapixels at most).": "L'image est trop grande (50 mégapixels au maximum).",

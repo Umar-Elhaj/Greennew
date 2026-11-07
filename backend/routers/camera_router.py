@@ -3,6 +3,8 @@
 #
 #   POST /api/camera/analyze-frame  → analyse a frame captured in the browser
 #   POST /api/camera/upload         → analyse an imported image file
+#                                     Both take an optional `crop` (Cassava|Corn|Tomato);
+#                                     without it, the parcel's crop, else all crops.
 #   POST /api/camera/connect        → (local development only) check that the
 #   POST /api/camera/capture           server can reach the rover's MJPEG stream
 #                                       and grab a frame. A hosted server cannot
@@ -83,7 +85,7 @@ async def capture_from_stream(
     return await analyze_image_bytes(
         image_bytes, db, current_user, source="camera",
         parcel_id=parcel_id, latitude=latitude, longitude=longitude,
-        lang=request_lang(request),
+        lang=request_lang(request), crop=payload.get("crop"),
     )
 
 
@@ -98,6 +100,7 @@ async def analyze_frame(
     mission_id:  Optional[int]      = Form(None),
     cell_index:  Optional[int]      = Form(None, ge=1),
     captured_at: Optional[datetime] = Form(None),
+    crop:        Optional[str]      = Form(None, max_length=20),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -106,7 +109,7 @@ async def analyze_frame(
         image_bytes, db, current_user, source=source,
         parcel_id=parcel_id, latitude=latitude, longitude=longitude,
         lang=request_lang(request),
-        mission_id=mission_id, cell_index=cell_index, captured_at=captured_at,
+        mission_id=mission_id, cell_index=cell_index, captured_at=captured_at, crop=crop,
     )
 
 
@@ -120,6 +123,7 @@ async def upload_and_analyze(
     mission_id:  Optional[int]      = Form(None),
     cell_index:  Optional[int]      = Form(None, ge=1),
     captured_at: Optional[datetime] = Form(None),
+    crop:        Optional[str]      = Form(None, max_length=20),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -128,5 +132,5 @@ async def upload_and_analyze(
         image_bytes, db, current_user, source="upload",
         parcel_id=parcel_id, latitude=latitude, longitude=longitude,
         lang=request_lang(request),
-        mission_id=mission_id, cell_index=cell_index, captured_at=captured_at,
+        mission_id=mission_id, cell_index=cell_index, captured_at=captured_at, crop=crop,
     )
