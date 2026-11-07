@@ -376,7 +376,7 @@ body.sidebar-collapsed .app-main {
 .header-page-title {
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
-  color: var(--text-primary);
+  color: var(--heading-brand);
   line-height: 1.2;
 }
 .header-breadcrumb {
@@ -479,10 +479,18 @@ body.sidebar-collapsed .app-main {
   gap: var(--sp-4);
 }
 .page-header-left {}
+.banner-title {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-extrabold);
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: var(--sp-2);
+}
 .page-title {
   font-size: var(--text-2xl);
   font-weight: var(--weight-extrabold);
-  color: var(--text-primary);
+  color: var(--heading-brand);
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -690,7 +698,7 @@ body.sidebar-collapsed .app-main {
 .coming-soon-title {
   font-size: var(--text-3xl);
   font-weight: var(--weight-extrabold);
-  color: var(--text-primary);
+  color: var(--heading-brand);
   letter-spacing: -0.03em;
 }
 .coming-soon-desc {

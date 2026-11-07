@@ -135,7 +135,7 @@ const App = {
       min-width: 240px;
       max-width: 360px;
       animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
-      font-family: var(--font-sans, Inter, sans-serif);
+      font-family: var(--font-sans, sans-serif);
     `;
     toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
     toast.innerHTML = `

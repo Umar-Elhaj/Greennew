@@ -53,9 +53,17 @@ ul, ol { list-style: none; }
 
 /* ---- Headings ---------------------------------------------- */
 h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
   font-weight: var(--weight-semibold);
   line-height: var(--leading-tight);
   color: var(--text-primary);
+}
+
+/* Titles and key figures that are not heading tags */
+.sidebar-logo-name, .auth-logo-name, .page-title, .card-title, .banner-title,
+.welcome-title, .coming-soon-title, .kpi-value, .prog-kpi-value, .gd-kpi .val,
+.stat-val, .mkt-stat-val, .roi-number, .weather-temp, .avatar-circle {
+  font-family: var(--font-display);
 }
 
 /* ---- Forms Reset ------------------------------------------- */
@@ -255,7 +263,7 @@ button { cursor: pointer; }
 .form-input:hover:not(:focus) { border-color: var(--input-border-hover); }
 .form-input:focus {
   border-color: var(--input-border-focus);
-  box-shadow: 0 0 0 3px var(--input-ring);
+  box-shadow: var(--input-focus-ring);
 }
 .form-input:focus + .input-icon,
 .input-wrapper:focus-within .input-icon { color: var(--brand-text); }
@@ -280,7 +288,7 @@ button { cursor: pointer; }
 
 /* ---- Input Error State ------------------------------------- */
 .form-input.error { border-color: var(--color-error); }
-.form-input.error:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.18); }
+.form-input.error:focus { box-shadow: 0 0 0 1px var(--color-error); }
 .field-error {
   font-size: var(--text-xs);
   color: var(--color-error-text);

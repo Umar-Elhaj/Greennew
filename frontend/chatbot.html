@@ -9,9 +9,7 @@
   <title data-i18n="titles.chatbot">GREEN</title>
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <script src="/js/theme-init.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/fonts.css" />
   <link rel="stylesheet" href="/css/variables.css" />
   <link rel="stylesheet" href="/css/main.css" />
   <link rel="stylesheet" href="/css/app.css" />
@@ -155,7 +153,7 @@
     .chat-welcome h2 {
       font-size: var(--text-2xl);
       font-weight: var(--weight-extrabold);
-      color: var(--text-primary);
+      color: var(--heading-brand);
       letter-spacing: -.02em;
       margin: 0 0 var(--sp-2);
     }
@@ -298,7 +296,7 @@
     }
     .chat-input-row:focus-within {
       border-color: var(--input-border-focus);
-      box-shadow: 0 0 0 3px var(--input-ring);
+      box-shadow: var(--input-focus-ring);
       background: var(--input-bg);
     }
     #chatInput {

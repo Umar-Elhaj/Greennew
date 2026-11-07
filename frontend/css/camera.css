@@ -182,7 +182,7 @@
   cursor: pointer;
   transition: border-color var(--dur-base);
 }
-.device-select:focus { outline: none; border-color: var(--input-border-focus); box-shadow: 0 0 0 3px var(--input-ring); }
+.device-select:focus { outline: none; border-color: var(--input-border-focus); box-shadow: var(--input-focus-ring); }
 
 /* Camera info note */
 .camera-note {

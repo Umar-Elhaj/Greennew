@@ -68,3 +68,7 @@ qa/screenshots/
 .pytest_cache/
 .ruff_cache/
 backend/test-results/
+
+# Research notes and reports (local only)
+/research_notes/
+/reports/

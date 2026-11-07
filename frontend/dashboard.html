@@ -16,10 +16,7 @@
 
   <link rel="icon" type="image/png" href="/assets/logo.png" />
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/fonts.css" />
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/css/variables.css" />
@@ -115,7 +112,7 @@
     .section-title {
       font-size: var(--text-lg);
       font-weight: var(--weight-bold);
-      color: var(--text-primary);
+      color: var(--heading-brand);
       letter-spacing: -0.01em;
       margin-bottom: var(--sp-4);
       display: flex;
@@ -673,7 +670,7 @@
           maintainAspectRatio: false,
           locale: I18n.locale,
           plugins: {
-            legend: { position: 'top', labels: { color: tickColor, font: { family: 'Inter', size: 12 }, boxWidth: 12, padding: 16 } },
+            legend: { position: 'top', labels: { color: tickColor, font: { family: 'Andika', size: 12 }, boxWidth: 12, padding: 16 } },
             tooltip: {
               backgroundColor: isDark ? '#161B22' : '#FFFFFF',
               borderColor: isDark ? '#30363D' : '#E5E7EB',

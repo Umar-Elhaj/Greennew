@@ -45,6 +45,7 @@
   --text-brand:      #15803D;   /* green text on light surfaces: 5:1 (AA) */
   --brand-text:      #15803D;   /* use for text/links; --brand-primary stays for fills */
   --brand-fill-strong: #15803D; /* fill behind white text (5:1) */
+  --heading-brand:   #1F7A50;   /* big titles: logo green, deepened for 5.3:1 on white (AA) */
   --color-error-text:   #B91C1C;   /* red text on light surfaces (6.5:1) */
   --color-warning-text: #B45309;   /* amber text on light surfaces (5:1) */
 
@@ -56,8 +57,9 @@
   --input-bg:              #FFFFFF;
   --input-border:          #D1D5DB;
   --input-border-hover:    #9CA3AF;
-  --input-border-focus:    #2ECC71;
-  --input-ring:            rgba(46, 204, 113, 0.20);
+  --input-border-focus:    #16A34A;   /* 3.3:1 on white: a visible focus edge */
+  /* Focus = a crisp green edge (border + 1px), no glow around the field */
+  --input-focus-ring:      0 0 0 1px var(--input-border-focus);
   --input-placeholder:     #9CA3AF;
 
   /* ---- Semantic Tokens — Dark Theme ----------------------- */
@@ -85,7 +87,6 @@
   --dark-input-border:       #30363D;
   --dark-input-border-hover: #484F58;
   --dark-input-border-focus: #2ECC71;
-  --dark-input-ring:         rgba(46, 204, 113, 0.15);
   --dark-input-placeholder:  #6E7681;
 
   /* ---- Status / Feedback Colors --------------------------- */
@@ -106,8 +107,9 @@
   --color-info-border: #93C5FD;
 
   /* ---- Typography ----------------------------------------- */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+  --font-sans: 'Andika', -apple-system, BlinkMacSystemFont, 'Segoe UI',
                Helvetica, Arial, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Andika', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 
   --text-xs:   0.75rem;     /* 12px */
@@ -215,6 +217,7 @@
   --text-muted:      var(--dark-text-muted);
   --text-disabled:   var(--dark-text-disabled);
   --text-brand:      #2ECC71;
+  --heading-brand:   #2AC471;   /* logo green on dark surfaces (7.6:1) */
   --brand-text:      #2ECC71;
   --brand-fill-strong: #15803D;
   --color-error-text:   #F87171;
@@ -228,7 +231,6 @@
   --input-border:          var(--dark-input-border);
   --input-border-hover:    var(--dark-input-border-hover);
   --input-border-focus:    var(--dark-input-border-focus);
-  --input-ring:            var(--dark-input-ring);
   --input-placeholder:     var(--dark-input-placeholder);
 
   /* Shadows are darker/stronger in dark mode */

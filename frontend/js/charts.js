@@ -73,7 +73,7 @@ const VIZ = (() => {
         animation: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { labels: { color: t.tick, boxWidth: 12, boxHeight: 12, font: { family: 'Inter', size: 12 } } },
+          legend: { labels: { color: t.tick, boxWidth: 12, boxHeight: 12, font: { family: 'Andika', size: 12 } } },
           tooltip: {
             backgroundColor: t.tooltipBg, borderColor: t.tooltipBorder, borderWidth: 1,
             titleColor: t.text, bodyColor: t.tick, padding: 10,

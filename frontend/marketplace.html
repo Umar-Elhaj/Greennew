@@ -9,9 +9,7 @@
   <title data-i18n="titles.marketplace">GREEN</title>
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <script src="/js/theme-init.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/fonts.css" />
   <link rel="stylesheet" href="/css/variables.css" />
   <link rel="stylesheet" href="/css/main.css" />
   <link rel="stylesheet" href="/css/app.css" />
@@ -330,7 +328,7 @@
       width: 220px;
       transition: border-color var(--dur-base) var(--ease-out);
     }
-    .notify-input:focus { border-color: var(--input-border-focus); box-shadow: 0 0 0 3px var(--input-ring); }
+    .notify-input:focus { border-color: var(--input-border-focus); box-shadow: var(--input-focus-ring); }
     @media (max-width: 700px) {
       .notify-bar { flex-direction: column; }
       .notify-form { width: 100%; }
@@ -528,7 +526,7 @@
         <div style="position:absolute;width:320px;height:320px;background:rgba(255,255,255,.05);border-radius:50%;right:-60px;top:-100px;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;">
           <div style="display:inline-flex;align-items:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius-full);padding:3px 14px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.06em;text-transform:uppercase;margin-bottom:var(--sp-3);" data-i18n="marketplace.banner_kicker"></div>
-          <div style="font-size:var(--text-3xl);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.15;margin-bottom:var(--sp-3);" data-i18n="marketplace.banner_title"></div>
+          <div class="banner-title" style="font-size:var(--text-3xl);line-height:1.15;margin-bottom:var(--sp-3);" data-i18n="marketplace.banner_title"></div>
           <div style="font-size:var(--text-sm);color:rgba(255,255,255,.8);max-width:560px;line-height:1.6;" data-i18n="marketplace.banner_text"></div>
         </div>
       </div>

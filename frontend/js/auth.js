@@ -167,7 +167,7 @@ function initRegisterPage() {
   const step1   = document.getElementById('registerStep1');
   const step2   = document.getElementById('registerStep2');
   const nextBtn = document.getElementById('registerNextBtn');
-  const backBtn = document.getElementById('registerBackBtn');
+  const backBtns = document.querySelectorAll('#registerBackBtn, #registerBackTopBtn');
   const indicatorItems = document.querySelectorAll('#formStepsIndicator .step-indicator-item');
 
   function goToStep(step) {
@@ -178,6 +178,19 @@ function initRegisterPage() {
       item.classList.toggle('active', n === step);
       item.classList.toggle('completed', n < step);
     });
+  }
+
+  // Step change from a button: bring the top of the form back into view
+  // (the buttons sit at the bottom) and move focus to the new step.
+  function showStep(step) {
+    goToStep(step);
+    const card = document.querySelector('.auth-card');
+    if (card && card.getBoundingClientRect().top < 0) {
+      const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      card.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    }
+    const target = step === 1 ? step1 : step2;
+    if (target) target.focus({ preventScroll: true });
   }
 
   function validateStep1() {
@@ -235,17 +248,17 @@ function initRegisterPage() {
     nextBtn.addEventListener('click', () => {
       hideAlert('registerAlert');
       clearAllErrors('registerForm');
-      if (validateStep1()) goToStep(2);
+      if (validateStep1()) showStep(2);
     });
   }
 
-  if (backBtn) {
-    backBtn.addEventListener('click', () => {
+  backBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
       hideAlert('registerAlert');
       clearAllErrors('registerForm');
-      goToStep(1);
+      showStep(1);
     });
-  }
+  });
 
   // ---- Form submission
   form.addEventListener('submit', async (e) => {

@@ -9,9 +9,7 @@
   <title data-i18n="titles.economics">GREEN</title>
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <script src="/js/theme-init.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/fonts.css" />
   <link rel="stylesheet" href="/css/variables.css" />
   <link rel="stylesheet" href="/css/main.css" />
   <link rel="stylesheet" href="/css/app.css" />
@@ -92,7 +90,7 @@
     }
     .form-select:focus, .form-input:focus {
       border-color: var(--input-border-focus);
-      box-shadow: 0 0 0 3px var(--input-ring);
+      box-shadow: var(--input-focus-ring);
     }
     .form-slider {
       -webkit-appearance: none;
@@ -256,7 +254,7 @@
         <div style="position:absolute;width:280px;height:280px;background:rgba(255,255,255,.05);border-radius:50%;right:-50px;top:-80px;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;">
           <div style="font-size:var(--text-xs);color:rgba(255,255,255,.6);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--sp-2);" data-i18n="economics.banner_kicker"></div>
-          <div style="font-size:var(--text-2xl);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:var(--sp-2);" data-i18n="economics.banner_title"></div>
+          <div class="banner-title" data-i18n="economics.banner_title"></div>
           <div style="font-size:var(--text-sm);color:rgba(255,255,255,.75);" data-i18n="economics.banner_text"></div>
         </div>
       </div>
